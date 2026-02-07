@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phuc Le - Data Analyst Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Dashboard Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#overview" class="logo">📊 Phuc Le | Data Analyst</a>
+                <nav class="nav-links" id="navLinks">
+                    <a href="#overview">Overview</a>
+                    <a href="#projects">Projects</a>
+                    <a href="#skills">Skills</a>
+                    <a href="#about">About</a>
+                    <a href="#education">Education</a>
+                    <a href="#contact">Contact</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar" id="sidebar">
+                <h3>Navigation</h3>
+                <ul class="sidebar-menu">
+                    <li><a href="#overview" class="active">📊 Overview</a></li>
+                    <li><a href="#projects">💼 Projects</a></li>
+                    <li><a href="#skills">🛠️ Skills</a></li>
+                    <li><a href="#about">👤 About</a></li>
+                    <li><a href="#education">🎓 Education</a></li>
+                    <li><a href="#contact">📧 Contact</a></li>
+                </ul>
+            </aside>
+
+            <!-- Main Dashboard Content -->
+            <main class="main-content">
+                <!-- KPI Overview Section -->
+                <section id="overview">
+                    <div class="kpi-section">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total Projects</span>
+                                <span class="kpi-icon">📁</span>
+                            </div>
+                            <div class="kpi-value">3</div>
+                            <div class="kpi-change">2 SQL + 1 Power BI</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Data Records Analyzed</span>
+                                <span class="kpi-icon">📊</span>
+                            </div>
+                            <div class="kpi-value">36K+</div>
+                            <div class="kpi-change positive">Across all projects</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Core Tools</span>
+                                <span class="kpi-icon">⚡</span>
+                            </div>
+                            <div class="kpi-value">3</div>
+                            <div class="kpi-change">Excel, MySQL, Power BI</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Career Goal</span>
+                                <span class="kpi-icon">🎯</span>
+                            </div>
+                            <div class="kpi-value">100%</div>
+                            <div class="kpi-change positive">Data Analyst Focus</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Projects Dashboard Section -->
+                <section id="projects" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">My Projects</h2>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="sql">SQL Analysis</button>
+                            <button class="filter-btn" data-filter="powerbi">Power BI</button>
+                        </div>
+                    </div>
+
+                    <div class="projects-grid">
+                        <!-- World Life Expectancy Project -->
+                        <div class="project-widget" data-category="sql">
+                            <div class="project-header">
+                                <div>
+                                    <h3>World Life Expectancy Analysis</h3>
+                                    <p class="project-subtitle">Global Health Data Analysis</p>
+                                </div>
+                                <span class="project-status">Completed</span>
+                            </div>
+                            <div class="project-metrics">
+                                <div class="metrics-row">
+                                    <div class="metric">
+                                        <div class="metric-value">193</div>
+                                        <div class="metric-label">Countries</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">15 Yrs</div>
+                                        <div class="metric-label">Time Span</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">2,941</div>
+                                        <div class="metric-label">Records</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="project-body">
+                                <p class="project-description">Comprehensive analysis of global life expectancy data exploring relationships between life expectancy and socioeconomic factors. Discovered 13-year life expectancy gap between developed and developing nations.</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">MySQL</span>
+                                    <span class="tech-badge">Data Cleaning</span>
+                                    <span class="tech-badge">Window Functions</span>
+                                    <span class="tech-badge">Statistical Analysis</span>
+                                </div>
+                                <div class="project-actions">
+                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio/tree/main/world-life-expectancy-project" class="action-btn primary" target="_blank">View Project</a>
+                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="action-btn" target="_blank">GitHub</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- US Household Income Analysis -->
+                        <div class="project-widget" data-category="sql">
+                            <div class="project-header">
+                                <div>
+                                    <h3>US Household Income Analysis</h3>
+                                    <p class="project-subtitle">Geographic & Economic Patterns</p>
+                                </div>
+                                <span class="project-status">Completed</span>
+                            </div>
+                            <div class="project-metrics">
+                                <div class="metrics-row">
+                                    <div class="metric">
+                                        <div class="metric-value">32K+</div>
+                                        <div class="metric-label">Records</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">50</div>
+                                        <div class="metric-label">States</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">13 Yrs</div>
+                                        <div class="metric-label">Gap Found</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="project-body">
+                                <p class="project-description">Exploratory data analysis of US Census data examining geographic and economic patterns across states, counties, and community types. Revealed substantial urban-rural income divide and coastal vs. inland disparities.</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">MySQL</span>
+                                    <span class="tech-badge">Data Cleaning</span>
+                                    <span class="tech-badge">Aggregate Functions</span>
+                                    <span class="tech-badge">Geographic Analysis</span>
+                                </div>
+                                <div class="project-actions">
+                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio/tree/main/US-Household-Income-Analysis" class="action-btn primary" target="_blank">View Project</a>
+                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="action-btn" target="_blank">GitHub</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- HR Analytics Dashboard -->
+                        <div class="project-widget" data-category="powerbi">
+                            <div class="project-header">
+                                <div>
+                                    <h3>HR Analytics Dashboard</h3>
+                                    <p class="project-subtitle">Employee Attrition Analysis</p>
+                                </div>
+                                <span class="project-status">Completed</span>
+                            </div>
+                            <div class="project-metrics">
+                                <div class="metrics-row">
+                                    <div class="metric">
+                                        <div class="metric-value">1,470</div>
+                                        <div class="metric-label">Employees</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">16%</div>
+                                        <div class="metric-label">Attrition Rate</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">238</div>
+                                        <div class="metric-label">Departed</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="project-body">
+                                <p class="project-description">Interactive Power BI dashboard analyzing HR employee attrition patterns across departments, demographics, and compensation levels. Identified salary and early tenure as key attrition drivers.</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">Power BI</span>
+                                    <span class="tech-badge">DAX</span>
+                                    <span class="tech-badge">Power Query</span>
+                                    <span class="tech-badge">HR Analytics</span>
+                                </div>
+                                <div class="project-actions">
+                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio/tree/main/power-bi-hr-analytics" class="action-btn primary" target="_blank">View Dashboard</a>
+                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="action-btn" target="_blank">GitHub</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Skills Dashboard Section -->
+                <section id="skills" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Technical Skills</h2>
+                    </div>
+
+                    <div class="skills-dashboard">
+                        <!-- Data Analytics Skills -->
+                        <div class="skill-widget">
+                            <div class="skill-widget-header">
+                                <div class="skill-icon-large">📊</div>
+                                <div>
+                                    <h3>Power BI</h3>
+                                    <p class="skill-level">Intermediate</p>
+                                </div>
+                            </div>
+                            <ul class="skill-items">
+                                <li>Dashboard Creation</li>
+                                <li>Data Modeling</li>
+                                <li>DAX Functions</li>
+                                <li>Power Query Transformations</li>
+                            </ul>
+                        </div>
+
+                        <div class="skill-widget">
+                            <div class="skill-widget-header">
+                                <div class="skill-icon-large">🗄️</div>
+                                <div>
+                                    <h3>MySQL</h3>
+                                    <p class="skill-level">Intermediate</p>
+                                </div>
+                            </div>
+                            <ul class="skill-items">
+                                <li>Window Functions (ROW_NUMBER, PARTITION BY)</li>
+                                <li>Joins & Subqueries</li>
+                                <li>Data Cleaning & ETL</li>
+                                <li>Aggregate Functions</li>
+                            </ul>
+                        </div>
+
+                        <div class="skill-widget">
+                            <div class="skill-widget-header">
+                                <div class="skill-icon-large">📈</div>
+                                <div>
+                                    <h3>Excel</h3>
+                                    <p class="skill-level">Advanced</p>
+                                </div>
+                            </div>
+                            <ul class="skill-items">
+                                <li>Data Analysis & Visualization</li>
+                                <li>Pivot Tables & Charts</li>
+                                <li>Advanced Formulas</li>
+                                <li>Data Validation</li>
+                            </ul>
+                        </div>
+
+                        <!-- Web Development Skills -->
+                        <div class="skill-widget">
+                            <div class="skill-widget-header">
+                                <div class="skill-icon-large">🌐</div>
+                                <div>
+                                    <h3>HTML & CSS</h3>
+                                    <p class="skill-level">4 Months Experience</p>
+                                </div>
+                            </div>
+                            <ul class="skill-items">
+                                <li>Responsive Design</li>
+                                <li>Modern CSS & Flexbox</li>
+                                <li>Web Layouts</li>
+                                <li>Styling & Animations</li>
+                            </ul>
+                        </div>
+
+                        <div class="skill-widget">
+                            <div class="skill-widget-header">
+                                <div class="skill-icon-large">💻</div>
+                                <div>
+                                    <h3>JavaScript</h3>
+                                    <p class="skill-level">4 Months Experience</p>
+                                </div>
+                            </div>
+                            <ul class="skill-items">
+                                <li>DOM Manipulation</li>
+                                <li>Event Handling</li>
+                                <li>Interactive Features</li>
+                                <li>Web Functionality</li>
+                            </ul>
+                        </div>
+
+                        <div class="skill-widget">
+                            <div class="skill-widget-header">
+                                <div class="skill-icon-large">🐍</div>
+                                <div>
+                                    <h3>Python</h3>
+                                    <p class="skill-level">Basic</p>
+                                </div>
+                            </div>
+                            <ul class="skill-items">
+                                <li>Basic Syntax</li>
+                                <li>Variables & Data Types</li>
+                                <li>Control Flow</li>
+                                <li>Functions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- About Dashboard Section -->
+                <section id="about" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">About Me</h2>
+                    </div>
+
+                    <div class="about-dashboard">
+                        <div class="profile-card">
+                            <div class="profile-avatar">📊</div>
+                            <div class="profile-name">Phuc Le</div>
+                            <div class="profile-role">Aspiring Data Analyst</div>
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">3</div>
+                                    <div class="stat-label">Projects</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">36K+</div>
+                                    <div class="stat-label">Records</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="about-content-card">
+                            <h3>Hello, I'm Phuc Le</h3>
+                            <p>I'm an aspiring data analyst with a passion for turning raw data into meaningful insights. My core analytical toolkit includes Excel, MySQL, and Power BI, which I use to analyze data and create compelling visualizations.</p>
+                            <p>I have 4 months of freelance web development experience in HTML, CSS, and JavaScript, which has given me strong problem-solving skills, attention to detail, and the ability to work independently. I'm now transitioning into data analytics, where I can combine my technical skills with analytical thinking.</p>
+                            <p>I've completed 3 data analysis projects using Excel and MySQL (analyzing over 36,000 records across multiple datasets), and created 1 interactive Power BI dashboard for HR analytics. My projects include global life expectancy analysis, US household income patterns, and employee attrition insights.</p>
+                            <p>I'm continuously learning new techniques in SQL window functions, DAX calculations, and data visualization best practices to enhance my analytical capabilities and deliver data-driven insights.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Education & Certifications Section -->
+                <section id="education" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Education & Certifications</h2>
+                    </div>
+
+                    <div class="education-grid">
+                        <div class="education-card">
+                            <div class="education-icon">🎓</div>
+                            <div class="education-content">
+                                <h3>Bachelor of Science, Computer Science</h3>
+                                <p class="education-institution">California State University Channel Islands</p>
+                                <p class="education-location">Camarillo, CA</p>
+                                <p class="education-year">2024</p>
+                            </div>
+                        </div>
+
+                        <div class="education-card">
+                            <div class="education-icon">📊</div>
+                            <div class="education-content">
+                                <h3>Google Data Analytics Professional Certificate</h3>
+                                <p class="education-institution">Google</p>
+                                <p class="education-year">2025</p>
+                            </div>
+                        </div>
+
+                        <div class="education-card">
+                            <div class="education-icon">🗄️</div>
+                            <div class="education-content">
+                                <h3>Analyst Builder MySQL Certificate</h3>
+                                <p class="education-institution">Analyst Builder</p>
+                                <p class="education-year">2026</p>
+                            </div>
+                        </div>
+
+                        <div class="education-card">
+                            <div class="education-icon">📈</div>
+                            <div class="education-content">
+                                <h3>Analyst Builder Power BI Certificate</h3>
+                                <p class="education-institution">Analyst Builder</p>
+                                <p class="education-year">2026</p>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </section>
+
+                <!-- Contact Dashboard Section -->
+                <section id="contact" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Get In Touch</h2>
+                    </div>
+
+                    <div class="contact-grid">
+                        <div class="contact-card">
+                            <div class="contact-icon">📧</div>
+                            <div class="contact-info">
+                                <h4>Email</h4>
+                                <p>le.luke06@gmail.com</p>
+                                <a href="mailto:le.luke06@gmail.com" class="contact-button">Send Email</a>
+                            </div>
+                        </div>
+
+                        <div class="contact-card">
+                            <div class="contact-icon">💼</div>
+                            <div class="contact-info">
+                                <h4>LinkedIn</h4>
+                                <p>Connect with me</p>
+                                <a href="https://www.linkedin.com/in/phuc-le-6145aa375/" class="contact-button" target="_blank">View Profile</a>
+                            </div>
+                        </div>
+
+                        <div class="contact-card">
+                            <div class="contact-icon">🐙</div>
+                            <div class="contact-info">
+                                <h4>GitHub</h4>
+                                <p>View my projects</p>
+                                <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="contact-button" target="_blank">Visit Repository</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Phuc Le. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
