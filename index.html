@@ -4,57 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phuc Le - Data Analyst Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" id="mobileMenuToggle">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
-
     <!-- Dashboard Header -->
     <header>
         <div class="container">
             <div class="header-content">
-                <a href="#overview" class="logo">📊 Phuc Le | Data Analyst</a>
-                <nav class="nav-links" id="navLinks">
-                    <a href="#overview">Overview</a>
-                    <a href="#projects">Projects</a>
-                    <a href="#skills">Skills</a>
-                    <a href="#about">About</a>
-                    <a href="#education">Education</a>
-                    <a href="#contact">Contact</a>
-                </nav>
+                <!-- Hamburger Menu (Always Visible) -->
+                <button class="hamburger-menu" id="hamburgerMenu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <!-- Centered Logo -->
+                <a href="#overview" class="logo-center">
+                    <div class="logo-name">Phuc Le</div>
+                    <div class="logo-role">Data Analyst</div>
+                </a>
+
+                <!-- Spacer for balance -->
+                <div class="header-spacer"></div>
             </div>
         </div>
+
+        <!-- Slide-out Navigation Menu -->
+        <nav class="slide-menu" id="slideMenu">
+            <div class="slide-menu-header">
+                <h3>Navigation</h3>
+                <button class="menu-close" id="menuClose">&times;</button>
+            </div>
+            <ul class="slide-menu-links">
+                <li><a href="#overview"><i class="fas fa-chart-line"></i> Overview</a></li>
+                <li><a href="#projects"><i class="fas fa-briefcase"></i> Projects</a></li>
+                <li><a href="#skills"><i class="fas fa-tools"></i> Skills</a></li>
+                <li><a href="#about"><i class="fas fa-user"></i> About</a></li>
+                <li><a href="#education"><i class="fas fa-graduation-cap"></i> Education</a></li>
+                <li><a href="#contact"><i class="fas fa-envelope"></i> Contact</a></li>
+            </ul>
+        </nav>
+
+        <!-- Overlay -->
+        <div class="menu-overlay" id="menuOverlay"></div>
     </header>
 
     <div class="container">
-        <div class="dashboard-layout">
-            <!-- Sidebar Navigation -->
-            <aside class="sidebar" id="sidebar">
-                <h3>Navigation</h3>
-                <ul class="sidebar-menu">
-                    <li><a href="#overview" class="active">📊 Overview</a></li>
-                    <li><a href="#projects">💼 Projects</a></li>
-                    <li><a href="#skills">🛠️ Skills</a></li>
-                    <li><a href="#about">👤 About</a></li>
-                    <li><a href="#education">🎓 Education</a></li>
-                    <li><a href="#contact">📧 Contact</a></li>
-                </ul>
-            </aside>
-
-            <!-- Main Dashboard Content -->
-            <main class="main-content">
-                <!-- KPI Overview Section -->
+        <!-- Main Dashboard Content -->
+        <main class="main-content">
+            <!-- KPI Overview Section -->
                 <section id="overview">
                     <div class="kpi-section">
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-title">Total Projects</span>
-                                <span class="kpi-icon">📁</span>
+                                <span class="kpi-icon"><i class="fas fa-folder"></i></span>
                             </div>
                             <div class="kpi-value">3</div>
                             <div class="kpi-change">2 SQL + 1 Power BI</div>
@@ -63,7 +68,7 @@
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-title">Data Records Analyzed</span>
-                                <span class="kpi-icon">📊</span>
+                                <span class="kpi-icon"><i class="fas fa-chart-bar"></i></span>
                             </div>
                             <div class="kpi-value">36K+</div>
                             <div class="kpi-change positive">Across all projects</div>
@@ -72,7 +77,7 @@
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-title">Core Tools</span>
-                                <span class="kpi-icon">⚡</span>
+                                <span class="kpi-icon"><i class="fas fa-bolt"></i></span>
                             </div>
                             <div class="kpi-value">3</div>
                             <div class="kpi-change">Excel, MySQL, Power BI</div>
@@ -81,7 +86,7 @@
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-title">Career Goal</span>
-                                <span class="kpi-icon">🎯</span>
+                                <span class="kpi-icon"><i class="fas fa-bullseye"></i></span>
                             </div>
                             <div class="kpi-value">100%</div>
                             <div class="kpi-change positive">Data Analyst Focus</div>
@@ -135,8 +140,7 @@
                                     <span class="tech-badge">Statistical Analysis</span>
                                 </div>
                                 <div class="project-actions">
-                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio/tree/main/world-life-expectancy-project" class="action-btn primary" target="_blank">View Project</a>
-                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="action-btn" target="_blank">GitHub</a>
+                                    <button class="view-details-btn primary-btn" data-project="world-life-expectancy">View Project</button>
                                 </div>
                             </div>
                         </div>
@@ -175,8 +179,7 @@
                                     <span class="tech-badge">Geographic Analysis</span>
                                 </div>
                                 <div class="project-actions">
-                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio/tree/main/US-Household-Income-Analysis" class="action-btn primary" target="_blank">View Project</a>
-                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="action-btn" target="_blank">GitHub</a>
+                                    <button class="view-details-btn primary-btn" data-project="us-household-income">View Project</button>
                                 </div>
                             </div>
                         </div>
@@ -215,8 +218,7 @@
                                     <span class="tech-badge">HR Analytics</span>
                                 </div>
                                 <div class="project-actions">
-                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio/tree/main/power-bi-hr-analytics" class="action-btn primary" target="_blank">View Dashboard</a>
-                                    <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="action-btn" target="_blank">GitHub</a>
+                                    <button class="view-details-btn primary-btn" data-project="hr-analytics">View Project</button>
                                 </div>
                             </div>
                         </div>
@@ -233,7 +235,7 @@
                         <!-- Data Analytics Skills -->
                         <div class="skill-widget">
                             <div class="skill-widget-header">
-                                <div class="skill-icon-large">📊</div>
+                                <div class="skill-icon-large"><i class="fas fa-chart-pie"></i></div>
                                 <div>
                                     <h3>Power BI</h3>
                                     <p class="skill-level">Intermediate</p>
@@ -249,7 +251,7 @@
 
                         <div class="skill-widget">
                             <div class="skill-widget-header">
-                                <div class="skill-icon-large">🗄️</div>
+                                <div class="skill-icon-large"><i class="fas fa-database"></i></div>
                                 <div>
                                     <h3>MySQL</h3>
                                     <p class="skill-level">Intermediate</p>
@@ -265,7 +267,7 @@
 
                         <div class="skill-widget">
                             <div class="skill-widget-header">
-                                <div class="skill-icon-large">📈</div>
+                                <div class="skill-icon-large"><i class="fas fa-file-excel"></i></div>
                                 <div>
                                     <h3>Excel</h3>
                                     <p class="skill-level">Advanced</p>
@@ -282,7 +284,7 @@
                         <!-- Web Development Skills -->
                         <div class="skill-widget">
                             <div class="skill-widget-header">
-                                <div class="skill-icon-large">🌐</div>
+                                <div class="skill-icon-large"><i class="fab fa-html5"></i></div>
                                 <div>
                                     <h3>HTML & CSS</h3>
                                     <p class="skill-level">4 Months Experience</p>
@@ -298,7 +300,7 @@
 
                         <div class="skill-widget">
                             <div class="skill-widget-header">
-                                <div class="skill-icon-large">💻</div>
+                                <div class="skill-icon-large"><i class="fab fa-js"></i></div>
                                 <div>
                                     <h3>JavaScript</h3>
                                     <p class="skill-level">4 Months Experience</p>
@@ -314,7 +316,7 @@
 
                         <div class="skill-widget">
                             <div class="skill-widget-header">
-                                <div class="skill-icon-large">🐍</div>
+                                <div class="skill-icon-large"><i class="fab fa-python"></i></div>
                                 <div>
                                     <h3>Python</h3>
                                     <p class="skill-level">Basic</p>
@@ -338,7 +340,7 @@
 
                     <div class="about-dashboard">
                         <div class="profile-card">
-                            <div class="profile-avatar">📊</div>
+                            <div class="profile-avatar"><i class="fas fa-chart-line"></i></div>
                             <div class="profile-name">Phuc Le</div>
                             <div class="profile-role">Aspiring Data Analyst</div>
                             <div class="profile-stats">
@@ -371,7 +373,7 @@
 
                     <div class="education-grid">
                         <div class="education-card">
-                            <div class="education-icon">🎓</div>
+                            <div class="education-icon"><i class="fas fa-graduation-cap"></i></div>
                             <div class="education-content">
                                 <h3>Bachelor of Science, Computer Science</h3>
                                 <p class="education-institution">California State University Channel Islands</p>
@@ -381,7 +383,7 @@
                         </div>
 
                         <div class="education-card">
-                            <div class="education-icon">📊</div>
+                            <div class="education-icon"><i class="fas fa-chart-line"></i></div>
                             <div class="education-content">
                                 <h3>Google Data Analytics Professional Certificate</h3>
                                 <p class="education-institution">Google</p>
@@ -390,7 +392,7 @@
                         </div>
 
                         <div class="education-card">
-                            <div class="education-icon">🗄️</div>
+                            <div class="education-icon"><i class="fas fa-database"></i></div>
                             <div class="education-content">
                                 <h3>Analyst Builder MySQL Certificate</h3>
                                 <p class="education-institution">Analyst Builder</p>
@@ -399,7 +401,7 @@
                         </div>
 
                         <div class="education-card">
-                            <div class="education-icon">📈</div>
+                            <div class="education-icon"><i class="fas fa-chart-bar"></i></div>
                             <div class="education-content">
                                 <h3>Analyst Builder Power BI Certificate</h3>
                                 <p class="education-institution">Analyst Builder</p>
@@ -418,16 +420,16 @@
 
                     <div class="contact-grid">
                         <div class="contact-card">
-                            <div class="contact-icon">📧</div>
+                            <div class="contact-icon"><i class="fas fa-envelope"></i></div>
                             <div class="contact-info">
                                 <h4>Email</h4>
-                                <p>le.luke06@gmail.com</p>
-                                <a href="mailto:le.luke06@gmail.com" class="contact-button">Send Email</a>
+                                <p><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="305c551e5c455b55000670575d51595c1e535f5d">[email&#160;protected]</a></p>
+                                <a href="/cdn-cgi/l/email-protection#96faf3b8fae3fdf3a6a0d6f1fbf7fffab8f5f9fb" class="contact-button">Send Email</a>
                             </div>
                         </div>
 
                         <div class="contact-card">
-                            <div class="contact-icon">💼</div>
+                            <div class="contact-icon"><i class="fab fa-linkedin"></i></div>
                             <div class="contact-info">
                                 <h4>LinkedIn</h4>
                                 <p>Connect with me</p>
@@ -436,7 +438,7 @@
                         </div>
 
                         <div class="contact-card">
-                            <div class="contact-icon">🐙</div>
+                            <div class="contact-icon"><i class="fab fa-github"></i></div>
                             <div class="contact-info">
                                 <h4>GitHub</h4>
                                 <p>View my projects</p>
@@ -446,6 +448,19 @@
                     </div>
                 </section>
             </main>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="project-modal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalClose">&times;</span>
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <p id="modalSubtitle"></p>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
         </div>
     </div>
 
