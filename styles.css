@@ -35,12 +35,15 @@ header {
     position: sticky;
     top: 0;
     z-index: 100;
+    overflow: hidden;
 }
 
 .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    overflow: hidden;
 }
 
 /* Hamburger Menu Button */
@@ -1127,6 +1130,16 @@ footer {
 
 /* Mobile Responsive (below 768px) */
 @media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .container {
+        padding: 0 15px;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
     .logo-name {
         font-size: 1.2rem;
     }
@@ -1137,6 +1150,7 @@ footer {
 
     .kpi-section {
         grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
 
     .section-header {
@@ -1169,6 +1183,23 @@ footer {
 
     .skills-dashboard {
         grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .skill-widget {
+        padding: 1rem;
+        min-width: 0;
+    }
+
+    .skill-widget-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .skill-items {
+        font-size: 0.85rem;
     }
 
     .about-dashboard {
@@ -1186,15 +1217,22 @@ footer {
 
     .education-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
 
     .education-card {
         flex-direction: column;
         text-align: center;
+        padding: 1rem;
     }
 
     .dashboard-section {
         padding: 1.5rem;
+    }
+
+    .main-content {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
 
     .container {
@@ -1235,6 +1273,18 @@ footer {
 
 /* Extra Small Mobile (below 480px) */
 @media (max-width: 480px) {
+    .kpi-section {
+        grid-template-columns: 1fr;
+    }
+
+    .skills-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .education-grid {
+        grid-template-columns: 1fr;
+    }
+
     .kpi-card {
         padding: 1rem;
     }
@@ -1271,5 +1321,20 @@ footer {
         width: 60px;
         height: 60px;
         font-size: 2rem;
+    }
+}
+
+/* Medium Mobile (481px - 767px) - Better 2-column layout */
+@media (min-width: 481px) and (max-width: 767px) {
+    .kpi-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .skills-dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .education-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
