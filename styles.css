@@ -480,7 +480,7 @@ header {
 /* Skills Dashboard */
 .skills-dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
 }
 
@@ -1130,27 +1130,51 @@ footer {
 
 /* Mobile Responsive (below 768px) */
 @media (max-width: 768px) {
-    body {
+    * {
+        max-width: 100%;
+    }
+
+    html, body {
         overflow-x: hidden;
+        width: 100%;
+        position: relative;
     }
 
     .container {
-        padding: 0 15px;
+        padding: 0 10px;
+        max-width: 100%;
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    .main-content {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .dashboard-section {
+        padding: 1rem;
         max-width: 100%;
         overflow-x: hidden;
     }
 
     .logo-name {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .logo-role {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     .kpi-section {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+        gap: 0.75rem;
+    }
+
+    .kpi-card {
+        min-width: 0;
     }
 
     .section-header {
@@ -1172,6 +1196,10 @@ footer {
         grid-template-columns: 1fr;
     }
 
+    .project-widget {
+        min-width: 0;
+    }
+
     .project-header {
         flex-direction: column;
         gap: 0.5rem;
@@ -1183,12 +1211,13 @@ footer {
 
     .skills-dashboard {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .skill-widget {
-        padding: 1rem;
+        padding: 0.875rem;
         min-width: 0;
+        overflow: hidden;
     }
 
     .skill-widget-header {
@@ -1198,8 +1227,24 @@ footer {
         gap: 0.5rem;
     }
 
+    .skill-widget h3 {
+        font-size: 0.95rem;
+        word-break: break-word;
+    }
+
+    .skill-level {
+        font-size: 0.75rem;
+    }
+
     .skill-items {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+    }
+
+    .skill-items li {
+        padding: 0.5rem 0;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
     }
 
     .about-dashboard {
@@ -1208,31 +1253,36 @@ footer {
 
     .contact-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .contact-card {
         flex-direction: row;
         text-align: left;
+        min-width: 0;
     }
 
     .education-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .education-card {
         flex-direction: column;
         text-align: center;
-        padding: 1rem;
+        padding: 0.875rem;
+        min-width: 0;
     }
 
-    .dashboard-section {
-        padding: 1.5rem;
+    .education-icon {
+        font-size: 2.5rem;
+        width: 70px;
+        height: 70px;
     }
 
-    .main-content {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
+    .education-content h3 {
+        font-size: 0.95rem;
+        word-break: break-word;
     }
 
     .container {
