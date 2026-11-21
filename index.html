@@ -145,7 +145,7 @@ footer a{font-weight:600}
 
   <!-- EDIT: put your real email / LinkedIn here -->
   <footer>
-    <a href="mailto:le.luke06@gmail.com">Email</a>
+    <a href="#contact" id="em" data-a="moc.liamg" data-b="60ekul.el">Email</a>
     <a href="https://www.linkedin.com/in/phuc-le-6145aa375/" target="_blank" rel="noopener">LinkedIn</a>
     <span>© <span id="yr"></span> Luke Le</span>
   </footer>
@@ -171,6 +171,9 @@ bg.onclick=e=>{e.stopPropagation();setMenu(!mn.classList.contains('open'))};
 document.addEventListener('click',e=>{if(!mn.contains(e.target))setMenu(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
 document.getElementById('yr').textContent=new Date().getFullYear();
+/* email is stored backwards and only put together when someone clicks, so scrapers can't read it */
+(function(){const e=document.getElementById('em');if(!e)return;const r=x=>x.split('').reverse().join('');
+e.addEventListener('click',ev=>{ev.preventDefault();location.href='mai'+'lto:'+r(e.dataset.b)+'@'+r(e.dataset.a)});})();
 
 /* spectrum trace */
 (function(){
