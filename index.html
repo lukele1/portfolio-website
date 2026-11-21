@@ -1,470 +1,201 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phuc Le - Data Analyst Portfolio</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Luke Le · RF Technician</title>
+<meta name="description" content="Phuc (Luke) Le, RF technician commissioning public safety ERRCS / BDA systems.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#f3f5f6; --ink:#151b20; --muted:#5f6d77; --line:#d6dde1;
+  --signal:#d0601a; --link:#1f6fb8; --ok:#2e7a33;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1316; --ink:#e7ecef; --muted:#97a5ae; --line:#29333a;
+  --signal:#f08a46; --link:#6fb1f0; --ok:#76c47a; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+a{color:var(--link)}
+.wrap{max-width:760px;margin:0 auto;padding:56px max(18px,env(safe-area-inset-left,0px)) 40px}
+.kicker{font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--signal)}
+h1{font:700 clamp(46px,9vw,72px)/0.95 var(--display);margin:8px 0 12px}
+.lede{font-size:18px;color:var(--muted);margin:0;max-width:56ch}
+.scope{margin:30px 0 44px;background:#0d1217;border-radius:10px;overflow:hidden}
+.scope canvas{display:block;width:100%;height:120px}
+h2{font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.block{margin-bottom:40px}
+ul.certs{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+ul.certs li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+ul.certs .s{font:500 13px var(--mono);color:var(--muted);white-space:nowrap}
+ul.certs .s.earned{color:var(--ok)}
+.tool{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.tool b{display:block}
+.tool span{color:var(--muted);font-size:15px}
+.tool .go{font-size:22px;color:var(--signal)}
+.tool:hover b{color:var(--link)}
+.top{position:fixed;top:14px;right:max(14px,env(safe-area-inset-right,0px));z-index:10}
+.burger{width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.burger i,.burger i::before,.burger i::after{display:block;width:18px;height:2px;background:currentColor;border-radius:2px;position:relative;transition:transform .2s,background .2s}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}
+.burger i::before{top:-6px}.burger i::after{top:6px}
+.burger[aria-expanded="true"] i{background:transparent}
+.burger[aria-expanded="true"] i::before{transform:translateY(6px) rotate(45deg)}
+.burger[aria-expanded="true"] i::after{transform:translateY(-6px) rotate(-45deg)}
+.menu{position:absolute;right:0;top:52px;width:min(300px,calc(100vw - 28px));background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:none}
+.menu.open{display:block}
+.menu .lbl{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.menu a{display:block;padding:10px;border-radius:8px;text-decoration:none;color:var(--ink)}
+.menu a:hover{background:color-mix(in srgb,var(--line) 50%,transparent)}
+.menu a small{display:block;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){.burger i,.burger i::before,.burger i::after{transition:none}}
+footer{color:var(--muted);font-size:15px;display:flex;gap:18px;flex-wrap:wrap}
+:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+</style>
+<style id="look-refresh">
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+/* ===== Look refresh: riser-drawing blueprint, fire-red callouts. Styling only, no content changes. ===== */
+:root{
+  --bg:#ECF0F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#13243A; --muted:#56677A; --line:#CBD5DC; --soft:#F3F6F8; --fixed-bg:#F1F4F6;
+  --accent:#C62828; --signal:#C62828; --link:#1B5E9E; --calc:#1B5E9E; --ans:#1B5E9E; --calc-bg:#E8F0F9; --ans-bg:#E8F0F9;
+  --in-bg:#FFF6D6; --in-line:#D4A000; --hook-bg:#EEF2F6;
+  --ok:#23733A; --ok-bg:#E5F3E8; --bad:#B42318; --bad-bg:#FBEAE8; --warn:#8A5A00; --warn-bg:#FDF2D8;
+  --gain:#23733A; --gain-bg:#EAF5EC; --loss:#B42318; --loss-bg:#FBEDEB;
+  --grid:rgba(19,36,58,.045); --panel:#0E1E30;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --body:var(--sans); --display:var(--sans); --font-ui:var(--sans);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --font-num:var(--mono);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B;
+  --grid:rgba(140,180,220,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B; --grid:rgba(140,180,220,.05); color-scheme:dark}
+body{background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+input,select,button{font-family:var(--sans)}
+a{text-underline-offset:3px}
+.burger{background:var(--card)}
+.menu{border-radius:10px;box-shadow:0 18px 40px -12px rgba(13,24,35,.35)}
+.menu .lbl{font:700 12px/1.3 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--accent)}
+.menu a{font-weight:600}
+.menu a small{font-weight:400}
+.menu a[aria-current="page"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
+@media print{body{background-image:none}}
+
+.wrap{padding-top:84px}
+.kicker{font:600 15px/1.35 var(--sans);letter-spacing:0;text-transform:none;color:var(--signal);display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--signal);box-shadow:0 0 0 4px color-mix(in srgb,var(--signal) 20%,transparent)}
+h1{font-family:var(--display);font-weight:800;font-stretch:70%;font-size:clamp(56px,12vw,104px);line-height:.88;letter-spacing:-.02em;margin:16px 0 20px;color:var(--ink)}
+.lede{font-size:19px;line-height:1.6;color:var(--muted);max-width:54ch}
+.scope{margin:36px 0 48px;background:var(--panel);border-radius:8px;border:1px solid color-mix(in srgb,var(--ink) 20%,transparent);position:relative}
+.scope::after{content:"";position:absolute;inset:0;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 0 40px rgba(0,0,0,.35);pointer-events:none}
+.scope canvas{height:140px}
+h2{font:700 17px/1.3 var(--sans);font-stretch:90%;letter-spacing:0;text-transform:none;color:var(--ink);margin:0 0 12px}
+ul.certs{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:2px 18px}
+ul.certs li{padding:13px 0;font-weight:500}
+ul.certs li:last-child{border-bottom:0}
+ul.certs .s{font:600 13px var(--mono);color:var(--muted);align-self:center}
+ul.certs .s.earned{color:var(--ok)}
+footer{border-top:1px solid var(--line);padding-top:18px;font-weight:500}
+footer a{font-weight:600}
+</style>
 </head>
 <body>
-    <!-- Dashboard Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <!-- Hamburger Menu (Always Visible) -->
-                <button class="hamburger-menu" id="hamburgerMenu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+<div class="top">
+  <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i></button>
+  <nav class="menu" id="menu">
+    <div class="lbl">BDA Setting Gain</div>
+    <a href="700/">700 MHz<small>Step by step: Anritsu hookups, readings, math</small></a>
+    <a href="800/">800 MHz<small>Step by step: Anritsu hookups, readings, math</small></a>
+    <a href="uhf/">UHF<small>Step by step: Anritsu hookups, readings, math</small></a>
+    <a href="vhf/">VHF<small>Step by step: Anritsu hookups, readings, math</small></a>
+    <div class="lbl">Practice and tools</div>
+    <a href="practice/">Practice sites<small>A random site to work, 20 in all</small></a>
+    <a href="calc/">Link Budget Calculator<small>Just the math, with practice scenarios</small></a>
+    <a href="bda/">Full worksheet (older)<small>Everything on one page, plus simplex</small></a>
+    <!-- add more tools here: <a href="folder/">Name<small>short description</small></a> -->
+  </nav>
+</div>
+<div class="wrap">
+  <div class="kicker">RF Technician · Amplified Wireless Solutions (AWS)</div>
+  <h1>Luke Le</h1>
+  <p class="lede">I commission ERRCS public safety radio systems, the BDAs and DAS that keep first responders' radios working inside buildings. Computer science background, so I build my own tools for the job.</p>
 
-                <!-- Centered Logo -->
-                <a href="#overview" class="logo-center">
-                    <div class="logo-name">Phuc Le</div>
-                    <div class="logo-role">Data Analyst</div>
-                </a>
+  <div class="scope" aria-hidden="true"><canvas id="scope"></canvas></div>
 
-                <!-- Spacer for balance -->
-                <div class="header-spacer"></div>
-            </div>
-        </div>
+  <div class="block">
+    <h2>Certifications</h2>
+    <ul class="certs" id="certlist"></ul>
+  </div>
 
-        <!-- Slide-out Navigation Menu -->
-        <nav class="slide-menu" id="slideMenu">
-            <div class="slide-menu-header">
-                <h3>Navigation</h3>
-                <button class="menu-close" id="menuClose">&times;</button>
-            </div>
-            <ul class="slide-menu-links">
-                <li><a href="#overview"><i class="fas fa-chart-line"></i> Overview</a></li>
-                <li><a href="#projects"><i class="fas fa-briefcase"></i> Projects</a></li>
-                <li><a href="#skills"><i class="fas fa-tools"></i> Skills</a></li>
-                <li><a href="#about"><i class="fas fa-user"></i> About</a></li>
-                <li><a href="#education"><i class="fas fa-graduation-cap"></i> Education</a></li>
-                <li><a href="#contact"><i class="fas fa-envelope"></i> Contact</a></li>
-            </ul>
-        </nav>
 
-        <!-- Overlay -->
-        <div class="menu-overlay" id="menuOverlay"></div>
-    </header>
+  <!-- EDIT: put your real email / LinkedIn here -->
+  <footer>
+    <a href="mailto:le.luke06@gmail.com">Email</a>
+    <a href="https://www.linkedin.com/in/phuc-le-6145aa375/" target="_blank" rel="noopener">LinkedIn</a>
+    <span>© <span id="yr"></span> Luke Le</span>
+  </footer>
+</div>
 
-    <div class="container">
-        <!-- Main Dashboard Content -->
-        <main class="main-content">
-            <!-- KPI Overview Section -->
-                <section id="overview">
-                    <div class="kpi-section">
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Total Projects</span>
-                                <span class="kpi-icon"><i class="fas fa-folder"></i></span>
-                            </div>
-                            <div class="kpi-value">3</div>
-                            <div class="kpi-change">2 SQL + 1 Power BI</div>
-                        </div>
+<script>
+/* ===== EDIT YOUR CERTIFICATIONS HERE =====
+   status: "earned", or any short text like "In progress" or "Planned 2028"  */
+const CERTS = [
+  {name:"FCC GROL (Elements 1 & 3)", status:"earned"},
+  {name:"NICET Level I · IB-PSC",     status:"earned"},
+  {name:"Fiplex certification",       status:"earned"},
+  {name:"ADRF certification",         status:"earned"},
+  {name:"Comba certification",        status:"Up next"},
+  {name:"NICET Level II · IB-PSC",    status:"Planned 2027"},
+];
+document.getElementById('certlist').innerHTML=CERTS.map(c=>{
+  const e=c.status==='earned';
+  return `<li><span>${c.name}</span><span class="s${e?' earned':''}">${e?'✓ Earned':c.status}</span></li>`}).join('');
+const bg=document.getElementById('burger'),mn=document.getElementById('menu');
+function setMenu(o){mn.classList.toggle('open',o);bg.setAttribute('aria-expanded',o)}
+bg.onclick=e=>{e.stopPropagation();setMenu(!mn.classList.contains('open'))};
+document.addEventListener('click',e=>{if(!mn.contains(e.target))setMenu(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
+document.getElementById('yr').textContent=new Date().getFullYear();
 
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Data Records Analyzed</span>
-                                <span class="kpi-icon"><i class="fas fa-chart-bar"></i></span>
-                            </div>
-                            <div class="kpi-value">36K+</div>
-                            <div class="kpi-change positive">Across all projects</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Core Tools</span>
-                                <span class="kpi-icon"><i class="fas fa-bolt"></i></span>
-                            </div>
-                            <div class="kpi-value">3</div>
-                            <div class="kpi-change">Excel, MySQL, Power BI</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Career Goal</span>
-                                <span class="kpi-icon"><i class="fas fa-bullseye"></i></span>
-                            </div>
-                            <div class="kpi-value">100%</div>
-                            <div class="kpi-change positive">Data Analyst Focus</div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Projects Dashboard Section -->
-                <section id="projects" class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">My Projects</h2>
-                        <div class="filter-buttons">
-                            <button class="filter-btn active" data-filter="all">All</button>
-                            <button class="filter-btn" data-filter="sql">SQL Analysis</button>
-                            <button class="filter-btn" data-filter="powerbi">Power BI</button>
-                        </div>
-                    </div>
-
-                    <div class="projects-grid">
-                        <!-- World Life Expectancy Project -->
-                        <div class="project-widget" data-category="sql">
-                            <div class="project-header">
-                                <div>
-                                    <h3>World Life Expectancy Analysis</h3>
-                                    <p class="project-subtitle">Global Health Data Analysis</p>
-                                </div>
-                                <span class="project-status">Completed</span>
-                            </div>
-                            <div class="project-metrics">
-                                <div class="metrics-row">
-                                    <div class="metric">
-                                        <div class="metric-value">193</div>
-                                        <div class="metric-label">Countries</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="metric-value">15 Yrs</div>
-                                        <div class="metric-label">Time Span</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="metric-value">2,941</div>
-                                        <div class="metric-label">Records</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="project-body">
-                                <p class="project-description">Comprehensive analysis of global life expectancy data exploring relationships between life expectancy and socioeconomic factors. Discovered 13-year life expectancy gap between developed and developing nations.</p>
-                                <div class="tech-stack">
-                                    <span class="tech-badge">MySQL</span>
-                                    <span class="tech-badge">Data Cleaning</span>
-                                    <span class="tech-badge">Window Functions</span>
-                                    <span class="tech-badge">Statistical Analysis</span>
-                                </div>
-                                <div class="project-actions">
-                                    <button class="view-details-btn primary-btn" data-project="world-life-expectancy">View Project</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- US Household Income Analysis -->
-                        <div class="project-widget" data-category="sql">
-                            <div class="project-header">
-                                <div>
-                                    <h3>US Household Income Analysis</h3>
-                                    <p class="project-subtitle">Geographic & Economic Patterns</p>
-                                </div>
-                                <span class="project-status">Completed</span>
-                            </div>
-                            <div class="project-metrics">
-                                <div class="metrics-row">
-                                    <div class="metric">
-                                        <div class="metric-value">32K+</div>
-                                        <div class="metric-label">Records</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="metric-value">50</div>
-                                        <div class="metric-label">States</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="metric-value">13 Yrs</div>
-                                        <div class="metric-label">Gap Found</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="project-body">
-                                <p class="project-description">Exploratory data analysis of US Census data examining geographic and economic patterns across states, counties, and community types. Revealed substantial urban-rural income divide and coastal vs. inland disparities.</p>
-                                <div class="tech-stack">
-                                    <span class="tech-badge">MySQL</span>
-                                    <span class="tech-badge">Data Cleaning</span>
-                                    <span class="tech-badge">Aggregate Functions</span>
-                                    <span class="tech-badge">Geographic Analysis</span>
-                                </div>
-                                <div class="project-actions">
-                                    <button class="view-details-btn primary-btn" data-project="us-household-income">View Project</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- HR Analytics Dashboard -->
-                        <div class="project-widget" data-category="powerbi">
-                            <div class="project-header">
-                                <div>
-                                    <h3>HR Analytics Dashboard</h3>
-                                    <p class="project-subtitle">Employee Attrition Analysis</p>
-                                </div>
-                                <span class="project-status">Completed</span>
-                            </div>
-                            <div class="project-metrics">
-                                <div class="metrics-row">
-                                    <div class="metric">
-                                        <div class="metric-value">1,470</div>
-                                        <div class="metric-label">Employees</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="metric-value">16%</div>
-                                        <div class="metric-label">Attrition Rate</div>
-                                    </div>
-                                    <div class="metric">
-                                        <div class="metric-value">238</div>
-                                        <div class="metric-label">Departed</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="project-body">
-                                <p class="project-description">Interactive Power BI dashboard analyzing HR employee attrition patterns across departments, demographics, and compensation levels. Identified salary and early tenure as key attrition drivers.</p>
-                                <div class="tech-stack">
-                                    <span class="tech-badge">Power BI</span>
-                                    <span class="tech-badge">DAX</span>
-                                    <span class="tech-badge">Power Query</span>
-                                    <span class="tech-badge">HR Analytics</span>
-                                </div>
-                                <div class="project-actions">
-                                    <button class="view-details-btn primary-btn" data-project="hr-analytics">View Project</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Skills Dashboard Section -->
-                <section id="skills" class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">Technical Skills</h2>
-                    </div>
-
-                    <div class="skills-dashboard">
-                        <!-- Data Analytics Skills -->
-                        <div class="skill-widget">
-                            <div class="skill-widget-header">
-                                <div class="skill-icon-large"><i class="fas fa-chart-pie"></i></div>
-                                <div>
-                                    <h3>Power BI</h3>
-                                    <p class="skill-level">Intermediate</p>
-                                </div>
-                            </div>
-                            <ul class="skill-items">
-                                <li>Dashboard Creation</li>
-                                <li>Data Modeling</li>
-                                <li>DAX Functions</li>
-                                <li>Power Query Transformations</li>
-                            </ul>
-                        </div>
-
-                        <div class="skill-widget">
-                            <div class="skill-widget-header">
-                                <div class="skill-icon-large"><i class="fas fa-database"></i></div>
-                                <div>
-                                    <h3>MySQL</h3>
-                                    <p class="skill-level">Intermediate</p>
-                                </div>
-                            </div>
-                            <ul class="skill-items">
-                                <li>Window Functions (ROW_NUMBER, PARTITION BY)</li>
-                                <li>Joins & Subqueries</li>
-                                <li>Data Cleaning & ETL</li>
-                                <li>Aggregate Functions</li>
-                            </ul>
-                        </div>
-
-                        <div class="skill-widget">
-                            <div class="skill-widget-header">
-                                <div class="skill-icon-large"><i class="fas fa-file-excel"></i></div>
-                                <div>
-                                    <h3>Excel</h3>
-                                    <p class="skill-level">Advanced</p>
-                                </div>
-                            </div>
-                            <ul class="skill-items">
-                                <li>Data Analysis & Visualization</li>
-                                <li>Pivot Tables & Charts</li>
-                                <li>Advanced Formulas</li>
-                                <li>Data Validation</li>
-                            </ul>
-                        </div>
-
-                        <!-- Web Development Skills -->
-                        <div class="skill-widget">
-                            <div class="skill-widget-header">
-                                <div class="skill-icon-large"><i class="fab fa-html5"></i></div>
-                                <div>
-                                    <h3>HTML & CSS</h3>
-                                    <p class="skill-level">4 Months Experience</p>
-                                </div>
-                            </div>
-                            <ul class="skill-items">
-                                <li>Responsive Design</li>
-                                <li>Modern CSS & Flexbox</li>
-                                <li>Web Layouts</li>
-                                <li>Styling & Animations</li>
-                            </ul>
-                        </div>
-
-                        <div class="skill-widget">
-                            <div class="skill-widget-header">
-                                <div class="skill-icon-large"><i class="fab fa-js"></i></div>
-                                <div>
-                                    <h3>JavaScript</h3>
-                                    <p class="skill-level">4 Months Experience</p>
-                                </div>
-                            </div>
-                            <ul class="skill-items">
-                                <li>DOM Manipulation</li>
-                                <li>Event Handling</li>
-                                <li>Interactive Features</li>
-                                <li>Web Functionality</li>
-                            </ul>
-                        </div>
-
-                        <div class="skill-widget">
-                            <div class="skill-widget-header">
-                                <div class="skill-icon-large"><i class="fab fa-python"></i></div>
-                                <div>
-                                    <h3>Python</h3>
-                                    <p class="skill-level">Basic</p>
-                                </div>
-                            </div>
-                            <ul class="skill-items">
-                                <li>Basic Syntax</li>
-                                <li>Variables & Data Types</li>
-                                <li>Control Flow</li>
-                                <li>Functions</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- About Dashboard Section -->
-                <section id="about" class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">About Me</h2>
-                    </div>
-
-                    <div class="about-dashboard">
-                        <div class="profile-card">
-                            <div class="profile-avatar"><i class="fas fa-chart-line"></i></div>
-                            <div class="profile-name">Phuc Le</div>
-                            <div class="profile-role">Aspiring Data Analyst</div>
-                            <div class="profile-stats">
-                                <div class="stat-item">
-                                    <div class="stat-value">3</div>
-                                    <div class="stat-label">Projects</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">36K+</div>
-                                    <div class="stat-label">Records</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="about-content-card">
-                            <h3>Hello, I'm Phuc Le</h3>
-                            <p>I'm an aspiring data analyst with a passion for turning raw data into meaningful insights. My core analytical toolkit includes Excel, MySQL, and Power BI, which I use to analyze data and create compelling visualizations.</p>
-                            <p>I have 4 months of freelance web development experience in HTML, CSS, and JavaScript, which has given me strong problem-solving skills, attention to detail, and the ability to work independently. I'm now transitioning into data analytics, where I can combine my technical skills with analytical thinking.</p>
-                            <p>I've completed 3 data analysis projects using Excel and MySQL (analyzing over 36,000 records across multiple datasets), and created 1 interactive Power BI dashboard for HR analytics. My projects include global life expectancy analysis, US household income patterns, and employee attrition insights.</p>
-                            <p>I'm continuously learning new techniques in SQL window functions, DAX calculations, and data visualization best practices to enhance my analytical capabilities and deliver data-driven insights.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Education & Certifications Section -->
-                <section id="education" class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">Education & Certifications</h2>
-                    </div>
-
-                    <div class="education-grid">
-                        <div class="education-card">
-                            <div class="education-icon"><i class="fas fa-graduation-cap"></i></div>
-                            <div class="education-content">
-                                <h3>Bachelor of Science, Computer Science</h3>
-                                <p class="education-institution">California State University Channel Islands</p>
-                                <p class="education-location">Camarillo, CA</p>
-                                <p class="education-year">2024</p>
-                            </div>
-                        </div>
-
-                        <div class="education-card">
-                            <div class="education-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="education-content">
-                                <h3>Google Data Analytics Professional Certificate</h3>
-                                <p class="education-institution">Google</p>
-                                <p class="education-year">2025</p>
-                            </div>
-                        </div>
-
-                        <div class="education-card">
-                            <div class="education-icon"><i class="fas fa-database"></i></div>
-                            <div class="education-content">
-                                <h3>Analyst Builder MySQL Certificate</h3>
-                                <p class="education-institution">Analyst Builder</p>
-                                <p class="education-year">2026</p>
-                            </div>
-                        </div>
-
-                        <div class="education-card">
-                            <div class="education-icon"><i class="fas fa-chart-bar"></i></div>
-                            <div class="education-content">
-                                <h3>Analyst Builder Power BI Certificate</h3>
-                                <p class="education-institution">Analyst Builder</p>
-                                <p class="education-year">2026</p>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                </section>
-
-                <!-- Contact Dashboard Section -->
-                <section id="contact" class="dashboard-section">
-                    <div class="section-header">
-                        <h2 class="section-title">Get In Touch</h2>
-                    </div>
-
-                    <div class="contact-grid">
-                        <div class="contact-card">
-                            <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-                            <div class="contact-info">
-                                <h4>Email</h4>
-                                <p><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c4a8a1eaa8b1afa1f4f284a3a9a5ada8eaa7aba9">[email&#160;protected]</a></p>
-                                <a href="/cdn-cgi/l/email-protection#0b676e25677e606e3b3d4b6c666a626725686466" class="contact-button">Send Email</a>
-                            </div>
-                        </div>
-
-                        <div class="contact-card">
-                            <div class="contact-icon"><i class="fab fa-linkedin"></i></div>
-                            <div class="contact-info">
-                                <h4>LinkedIn</h4>
-                                <p>Connect with me</p>
-                                <a href="https://www.linkedin.com/in/phuc-le-6145aa375/" class="contact-button" target="_blank">View Profile</a>
-                            </div>
-                        </div>
-
-                        <div class="contact-card">
-                            <div class="contact-icon"><i class="fab fa-github"></i></div>
-                            <div class="contact-info">
-                                <h4>GitHub</h4>
-                                <p>View my projects</p>
-                                <a href="https://github.com/lukele1/Data--Analytics-Portfolio" class="contact-button" target="_blank">Visit Repository</a>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
-    </div>
-
-    <!-- Project Modal -->
-    <div id="projectModal" class="project-modal">
-        <div class="modal-content">
-            <span class="modal-close" id="modalClose">&times;</span>
-            <div class="modal-header">
-                <h2 id="modalTitle"></h2>
-                <p id="modalSubtitle"></p>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Content will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-        <div
+/* spectrum trace */
+(function(){
+  const cv=document.getElementById('scope'),ctx=cv.getContext('2d');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const chans=[[.18,-58],[.30,-74],[.44,-66],[.58,-77],[.72,-71],[.85,-80]];
+  let t=0;
+  function size(){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio}
+  function draw(){
+    const W=cv.width,H=cv.height,d=devicePixelRatio;ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(120,150,170,.15)';ctx.lineWidth=1;
+    for(let i=1;i<10;i++){const x=W*i/10;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let i=1;i<4;i++){const y=H*i/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    const y=v=>H*((-45-v)/62);
+    ctx.beginPath();ctx.lineWidth=1.5*d;ctx.strokeStyle='#5fb0ff';
+    for(let x=0;x<=W;x+=2*d){
+      const f=x/W;let v=-99+Math.sin(f*90+t*.7)*1.2+(Math.random()-.5)*2.4;
+      for(const [c,p] of chans){if(c===.18||Math.sin(t*.9+c*20)>.55)v=Math.max(v,p-Math.pow((f-c)*900,2))}
+      x?ctx.lineTo(x,y(v)):ctx.moveTo(x,y(v));
+    }
+    ctx.stroke();
+    t+=.05;if(!reduce)requestAnimationFrame(draw);
+  }
+  size();addEventListener('resize',()=>{size();if(reduce)draw()});draw();
+})();
+</script>
+</body>
+</html>

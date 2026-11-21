@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BDA Setting Gain · 800 MHz</title>
+<meta name="description" content="Step-by-step BDA commissioning worksheet for 800 MHz: how to hook up the Anritsu, where to get each reading, and the math for DL and UL gain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f6; --card:#fff; --ink:#151b20; --muted:#5d6b75; --line:#d5dce0; --soft:#f6f8f9;
+  --in-bg:#fff8e6; --in-line:#d9a520; --calc-bg:#eaf1fa; --calc:#1f5fa8; --accent:#cf5d16;
+  --hook-bg:#eef2f6; --ok:#2e7a33; --ok-bg:#e9f5ea; --bad:#b3261e; --bad-bg:#fbecea; --warn:#8a6100; --warn-bg:#fdf3dc;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1418; --card:#171e24; --ink:#e6ecef; --muted:#9aa8b1; --line:#2a343b; --soft:#1b2329;
+  --in-bg:#2a2412; --in-line:#c99a1e; --calc-bg:#182838; --calc:#7fb6f2; --accent:#f08a46;
+  --hook-bg:#1c252c; --ok:#79c77d; --ok-bg:#16291a; --bad:#f08a80; --bad-bg:#33191a; --warn:#e2b552; --warn-bg:#2e2510; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+a{color:var(--calc)}
+.wrap{max-width:900px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 90px}
+/* top */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:900px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
+.top .home{font-weight:700;text-decoration:none;color:var(--ink);margin-right:auto;white-space:nowrap}
+.bands{display:flex;gap:4px}
+.bands a{font:600 13px var(--mono);text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 9px;background:var(--card)}
+.bands a[aria-current="page"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.burger{flex:none;width:40px;height:40px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center;position:relative}
+.burger i,.burger i::before,.burger i::after{display:block;width:17px;height:2px;background:currentColor;border-radius:2px;position:relative}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}.burger i::before{top:-6px}.burger i::after{top:6px}
+.menu{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:54px;width:min(300px,calc(100vw - 32px));background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none}
+.menu.open{display:block}
+.menu .lbl{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.menu a{display:block;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink)}
+.menu a:hover{background:var(--soft)} .menu a small{display:block;color:var(--muted);font-size:12.5px}
+@media (max-width:560px){.bands{display:none}}
+header h1{font-size:clamp(26px,5vw,34px);line-height:1.1;margin:14px 0 4px}
+header p{color:var(--muted);margin:0 0 12px;max-width:68ch}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.tools button{font:600 14px var(--sans);min-height:38px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tools button.danger{color:var(--bad)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.legend .l1::before{background:var(--in-bg);border:1.5px solid var(--in-line)} .legend .l2::before{background:var(--calc-bg);border:1.5px solid var(--calc)}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:17px;margin:0 0 6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card h2 .n{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 6px;border-radius:6px;background:var(--ink);color:var(--card);font:600 13px var(--mono)}
+.tag{margin-left:auto;font:600 11px var(--mono);border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
+.tag.off{color:var(--bad);border-color:var(--bad)}
+.use{font-size:13.5px;color:var(--muted);margin:0 0 8px}.use b{color:var(--ink)}
+.ins{margin:4px 0 8px;padding-left:20px}.ins li{margin:3px 0}
+.hook{background:var(--hook-bg);border-left:4px solid var(--ink);border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}
+.hook .t{font:600 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.hook ol{margin:0;padding-left:20px}.hook li{margin:3px 0}
+details.how{border:1px solid var(--line);border-radius:8px;margin:8px 0;background:var(--soft)}
+details.how summary{cursor:pointer;padding:8px 12px;font-weight:600;font-size:14px}
+details.how .b{padding:0 12px 10px;font-size:13.5px}
+table.set{border-collapse:collapse;width:100%;font-size:13px}
+table.set td{border-top:1px solid var(--line);padding:5px 6px;vertical-align:top}
+table.set td:first-child{font-weight:600;width:34%}
+.port{display:inline-block;border:1.4px solid currentColor;border-radius:4px;padding:0 5px;font:600 12px var(--mono);white-space:nowrap}
+/* fields */
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 10px;margin:8px 0}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fld label{font-size:12.5px;color:var(--muted);line-height:1.25}
+.fld .row{display:flex;gap:6px}
+input,select{font:16px var(--mono);min-height:40px;width:100%;min-width:0;padding:6px 8px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink)}
+select{font-family:var(--sans);font-size:15px}
+.fld .row select{width:auto;flex:none;border-color:var(--line);background:var(--card)}
+input::placeholder{color:var(--muted);opacity:.75}
+/* equations */
+.eq{border:1.5px dashed var(--line);border-radius:10px;padding:9px 10px;margin:9px 0;background:var(--soft)}
+.eq .f{font-weight:600;font-size:14px;margin-bottom:6px}
+.eq .row{display:flex;align-items:flex-end;gap:6px}
+.eq .cell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:3px}
+.eq .cell .lb{font-size:11.5px;color:var(--muted);line-height:1.2;min-height:28px;display:flex;align-items:flex-end}
+.eq .cell .v{min-height:40px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 16px var(--mono);border:1.5px solid var(--line);background:var(--card);padding:0 4px;overflow:hidden;white-space:nowrap}
+.eq .cell .v.calc{background:var(--calc-bg);border-color:var(--calc);color:var(--calc)}
+.eq .cell .v.fixed{color:var(--muted)}
+.eq .cell input{text-align:center}
+.eq .cell.res .v{border-width:2.5px;border-color:var(--calc);background:var(--calc-bg);color:var(--calc);font-size:17px}
+.eq .cell.res .lb{font-weight:700;color:var(--ink)}
+.eq .op{flex:none;font:700 20px var(--mono);padding-bottom:7px;width:16px;text-align:center;color:var(--muted)}
+@media (max-width:640px){
+  .eq .row{flex-wrap:wrap}
+  .eq .cell{flex:1 1 calc(50% - 24px)}
+  .eq .op{width:12px}
+  .eq .cell.res{flex-basis:100%}
+  .eq .op.eqs{display:none}
+}
+.verdict{border-radius:8px;padding:7px 10px;font-weight:600;font-size:14px;margin:8px 0 2px}
+.verdict.ok{background:var(--ok-bg);color:var(--ok)} .verdict.bad{background:var(--bad-bg);color:var(--bad)} .verdict.warn{background:var(--warn-bg);color:var(--warn)} .verdict.na{background:var(--soft);color:var(--muted);font-weight:500}
+.note{font-size:13px;color:var(--muted);margin:6px 0 0}
+.rule{border:1.5px solid var(--in-line);background:var(--in-bg);border-radius:8px;padding:9px 12px;margin:10px 0;font-size:13.5px}
+.rule b.t{display:block;margin-bottom:3px}
+.rule ol{margin:0;padding-left:20px}.rule li{margin:3px 0}
+/* tables */
+.tw{overflow-x:auto;margin:8px 0}
+table.grid{border-collapse:collapse;width:100%;min-width:520px}
+table.grid th{font-size:12px;text-align:left;color:var(--muted);font-weight:600;padding:4px 5px;border-bottom:1px solid var(--line)}
+table.grid td{padding:3px 4px;border-bottom:1px solid var(--line)}
+table.grid td.out{font:600 14px var(--mono);white-space:nowrap}
+table.grid .x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;min-height:36px;min-width:36px}
+button.add{font:600 13.5px var(--sans);border:1px dashed var(--line);background:none;color:var(--calc);border-radius:8px;padding:7px 12px;cursor:pointer;min-height:38px}
+.chk{display:flex;gap:9px;align-items:flex-start;padding:6px 0;font-size:14.5px}
+.chk input{width:20px;height:20px;min-height:0;flex:none;margin-top:2px;accent-color:var(--ok)}
+/* result bar */
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.1)}
+#bar .in{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:7px max(12px,env(safe-area-inset-left,0px)) calc(7px + env(safe-area-inset-bottom,0px))}
+#bar div{text-align:center;font-size:11px;color:var(--muted);line-height:1.2}
+#bar b{display:block;font:600 15px var(--mono);color:var(--ink)}
+#bar .ok b{color:var(--ok)} #bar .bad b{color:var(--bad)}
+footer{font-size:13px;color:var(--muted);margin-top:20px}
+:focus-visible{outline:2px solid var(--calc);outline-offset:2px}
+@media print{
+  .top,#bar,.tools,button.add,table.grid .x{display:none!important}
+  body{background:#fff;color:#000;font-size:11px}
+  .card{break-inside:avoid;border-color:#999}
+  details.how{display:none}
+  .wrap{padding:0}
+}
+</style>
+<style id="look-refresh">
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+/* ===== Look refresh: riser-drawing blueprint, fire-red callouts. Styling only, no content changes. ===== */
+:root{
+  --bg:#ECF0F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#13243A; --muted:#56677A; --line:#CBD5DC; --soft:#F3F6F8; --fixed-bg:#F1F4F6;
+  --accent:#C62828; --signal:#C62828; --link:#1B5E9E; --calc:#1B5E9E; --ans:#1B5E9E; --calc-bg:#E8F0F9; --ans-bg:#E8F0F9;
+  --in-bg:#FFF6D6; --in-line:#D4A000; --hook-bg:#EEF2F6;
+  --ok:#23733A; --ok-bg:#E5F3E8; --bad:#B42318; --bad-bg:#FBEAE8; --warn:#8A5A00; --warn-bg:#FDF2D8;
+  --gain:#23733A; --gain-bg:#EAF5EC; --loss:#B42318; --loss-bg:#FBEDEB;
+  --grid:rgba(19,36,58,.045); --panel:#0E1E30;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --body:var(--sans); --display:var(--sans); --font-ui:var(--sans);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --font-num:var(--mono);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B;
+  --grid:rgba(140,180,220,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B; --grid:rgba(140,180,220,.05); color-scheme:dark}
+body{background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+input,select,button{font-family:var(--sans)}
+a{text-underline-offset:3px}
+.burger{background:var(--card)}
+.menu{border-radius:10px;box-shadow:0 18px 40px -12px rgba(13,24,35,.35)}
+.menu .lbl{font:700 12px/1.3 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--accent)}
+.menu a{font-weight:600}
+.menu a small{font-weight:400}
+.menu a[aria-current="page"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
+@media print{body{background-image:none}}
+
+.top{background:color-mix(in srgb,var(--card) 90%,transparent)}
+.top .home{font-weight:800;font-stretch:85%;font-size:16px}
+.bands a{font:700 13px var(--sans);border-radius:6px;padding:6px 10px}
+.bands a[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:#fff}
+header h1{font-weight:800;font-stretch:72%;font-size:clamp(34px,6.5vw,52px);line-height:.95;letter-spacing:-.015em;margin:22px 0 10px}
+header p{font-size:15.5px;line-height:1.6}
+.tools button{font-weight:600;border-radius:8px}
+.legend{font-weight:500}
+.card{border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.card h2{font-size:19px;font-weight:700;font-stretch:90%;gap:10px;margin-bottom:10px}
+.card h2 .n{background:transparent;color:var(--accent);border:2px solid var(--accent);border-radius:999px;min-width:34px;height:34px;padding:0 7px;font:700 13px var(--mono)}
+.tag{font:700 11px var(--sans);letter-spacing:.02em;padding:3px 9px}
+.tag.off{background:var(--bad-bg)}
+.hook{border-left-color:var(--ink);border-radius:4px 8px 8px 4px;padding:10px 14px}
+.hook .t{font:700 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink)}
+.port{font:700 11.5px var(--mono);border-radius:4px;padding:1px 6px;background:var(--card)}
+details.how summary{font-weight:700}
+.eq{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--soft)}
+.eq .f{font-weight:700;font-size:14.5px}
+.eq .op{color:var(--accent)}
+.verdict{border-radius:8px;padding:9px 12px}
+.rule{border-radius:10px}
+table.grid th{font-weight:700}
+button.add{font-weight:700}
+#bar{background:var(--panel);border-top:2px solid var(--accent);box-shadow:none}
+#bar div{color:rgba(228,235,241,.62)}
+#bar b{color:#fff}
+#bar .ok b{color:#7BD88F} #bar .bad b{color:#FF8A80}
+footer{line-height:1.6}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="home" href="../">← lehongphuc.net</a>
+  <nav class="bands" aria-label="Bands"><a href="../700/">700</a><a href="../800/" aria-current="page">800</a><a href="../uhf/">UHF</a><a href="../vhf/">VHF</a></nav>
+  <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i></button>
+  <nav class="menu" id="menu">
+    <div class="lbl">BDA Setting Gain</div>
+    <a href="../700/">700 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../800/" aria-current="page">800 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../uhf/">UHF<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../vhf/">VHF<small>Step by step: Anritsu hookups, readings, math</small></a>
+    <div class="lbl">Practice and tools</div>
+    <a href="../practice/">Practice sites<small>A random site every refresh</small></a>
+    <a href="../calc/">Link Budget Calculator<small>Just the math, with practice scenarios</small></a>
+    <a href="../">Home</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+<header>
+  <h1>BDA Setting Gain · 800 MHz</h1>
+  <p>Go top to bottom. Type your readings in the <b>yellow</b> boxes, the <b>blue</b> boxes fill in from earlier steps. This is just the paper math, the grid walk and talk test are what actually pass the system.</p>
+</header>
+<div class="tools">
+  <button type="button" id="print">Print / save PDF</button>
+  <button type="button" class="danger" id="clear">Clear this band</button>
+</div>
+<div class="legend"><span class="l1">You type it</span><span class="l2">Worked out for you</span></div>
+<div id="app"></div>
+<footer>All antenna gains are in dBd (dBd = dBi − 2.15). Numbers save in this browser only, per band. Check against your AHJ rules, the design and your BDA manual.</footer>
+</div>
+<div id="bar"><div class="in" id="barin"></div></div>
+
+<script>
+const BAND = {"key": "800", "slug": "800", "name": "800 MHz", "dl": "851–861 MHz", "ulrule": "UL = DL − 45 MHz", "sweep": "about 800–870 MHz", "cable": "2.2", "radio": 33, "cc": "Trunked (P25): the control channel is always on, voice channels only key during calls.", "fmid": 856, "uloff": -45, "fex": "851.0125", "dlStart": 851, "dlStop": 861, "ulph": "auto (DL − 45)"};
+const KEY = 'bda-gain-'+BAND.key;
+const $ = id => document.getElementById(id);
+const L = Math.log10;
+const isN = x => typeof x==='number' && isFinite(x);
+const f1 = x => isN(x) ? (Math.round(x*10)/10).toFixed(1).replace('-','−') : '—';
+const lowest = a => { a=a.filter(isN); return a.length?Math.min(...a):null; };
+const DEF = () => ({site:{},s:{cl:BAND.cable,tgt:10},chans:[{},{},{},{}],ants:[{},{},{}],checks:{}});
+let S; try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){} if(!S||!S.s) S=DEF();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const num = v => { if(v===''||v===null||v===undefined) return null; const n=Number(String(v).replace(/[−–]/g,'-')); return isFinite(n)?n:null; };
+const g = k => num(S.s[k]);
+
+/*CALC-START*/
+function calc(s,chans,ants,band){
+  const v=k=>num(s[k]); const o={};
+  const ra=v('readA'), rb=v('readB'), inj=isN(v('inj'))?v('inj'):null;
+  const reads=[ra,rb].filter(isN);
+  o.readW=reads.length?Math.max(...reads):null;
+  o.iso=(isN(inj)&&isN(o.readW))?inj-o.readW:null; o.mg=isN(o.iso)?o.iso-20:null;
+  o.cap=v('cap');
+  o.gd=v('gd');
+  o.loss=(isN(v('cft'))&&isN(v('cl')))?v('cft')*v('cl')/100+(v('pad')||0):null;
+  const fs=chans.map(c=>num(c.f)).filter(isN), ps=chans.map(c=>num(c.p)).filter(isN);
+  o.nch=fs.length; o.strong=ps.length?Math.max(...ps):null; o.weak=ps.length?Math.min(...ps):null;
+  o.fdl=fs.length?Math.max(...fs):band.fmid;
+  o.tp=(isN(v('tpA'))&&isN(v('tpG')))?v('tpA')-(v('tpLoss')||0)-v('tpG'):null;
+  o.pmax=isN(v('pmax'))?(s.pmaxu==='W'?10*L(v('pmax')*1000):v('pmax')):null;
+  o.tlog=o.nch>0?10*L(o.nch):null;
+  o.ceil=(isN(o.pmax)&&isN(o.tlog))?o.pmax-o.tlog:null;
+  o.tgt=isN(v('tgt'))?v('tgt'):10;
+  o.need=isN(o.strong)?o.tgt-o.strong:null;
+  o.dlsug=isN(o.need)?lowest([o.need,o.cap,o.mg]):null;
+  o.dlset=isN(v('dlset'))?v('dlset'):o.dlsug;
+  o.strongOut=(isN(o.strong)&&isN(o.dlset))?o.strong+o.dlset:null;
+  o.weakOut=(isN(o.weak)&&isN(o.dlset))?(isN(o.ceil)?Math.min(o.weak+o.dlset,o.ceil):o.weak+o.dlset):null;
+  o.dasq=(isN(v('dft'))&&isN(v('dl')))?v('dft')/100*v('dl')+(v('taps')||0)+(v('th')||0)*1+(v('sp')||0)*3.3+(v('jmp')||0):null;
+  o.das=isN(v('dasOv'))?v('dasOv'):o.dasq;
+  o.gs=v('gs'); o.N=v('N'); o.dr=v('dr');
+  o.ghz=20*L(o.fdl/1000);
+  o.wall=(isN(o.N)&&isN(o.dr)&&o.dr>0)?10*o.N*L(o.dr/3.28):null;
+  o.pl=isN(o.wall)?32.5+o.ghz+o.wall:null;
+  o.rx=(isN(o.weakOut)&&isN(o.das)&&isN(o.gs)&&isN(o.pl))?o.weakOut-o.das+o.gs-o.pl:null;
+  o.radio=isN(v('radio'))?(s.radiou==='W'?10*L(v('radio')*1000):v('radio')):band.radio;
+  o.ulin=(isN(o.pl)&&isN(o.gs)&&isN(o.das))?o.radio-o.pl+o.gs-o.das:null;
+  o.ulf=isN(v('ulf'))?v('ulf'):(o.fdl+band.uloff);
+  o.mhz=20*L(o.ulf); o.mi=v('mi'); o.milog=(isN(o.mi)&&o.mi>0)?20*L(o.mi):null;
+  o.fspl=isN(o.milog)?o.mhz+o.milog+36.6:null;
+  const okUL=isN(o.ulin)&&isN(o.loss)&&isN(o.gd)&&isN(o.fspl);
+  o.mn=okUL?-95-o.ulin+o.loss-o.gd+o.fspl:null;
+  o.nf=v('nf');
+  o.mx=(isN(o.fspl)&&isN(o.loss)&&isN(o.gd)&&isN(o.nf))?o.fspl+o.loss-o.gd-o.nf-20:null;
+  o.lim=isN(o.mx)?lowest([o.cap,o.mg,o.mx]):null;
+  if(isN(o.lim)&&isN(o.mn)){let X=Math.min(o.lim,o.mx-3); if(X<o.mn) X=o.lim; if(Math.floor(X)>=o.mn) X=Math.floor(X); o.ulsug=X;} else o.ulsug=null;
+  o.ulset=isN(v('ulset'))?v('ulset'):o.ulsug;
+  o.tower=(okUL&&isN(o.ulset))?o.ulin+o.ulset-o.loss+o.gd-o.fspl:null;
+  o.nzm=(isN(o.mx)&&isN(o.ulset))?o.mx-o.ulset:null;
+  o.gchk=(isN(v('gOut'))&&isN(v('gIn')))?v('gOut')-v('gIn'):null;
+  return o;
+}
+/*CALC-END*/
+
+// ---------- rendering helpers ----------
+const P = t => `<span class="port">${t}</span>`;
+const inp = (k,ph='',scope='s') => `<input data-k="${scope}.${k}" id="i-${scope}-${k}" inputmode="decimal" placeholder="${ph}" value="${(S[scope][k]??'')}">`;
+const fld = (k,label,ph='',extra='') => `<div class="fld"><label for="i-s-${k}">${label}</label>${extra||inp(k,ph)}</div>`;
+// equation: terms [op,label,kind,val] kind: 'in' (key), 'calc' (output key), 'fixed' (text)
+function eq(formula,terms,resLabel,resKey){
+  let h=`<div class="eq"><div class="f">${formula}</div><div class="row">`;
+  terms.forEach(([op,lb,kind,val],i)=>{
+    if(i) h+=`<div class="op">${op}</div>`;
+    let box;
+    if(kind==='in') box=inp(val);
+    else if(kind==='calc') box=`<div class="v calc" data-o="${val}">—</div>`;
+    else box=`<div class="v fixed">${val}</div>`;
+    h+=`<div class="cell"><div class="lb">${lb}</div>${box}</div>`;
+  });
+  return h+`<div class="op eqs">=</div><div class="cell res"><div class="lb">${resLabel}</div><div class="v" data-o="${resKey}">—</div></div></div></div>`;
+}
+const hook=(title,items)=>`<div class="hook"><div class="t">${title}</div><ol>${items.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;
+const how=(title,rows)=>`<details class="how"><summary>${title}</summary><div class="b"><table class="set">${rows.map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div></details>`;
+const verdictBox=id=>`<div class="verdict na" id="v-${id}">Fill in the boxes above to see this.</div>`;
+const card=(n,title,body,tag='')=>`<section class="card" id="step-${n}"><h2><span class="n">${n}</span>${title}${tag?`<span class="tag${tag==='RF OFF'||tag==='BDA OFF'?' off':''}">${tag}</span>`:''}</h2>${body}</section>`;
+const chk=(k,t)=>`<label class="chk"><input type="checkbox" data-chk="${k}" ${S.checks[k]?'checked':''}><span>${t}</span></label>`;
+
+function render(){
+  const B=BAND, H=[];
+  H.push(card('','Site',`<div class="fields">
+    ${['name:Site','date:Date','tech:Tech','model:BDA model'].map(x=>{const [k,l]=x.split(':');return `<div class="fld"><label for="i-site-${k}">${l}</label><input data-k="site.${k}" id="i-site-${k}" value="${S.site[k]??''}" style="font-family:var(--sans)"></div>`}).join('')}
+    ${fld('mi','Miles to tower','e.g. 3')}${fld('cap','AHJ gain cap (dB)','blank = none')}</div>
+    <p class="note">DL range ${B.dl}. ${B.ulrule}.</p>`).replace('<span class="n"></span>',''));
+
+  H.push(card('0A','Sweep the lines',
+    `<p class="use"><b>Use:</b> Anritsu in cable &amp; antenna (VNA) mode. Proves the coax and connectors are good before anything gets powered.</p>`+
+    hook('Hook up',[`Unhook the <b>donor</b> cable from the BDA ${P('Donor')} port.`,
+      `Calibrate (Open / Short / Load) at the <b>end of your test cable</b>.`,
+      `Anritsu ${P('VNA port 1 / Reflection')} → test cable → donor cable.`,
+      `Save Return Loss and DTF. Then do the same on the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`])+
+    how('Anritsu settings',[['Mode','Vector Network Analyzer (cable &amp; antenna)'],['Measurement','Return Loss, then DTF Return Loss'],['Frequency','Start/Stop around your band ('+B.sweep+')'],['Limit line','−12 dB, pass/fail on'],['DTF distance','0 ft to the last antenna (or the donor)'],['Save','Name it SITE_TEST_LOCATION, e.g. SITE_DTF_DONOR']])+
+    `<div class="fields">${fld('rlDonor','Donor line return loss (dB)','−18')}${fld('rlDas','DAS line return loss (dB)','−16')}</div>`+
+    `<p class="note">Pass: the trace stays below −12 dB across the band. A spike on DTF at 140 ft means a bad connector, kink or water about 140 ft down the cable.</p>`,'BDA OFF'));
+
+  const antRows=S.ants.map((a,i)=>`<tr><td><input data-k="ants.${i}.id" value="${a.id??''}" placeholder="A${i+1}" style="font-family:var(--sans)"></td><td><input data-k="ants.${i}.fl" value="${a.fl??''}" placeholder="Floor" style="font-family:var(--sans)"></td><td><input data-k="ants.${i}.r" value="${a.r??''}" inputmode="decimal" placeholder="−65"></td><td class="out" data-ant="${i}">—</td><td><button class="x" data-del="ants.${i}" aria-label="Remove antenna">×</button></td></tr>`).join('');
+  H.push(card('0B','Antenna verification',
+    `<p class="use"><b>Use:</b> Anritsu (or a signal generator) to inject + the <b>PCTEL</b> to read at each antenna. Proves every service antenna is connected and radiating, and gives you real DAS loss.</p>`+
+    hook('Hook up',[`At the head end: Anritsu ${P('Sig gen out')} (or the signal generator OUT) → the <b>DAS</b> cable, still unhooked from the BDA ${P('DAS / Server')} port.`,
+      `CW tone at <b>0 dBm</b> on an <b>unused test frequency</b> in the band, <b>not</b> an assigned channel. Ask your lead which one.`])+
+    hook('Walk it with the PCTEL',[`Set the PCTEL to scan that same test frequency.`,
+      `Take it to each service antenna and hold the PCTEL antenna <b>right at the antenna</b> if you can reach it (or straight under it). Same spot and distance every time.`,
+      `Write down the reading for each antenna in the table below.`,
+      `A reading way lower than the others, or nothing at all = bad connector, wrong tap, crushed cable or a dead antenna on that run. Fix it before you go on.`])+
+    how('Anritsu settings',[['Mode','CW Signal Generator (turn sig-gen ON)'],['Output level','0.0 dBm'],['Frequency','Unused test frequency in band'],['Coupling','RX/TX coupling on, if your model has it']])+
+    `<div class="tw"><table class="grid"><tr><th>Antenna</th><th>Floor / area</th><th>PCTEL read (dBm)</th><th>DAS loss ≈ 0 − read − 30</th><th></th></tr>${antRows}</table></div><button class="add" data-add="ants">+ Add antenna</button>`+
+    `<p class="note">Rule of thumb right at the antenna: reading ≈ 0 − DAS loss − 30, so most land around −55 to −75. All the antennas should be close to each other. Around −90 to −100 means a problem on that run. The worst antenna's DAS loss can go straight into step 7.</p>`,'BDA OFF'));
+
+  H.push(card(1,'Isolation and max gain',
+    `<p class="use"><b>Use:</b> Anritsu signal generator + RF In. <b>BDA RF off</b> or both cables unhooked.</p>`+
+    hook('Hook up',[`Unhook both cables from the BDA (${P('Donor')} and ${P('DAS / Server')}).`,
+      `<b>Read A:</b> Anritsu ${P('Sig gen out')} → <b>donor</b> cable. Anritsu ${P('RF In')} → <b>DAS</b> cable. DL test frequency.`,
+      `<b>Read B:</b> swap the two cables. UL test frequency.`,
+      `Use unused test frequencies, not assigned channels. The <b>stronger read (closer to 0)</b> is the worse one. Or use the BDA's built-in isolation test.`])+
+    how('Anritsu settings',[['Mode','NFBM / interference analyzer with sig-gen ON (model dependent)'],['Sig-gen level','0.0 dBm'],['Ref level','about −68 dBm, auto RX range on'],['Frequency','DL test frequency for Read A, UL test frequency for Read B']])+
+    `<div class="fields">${fld('readA','Read A (dBm)','−92')}${fld('readB','Read B (dBm)','−90')}</div>`+
+    eq('Isolation = Injected − Read (worse one)',[['','Injected (dBm)','in','inj'],['−','Read (worse)','calc','readW']],'Isolation (dB)','iso')+
+    eq('Max gain = Isolation − 20',[['','Isolation','calc','iso'],['−','Safety margin','fixed','20']],'Max gain (dB)','mg')+verdictBox('iso'),'RF OFF'));
+
+  H.push(card(2,'Donor antenna and line',
+    `<p class="use"><b>Use:</b> donor antenna label or design, cable spec sheet, riser.</p>`+
+    `<ul class="ins"><li>Donor gain in <b>dBd</b>. Spec sheet only shows dBi? Subtract 2.15.</li><li>½" plenum at ${B.name} ≈ <b>${B.cable} dB per 100 ft</b>.</li><li>Add anything between the donor and the BDA: pad, filter, splitter, jumpers.</li></ul>`+
+    `<div class="fields">${fld('gd','Donor gain (dBd)','9')}</div>`+
+    eq('Donor-side loss = ft × loss ÷ 100 + pad / filter',[['','Cable (ft)','in','cft'],['×','Loss per 100 ft','in','cl'],['÷','','fixed','100'],['+','Pad / filter (dB)','in','pad']],'Loss (dB)','loss')));
+
+  H.push(card(3,'Program the BDA (RF output still off)',
+    `<ul class="ins"><li>Laptop → BDA (USB, Ethernet or web GUI).</li><li>Turn on only the bands in use.</li><li>Program every licensed DL channel and its UL pair (Class A filters). Set the filter width.</li><li>DL = TX column on the frequency list. ${B.ulrule}.</li><li>Once channels are in, the GUI shows Power IN per channel.</li></ul>`));
+
+  const chRows=S.chans.map((c,i)=>`<tr><td><input data-k="chans.${i}.f" value="${c.f??''}" inputmode="decimal" placeholder="${B.fex}"></td><td><select data-k="chans.${i}.cc"><option ${c.cc==='Y'?'selected':''}>Y</option><option ${c.cc!=='Y'?'selected':''}>N</option></select></td><td><input data-k="chans.${i}.p" value="${c.p??''}" inputmode="decimal" placeholder="−63"></td><td><select data-k="chans.${i}.src">${['GUI','Anritsu','Est'].map(x=>`<option ${c.src===x?'selected':''}>${x}</option>`).join('')}</select></td><td><button class="x" data-del="chans.${i}" aria-label="Remove channel">×</button></td></tr>`).join('');
+  H.push(card(4,'Power IN per channel',
+    `<p class="use"><b>Use:</b> BDA GUI Power IN. ${B.cc}</p>`+
+    hook('Where to read it',[`<b>GUI (normal way):</b> open the Power IN / channel status screen.`,
+      `<b>Anritsu on the cable:</b> unhook the donor cable at the BDA ${P('Donor')} port (after any pad / filter) → Anritsu ${P('RF In')}. That reading <b>is</b> the BDA input: donor gain and cable loss are already in it. No pad needed. Reconnect after.`,
+      `<b>Read before a pad / filter instead?</b> Subtract only what sits between that point and the BDA.`])+
+    how('Anritsu settings (spectrum analyzer)',[['Mode','Spectrum Analyzer'],['Find the channels','Start '+B.dlStart+' MHz, Stop '+B.dlStop+' MHz. The steady one is the control channel.'],['One channel','Center = channel, span 25 kHz (or 10 MHz wide view with a marker on it)'],['RBW / VBW','10 kHz / 3 kHz'],['Level','Ref level about −20 dBm, input atten 0 dB. Preamp on if it is down in the noise.'],['Read','Marker → peak. Max hold for voice channels.']])+
+    `<div class="tw"><table class="grid"><tr><th>DL freq (MHz)</th><th>Control ch?</th><th>Power IN (dBm)</th><th>How you got it</th><th></th></tr>${chRows}</table></div><button class="add" data-add="chans">+ Add channel</button>`+
+    `<div class="rule"><b class="t">Not a control channel? How to get its power</b><ol>
+      <li><b>Same tower as a control channel</b> (trunked 700/800): voice channels come from the same site at about the same power. Use that control channel's reading and pick "Est".</li>
+      <li><b>Conventional or a different tower:</b> Anritsu max hold on the channel for 15–30 min, or the GUI's peak Power IN.</li>
+      <li><b>Still nothing?</b> Ask the radio shop or dispatch to key that repeater while you watch. Never key a public safety channel yourself.</li>
+      <li><b>Can't get it today:</b> use the design's predicted level, pick "Est", and come back for a real reading before sign-off.</li></ol></div>`+
+    `<div class="eq"><div class="f">Strongest and weakest (from the table)</div><div class="row"><div class="cell"><div class="lb">Strongest (closest to 0) → sets DL gain</div><div class="v calc" data-o="strong">—</div></div><div class="cell"><div class="lb">Weakest (most negative) → checks coverage</div><div class="v calc" data-o="weak">—</div></div><div class="cell"><div class="lb">Channels counted</div><div class="v calc" data-o="nch">—</div></div></div></div>`+
+    eq('Two-point check = (Anritsu on cable − loss after that point) − GUI Power IN',[['','Anritsu on cable','in','tpA'],['−','Loss after that point (0 if at BDA)','in','tpLoss'],['−','GUI Power IN, same channel','in','tpG']],'Difference (dB)','tp')+verdictBox('tp')));
+
+  H.push(card(5,'Per-channel ceiling',
+    `<p class="use"><b>Use:</b> BDA spec sheet (max DL output). Channel count comes from step 4.</p>`+
+    `<div class="fields">${fld('pmax','BDA max DL output','33',`<div class="row">${inp('pmax','33')}<select data-k="s.pmaxu"><option ${S.s.pmaxu!=='W'?'selected':''}>dBm</option><option ${S.s.pmaxu==='W'?'selected':''}>W</option></select></div>`)}</div>`+
+    eq('Ceiling = Max output − 10·log(channels)',[['','Max output (dBm)','calc','pmax'],['−','10·log(channels)','calc','tlog']],'Ceiling (dBm)','ceil')+verdictBox('ceil')));
+
+  H.push(card(6,'Downlink gain',
+    eq('DL gain needed = Target out − Strongest Power IN',[['','Target out (dBm)','in','tgt'],['−','Strongest (step 4)','calc','strong']],'Needed (dB)','need')+
+    eq('DL gain to set = lowest of these three',[['','Needed','calc','need'],[',','AHJ cap','calc','cap'],[',','Max gain (step 1)','calc','mg']],'Set DL (dB)','dlsug')+
+    `<div class="fields">${fld('dlset','DL gain you actually set (optional)','blank = use suggested')}</div>`+
+    eq('Weakest channel output = Weakest Power IN + DL gain set (capped at the ceiling)',[['','Weakest (step 4)','calc','weak'],['+','DL gain set','calc','dlset']],'Weakest out (dBm)','weakOut')+
+    verdictBox('dl')+`<ul class="ins"><li>Set the DL gain in the GUI, <b>then</b> turn RF on.</li></ul>`));
+
+  H.push(card(7,'DAS loss to the worst antenna',
+    `<p class="use"><b>Use:</b> riser diagram. Follow the longest run from the BDA to the farthest antenna. Or use the worst antenna from step 0B.</p>`+
+    eq('DAS loss = cable + taps + throughs × 1 + splitters × 3.3 + jumpers',[['','Cable (ft)','in','dft'],['×','Loss per 100 ft','in','dl'],['÷','','fixed','100'],['+','Tap at antenna (DC6 = 6)','in','taps'],['+','Throughs (count)','in','th'],['+','2-way splitters (count)','in','sp'],['+','Jumpers (dB)','in','jmp']],'Quick count (dB)','dasq')+
+    `<div class="fields">${fld('dasOv','Or type DAS loss from the design / step 0B (optional)','overrides the count')}</div>`+
+    `<p class="note">Normal is about 25–40 dB. Using for the math: <b data-o="das">—</b> dB.</p>`));
+
+  H.push(card(8,'DOWNLINK: what the radio inside hears',
+    `<p class="use"><b>Use:</b> floor plan. Pick the weakest spot on the heat map, then the antenna closest to it. Measure straight across (air), not cable.</p>`+
+    `<div class="fields">${fld('gs','Service antenna gain (dBd)','0')}${fld('dr','Air distance to nearest antenna (ft)','40')}${fld('N','Building N','3.4',`<select data-k="s.N" id="i-s-N">${[['','Pick…'],['2.8','2.8 open warehouse'],['3.1','3.1 garage, mall'],['3.4','3.4 office, hotel'],['3.7','3.7 hospital, school'],['4.0','4.0 prison, heavy concrete']].map(([v,t])=>`<option value="${v}" ${String(S.s.N??'')===v?'selected':''}>${t}</option>`).join('')}</select>`)}</div>`+
+    eq('Indoor path loss = 32.5 + 20·log(GHz) + 10 × N × log(ft ÷ 3.28)',[['','Fixed','fixed','32.5'],['+','20·log(GHz)','calc','ghz'],['+','10 × N × log(ft ÷ 3.28)','calc','wall']],'Indoor PL (dB)','pl')+
+    eq('Radio inside = Weakest out − DAS loss + Antenna gain − Indoor PL',[['','Weakest out (step 6)','calc','weakOut'],['−','DAS loss (step 7)','calc','das'],['+','Antenna gain','calc','gs'],['−','Indoor PL','calc','pl']],'Radio inside (dBm)','rx')+verdictBox('rx')));
+
+  H.push(card(9,'Uplink gain',
+    `<p class="use"><b>Use:</b> donor site info (miles in the Site box), BDA spec sheet (noise figure). No radio info? Leave it blank and it uses <b>${B.radio} dBm</b>.</p>`+
+    `<div class="fields">${fld('radio','Radio power','auto',`<div class="row">${inp('radio','auto '+B.radio)}<select data-k="s.radiou"><option ${S.s.radiou!=='W'?'selected':''}>dBm</option><option ${S.s.radiou==='W'?'selected':''}>W</option></select></div>`)}${fld('nf','BDA noise figure (dB)','5')}${fld('ulf','UL frequency (MHz)',B.ulph)}</div>`+
+    eq('BDA UL input = Radio − Indoor PL + Antenna gain − DAS loss',[['','Radio (dBm)','calc','radio'],['−','Indoor PL','calc','pl'],['+','Antenna gain','calc','gs'],['−','DAS loss','calc','das']],'UL input (dBm)','ulin')+
+    eq('Free space loss = 20·log(UL MHz) + 20·log(miles) + 36.6',[['','20·log(MHz)','calc','mhz'],['+','20·log(miles)','calc','milog'],['+','Fixed','fixed','36.6']],'FSPL (dB)','fspl')+
+    eq('Min UL = −95 − UL input + Loss − Donor gain + FSPL',[['','Target','fixed','−95'],['−','UL input','calc','ulin'],['+','Loss (step 2)','calc','loss'],['−','Donor gain','calc','gd'],['+','FSPL','calc','fspl']],'Min UL (dB)','mn')+
+    eq('Max UL = FSPL + Loss − Donor gain − Noise figure − 20',[['','FSPL','calc','fspl'],['+','Loss','calc','loss'],['−','Donor gain','calc','gd'],['−','Noise figure','calc','nf'],['−','Margin','fixed','20']],'Max UL (dB)','mx')+
+    eq('UL limit = lowest of these three',[['','AHJ cap','calc','cap'],[',','Max gain (step 1)','calc','mg'],[',','Max UL','calc','mx']],'Limit (dB)','lim')+verdictBox('win')+
+    `<div class="fields">${fld('ulset','UL gain you actually set (optional)','blank = suggested')}</div>`+
+    `<p class="note">Suggested: <b data-o="ulsug">—</b> dB (at least 2 over min and 3 under max when it fits). Set it in the GUI.</p>`));
+
+  H.push(card(10,'UPLINK: what the tower hears',
+    eq('Tower hears = UL input + UL gain − Loss + Donor gain − FSPL',[['','UL input','calc','ulin'],['+','UL gain set','calc','ulset'],['−','Loss','calc','loss'],['+','Donor gain','calc','gd'],['−','FSPL','calc','fspl']],'Tower hears (dBm)','tower')+verdictBox('tower')+
+    `<p class="note">Noise margin (max UL − UL gain set): <b data-o="nzm">—</b> dB. Keep it at 0 or more.</p>`));
+
+  H.push(card(11,'Check it in the GUI',
+    hook('Hook up',[`<b>Gain check (GUI):</b> same channel, read Power OUT and Power IN.`,
+      `<b>Gain check (Anritsu):</b> BDA disconnected first. Anritsu ${P('Sig gen out')} at the real donor level (about −60, <b>never above −30 dBm</b>) → BDA ${P('Donor')}. BDA ${P('DAS / Server')} → <b>30 dB pad</b> → Anritsu ${P('RF In')}. Enter the pad as external loss.`,
+      `<b>UL noise:</b> BDA ${P('Donor')} → <b>30 dB pad</b> → Anritsu ${P('RF In')}. RBW 10 kHz, no radios keyed. Must be under −43 dBm (FCC). Look outside the band too: no spurs.`,
+      `Reconnect everything, torque it, clear alarms.`])+
+    eq('Gain check = Power OUT − Power IN (same channel)',[['','Power OUT','in','gOut'],['−','Power IN','in','gIn']],'Measured gain (dB)','gchk')+verdictBox('gchk')+
+    `<div class="fields">${fld('ulNoise','UL noise reading (dBm)','−68')}</div>`));
+
+  H.push(card(12,'Finish and prove it',
+    chk('agc','AGC / ALC on, output limit set')+chk('sq','UL squelch set (often about −100 dBm)')+chk('osc','Oscillation detection on')+chk('alarm','Every supervisory alarm tested at the FACP and annunciator')+chk('bbu','Battery drop test, runtime matches the AHJ')+chk('shots','GUI + analyzer screenshots, photos, config backup saved')+
+    `<details class="how" open><summary>Grid walk with the PCTEL (or similar scanner)</summary><div class="b"><ol style="padding-left:18px;margin:6px 0">
+      <li><b>Set up before the walk:</b> new project, import and scale each floor plan, and enter the DL frequencies you're testing (control channels on trunked systems).</li>
+      <li><b>Pass levels:</b> −95 dBm signal, plus DAQ 3.0 (or the BER/SINR target) on digital P25. Use what your AHJ requires.</li>
+      <li><b>Grid it:</b> about 20 equal grids per floor. Mark critical areas from the AHJ (fire command, stairwells, elevator lobbies, riser and fire pump rooms).</li>
+      <li><b>Walk it:</b> scanner on, walk through the middle of each grid at a normal pace and let it log. Don't stand under an antenna.</li>
+      <li><b>Uplink:</b> talk test with dispatch or a radio outside from the grids, especially the weak ones from your heat map.</li>
+      <li><b>Pass:</b> 95% of general area grids and 99% of critical area grids. Export the report for the AHJ.</li></ol></div></details>`+
+    `<div class="fields">${fld('gridGen','General area pass %','95')}${fld('gridCrit','Critical area pass %','99')}${fld('talk','Talk test (DL / UL)','OK / OK',`<input data-k="s.talk" id="i-s-talk" value="${S.s.talk??''}" style="font-family:var(--sans)" placeholder="OK / OK">`)}</div>`+verdictBox('grid')));
+
+  $('app').innerHTML=H.join('');
+  update();
+}
+function setV(id,cls,txt){const e=$('v-'+id);if(!e)return;e.className='verdict '+cls;e.textContent=txt}
+function update(){
+  const o=calc(S.s,S.chans,S.ants,BAND);
+  document.querySelectorAll('[data-o]').forEach(e=>{const k=e.dataset.o;const v=k==='nch'?(o.nch||null):o[k];e.textContent=isN(v)?(k==='nch'?String(v):f1(v)):'—'});
+  document.querySelectorAll('[data-ant]').forEach(e=>{const r=num(S.ants[+e.dataset.ant].r);if(!isN(r)){e.textContent='—';e.style.color='';return}const d=-r-30;e.textContent=f1(d)+' dB'+(r<-90?' ✗ check this run':' ✓');e.style.color=r<-90?'var(--bad)':'var(--ok)'});
+  if(isN(o.iso)) setV('iso',o.iso>=80?'ok':'warn',o.iso>=80?`No gain, DL or UL, can go above ${f1(o.mg)} dB.`:`Only ${f1(o.mg)} dB of gain allowed. Check donor placement before going on.`); else setV('iso','na','Type the injected level and at least one read.');
+  if(isN(o.tp)) setV('tp',Math.abs(o.tp)<=2?'ok':'bad',Math.abs(o.tp)<=2?`Within 2 dB (${f1(o.tp)}). Reading, pad value and GUI agree.`:`${f1(o.tp)} dB off. Check connectors, the pad value, or that both are the same channel.`); else setV('tp','na','Optional: compare the Anritsu cable reading to the GUI on the same channel.');
+  if(isN(o.ceil)) setV('ceil',o.ceil>=o.tgt?'ok':'warn',o.ceil>=o.tgt?`+${f1(o.tgt)} fits under the ${f1(o.ceil)} ceiling.`:`Ceiling ${f1(o.ceil)} is under +${f1(o.tgt)}. Each channel tops out at the ceiling.`); else setV('ceil','na','Needs max output and channels in step 4.');
+  if(isN(o.dlset)){const bad=[];if(isN(o.mg)&&o.dlset>o.mg+0.05)bad.push(`over the ${f1(o.mg)} isolation limit (oscillation risk)`);if(isN(o.cap)&&o.dlset>o.cap+0.05)bad.push(`over the AHJ cap of ${f1(o.cap)}`);if(isN(o.ceil)&&isN(o.strongOut)&&o.strongOut>o.ceil+0.05)bad.push(`strongest channel would be ${f1(o.strongOut)} dBm, over the ${f1(o.ceil)} ceiling`);
+    setV('dl',bad.length?'bad':'ok',bad.length?'DL gain is '+bad.join('; ')+'.':`Set ${f1(o.dlset)} dB. Strongest channel out: ${f1(o.strongOut)} dBm.`)} else setV('dl','na','Needs Power IN readings in step 4.');
+  if(isN(o.rx)) setV('rx',o.rx>=-95?'ok':'bad',o.rx>=-95?`PASS by ${f1(o.rx+95)} dB (need −95 or stronger).`:`FAIL by ${f1(-95-o.rx)} dB. Look at DAS loss, antenna spacing or output.`); else setV('rx','na','Needs steps 4, 6, 7 and the boxes above.');
+  if(isN(o.mn)&&isN(o.lim)) setV('win',o.lim>=o.mn?'ok':'bad',o.lim>=o.mn?`UL window: ${f1(o.mn)} to ${f1(o.lim)} dB.`:`Window closed: need ${f1(o.mn)} but the limit is ${f1(o.lim)}. Cut DAS loss or fix isolation first.`); else setV('win','na','Needs miles, donor gain, loss, noise figure and steps 7–8.');
+  if(isN(o.tower)){const msgs=[];let cls=o.tower>=-95?'ok':'bad';msgs.push(o.tower>=-95?`PASS by ${f1(o.tower+95)} dB.`:`FAIL by ${f1(-95-o.tower)} dB.`);if(isN(o.nzm)&&o.nzm<0){cls='bad';msgs.push(`UL gain is ${f1(-o.nzm)} dB over the noise limit: it will desense the tower.`)}if(isN(o.lim)&&isN(o.ulset)&&o.ulset>o.lim+0.05){cls='bad';msgs.push(`UL gain is over the ${f1(o.lim)} limit.`)}setV('tower',cls,msgs.join(' '))} else setV('tower','na','Needs step 9.');
+  if(isN(o.gchk)&&isN(o.dlset)) setV('gchk',Math.abs(o.gchk-o.dlset)<=2?'ok':'bad',Math.abs(o.gchk-o.dlset)<=2?`Within 2 dB of the ${f1(o.dlset)} you set.`:`${f1(o.gchk-o.dlset)} dB off the setting. Check the channel, the pad, or the BDA limiting (injected too hot?).`); else setV('gchk','na','Read Power OUT and IN on the same channel.');
+  const gg=g('gridGen'),gc=g('gridCrit'); if(isN(gg)||isN(gc)){const ok=(!isN(gg)||gg>=95)&&(!isN(gc)||gc>=99);setV('grid',ok?'ok':'bad',ok?'Grid walk passes.':'Grid walk short: general needs 95%, critical needs 99%.')} else setV('grid','na','Enter the grid results.');
+  const bx=(k,val,pass)=>`<div class="${pass===true?'ok':pass===false?'bad':''}"><b>${isN(val)?f1(val):'—'}</b>${k}</div>`;
+  $('barin').innerHTML=bx('Max gain',o.mg)+bx('DL gain',o.dlset)+bx('UL gain',o.ulset)+bx('Inside',o.rx,isN(o.rx)?o.rx>=-95:null)+bx('Tower',o.tower,isN(o.tower)?o.tower>=-95:null);
+}
+// ---------- events ----------
+function setPath(path,val){const p=path.split('.');let t=S;for(let i=0;i<p.length-1;i++)t=t[p[i]];t[p[p.length-1]]=val}
+document.addEventListener('input',e=>{const k=e.target.dataset.k;if(k){setPath(k,e.target.value);save();update()}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.k){setPath(t.dataset.k,t.value);save();update()}if(t.dataset.chk){S.checks[t.dataset.chk]=t.checked;save()}});
+document.addEventListener('click',e=>{const t=e.target;
+  if(t.dataset.add){S[t.dataset.add].push({});save();render();}
+  if(t.dataset.del){const [arr,i]=t.dataset.del.split('.');S[arr].splice(+i,1);if(!S[arr].length)S[arr].push({});save();render();}
+});
+$('print').onclick=()=>window.print();
+$('clear').onclick=()=>{if(confirm('Clear every box on the '+BAND.name+' sheet?')){S=DEF();save();render();scrollTo(0,0)}};
+const bg=$('burger'),mn=$('menu');bg.onclick=e=>{e.stopPropagation();const o=!mn.classList.contains('open');mn.classList.toggle('open',o);bg.setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!mn.contains(e.target)&&e.target!==bg){mn.classList.remove('open');bg.setAttribute('aria-expanded',false)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){mn.classList.remove('open');bg.setAttribute('aria-expanded',false)}});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BDA Link Budget Calculator</title>
+<meta name="description" content="Step-by-step link budget math for public safety BDAs: isolation, DL and UL gain, coverage inside and signal at the tower.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f6; --card:#ffffff; --ink:#172027; --muted:#5d6b75; --line:#d5dce0;
+  --in-bg:#fff8e6; --in-line:#d9a520; --accent:#cf5d16; --ans:#1f5fa8; --ans-bg:#eaf1fa;
+  --ok:#2e7a33; --ok-bg:#e9f5ea; --bad:#b3261e; --bad-bg:#fbecea; --warn:#9a6a00; --warn-bg:#fdf3dc;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1418; --card:#171e24; --ink:#e6ecef; --muted:#9aa8b1; --line:#2a343b;
+  --in-bg:#2a2412; --in-line:#c99a1e; --accent:#f08a46; --ans:#7fb6f2; --ans-bg:#182838;
+  --ok:#79c77d; --ok-bg:#16291a; --bad:#f08a80; --bad-bg:#33191a; --warn:#e2b552; --warn-bg:#2e2510; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1418; --card:#171e24; --ink:#e6ecef; --muted:#9aa8b1; --line:#2a343b;
+  --in-bg:#2a2412; --in-line:#c99a1e; --accent:#f08a46; --ans:#7fb6f2; --ans-bg:#182838;
+  --ok:#79c77d; --ok-bg:#16291a; --bad:#f08a80; --bad-bg:#33191a; --warn:#e2b552; --warn-bg:#2e2510; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+.wrap{max-width:1100px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-left,0px)) 60px}
+a{color:var(--ans)}
+header h1{font-size:clamp(26px,5vw,36px);line-height:1.1;margin:6px 0 6px}
+header p{margin:0;color:var(--muted);max-width:70ch}
+.back{font-size:14px;text-decoration:none}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 14px}
+.bar select,.bar button{font:inherit;font-size:15px;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px}
+.bar select{max-width:100%;flex:1 1 280px}
+.bar button{cursor:pointer;font-weight:600}
+.bar button.clear{color:var(--bad)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card)}
+.seg button{border:0;border-radius:0;min-height:40px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.layout{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.inputs{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+@media (max-width:900px){.inputs{position:static;max-height:none}}
+.inputs h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
+.inputs h2:first-child{margin-top:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.f.full{grid-column:1/-1}
+.f label{font-size:12.5px;color:var(--muted);line-height:1.25}
+.f .row{display:flex;gap:6px}
+.f input,.f select{font:16px var(--mono);width:100%;min-width:0;min-height:40px;padding:6px 8px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink)}
+.f select{font-family:var(--sans);font-size:15px}
+.f .row select{width:auto;flex:none;border-color:var(--line);background:var(--card)}
+.f input::placeholder{color:var(--muted);opacity:.8}
+.hint{font-size:11.5px;color:var(--muted)}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+@media (max-width:620px){.summary{grid-template-columns:1fr 1fr}}
+.sb{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sb .k{font-size:12px;color:var(--muted)}
+.sb .v{font:600 22px var(--mono);margin-top:2px}
+.sb .s{font-size:12.5px;font-weight:600;margin-top:2px}
+.sb.ok{border-color:var(--ok);background:var(--ok-bg)} .sb.ok .s{color:var(--ok)}
+.sb.bad{border-color:var(--bad);background:var(--bad-bg)} .sb.bad .s{color:var(--bad)}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.step h3{margin:0 0 8px;font-size:16px;display:flex;align-items:center;gap:8px}
+.step h3 .n{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:6px;background:var(--accent);color:#fff;font-size:13px}
+.line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:7px 0;border-top:1px dashed var(--line)}
+.line:first-of-type{border-top:0}
+.line .nm{font-weight:600;font-size:14px}
+.line .fx{font:13px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.line .fx b{color:var(--ink);font-weight:600}
+.res{font:600 17px var(--mono);color:var(--ans);background:var(--ans-bg);border-radius:8px;padding:5px 10px;white-space:nowrap;text-align:right}
+.res.na{color:var(--muted);background:transparent;font-weight:500;font-size:14px}
+.v{grid-column:1/-1;font-size:13.5px;font-weight:600;border-radius:7px;padding:6px 10px}
+.v.ok{color:var(--ok);background:var(--ok-bg)} .v.bad{color:var(--bad);background:var(--bad-bg)} .v.warn{color:var(--warn);background:var(--warn-bg)}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+footer{margin-top:24px;font-size:13px;color:var(--muted)}
+:focus-visible{outline:2px solid var(--ans);outline-offset:2px}
+#mini{display:none}
+@media (max-width:900px){
+  #mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);padding:8px max(10px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 18px rgba(0,0,0,.12)}
+  #mini div{text-align:center;font-size:11px;color:var(--muted);line-height:1.2}
+  #mini b{display:block;font:600 15px var(--mono);color:var(--ink)}
+  #mini .ok b{color:var(--ok)} #mini .bad b{color:var(--bad)}
+  body{padding-bottom:70px}
+}
+@media (max-width:420px){.grid{grid-template-columns:1fr 1fr}.res{font-size:15px}}
+</style>
+<style id="look-refresh">
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+/* ===== Look refresh: riser-drawing blueprint, fire-red callouts. Styling only, no content changes. ===== */
+:root{
+  --bg:#ECF0F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#13243A; --muted:#56677A; --line:#CBD5DC; --soft:#F3F6F8; --fixed-bg:#F1F4F6;
+  --accent:#C62828; --signal:#C62828; --link:#1B5E9E; --calc:#1B5E9E; --ans:#1B5E9E; --calc-bg:#E8F0F9; --ans-bg:#E8F0F9;
+  --in-bg:#FFF6D6; --in-line:#D4A000; --hook-bg:#EEF2F6;
+  --ok:#23733A; --ok-bg:#E5F3E8; --bad:#B42318; --bad-bg:#FBEAE8; --warn:#8A5A00; --warn-bg:#FDF2D8;
+  --gain:#23733A; --gain-bg:#EAF5EC; --loss:#B42318; --loss-bg:#FBEDEB;
+  --grid:rgba(19,36,58,.045); --panel:#0E1E30;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --body:var(--sans); --display:var(--sans); --font-ui:var(--sans);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --font-num:var(--mono);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B;
+  --grid:rgba(140,180,220,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B; --grid:rgba(140,180,220,.05); color-scheme:dark}
+body{background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+input,select,button{font-family:var(--sans)}
+a{text-underline-offset:3px}
+.burger{background:var(--card)}
+.menu{border-radius:10px;box-shadow:0 18px 40px -12px rgba(13,24,35,.35)}
+.menu .lbl{font:700 12px/1.3 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--accent)}
+.menu a{font-weight:600}
+.menu a small{font-weight:400}
+.menu a[aria-current="page"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
+@media print{body{background-image:none}}
+
+.back{font-weight:700}
+header h1{font-weight:800;font-stretch:72%;font-size:clamp(34px,6.5vw,52px);line-height:.95;letter-spacing:-.015em;margin:12px 0 10px}
+header p{font-size:15.5px;line-height:1.6}
+.bar select,.bar button{font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.inputs{border-radius:10px}
+.inputs h2{font:700 14px/1.3 var(--sans);letter-spacing:0;text-transform:none;color:var(--accent);margin:18px 0 8px}
+.sb{border-radius:10px}
+.sb .k{font-weight:600}
+.step{border-radius:10px;padding:14px 16px}
+.step h3{font-size:17px;font-weight:700;font-stretch:90%}
+.step h3 .n{background:transparent;color:var(--accent);border:2px solid var(--accent);border-radius:999px;width:30px;height:30px;font:700 12px var(--mono)}
+.line .nm{font-weight:700}
+.v{border-radius:8px}
+@media (max-width:900px){#mini{background:var(--panel);border-top:2px solid var(--accent);box-shadow:none}
+  #mini div{color:rgba(228,235,241,.62)} #mini b{color:#fff}
+  #mini .ok b{color:#7BD88F} #mini .bad b{color:#FF8A80}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back" href="../">← lehongphuc.net</a>
+  <h1>BDA Link Budget Calculator</h1>
+  <p>Just the math, in field order. Type your site's numbers on the left and every step works itself out on the right, isolation first. Paper math only: the grid walk and talk test are what pass a system.</p>
+</header>
+
+<div class="bar">
+  <select id="preset" aria-label="Load an example"><option value="">Load a practice scenario…</option></select>
+  <button class="clear" id="clear" type="button">Clear</button>
+  <span class="seg" role="group" aria-label="Antenna gain convention"><button type="button" data-conv="dBi" aria-pressed="true">dBi</button><button type="button" data-conv="dBd" aria-pressed="false">dBd</button></span>
+</div>
+
+<div class="layout">
+<form class="inputs" id="form" autocomplete="off" onsubmit="return false">
+  <h2>Isolation (RF off)</h2>
+  <div class="grid">
+    <div class="f"><label for="inj">Injected (dBm)</label><input id="inj" inputmode="decimal" placeholder="10"></div>
+    <div class="f"><label for="read">Read, worse way (dBm)</label><input id="read" inputmode="decimal" placeholder="−90"></div>
+  </div>
+  <h2>Tower and donor</h2>
+  <div class="grid">
+    <div class="f"><label for="f">DL frequency (MHz)</label><input id="f" inputmode="decimal" placeholder="770"></div>
+    <div class="f"><label for="ulf">UL frequency (MHz)</label><input id="ulf" inputmode="decimal" placeholder="auto"><span class="hint">Blank: 700 = DL+30, 800 = DL−45</span></div>
+    <div class="f"><label for="mi">Miles to tower</label><input id="mi" inputmode="decimal" placeholder="3"></div>
+    <div class="f"><label for="src">Donor reading taken at</label><select id="src"><option value="roof">Roof (whip)</option><option value="port">BDA port / GUI</option></select></div>
+    <div class="f" id="f-sig"><label for="sig">Donor signal on roof (dBm)</label><input id="sig" inputmode="decimal" placeholder="−58"></div>
+    <div class="f" id="f-pin"><label for="pin">BDA Power IN (dBm)</label><input id="pin" inputmode="decimal" placeholder="−50"></div>
+    <div class="f"><label for="gd">Donor antenna gain</label><div class="row"><input id="gd" inputmode="decimal" placeholder="11"><select id="gdu" aria-label="Donor gain unit"><option>dBi</option><option>dBd</option></select></div></div>
+    <div class="f"><label for="cft">Donor cable (ft)</label><input id="cft" inputmode="decimal" placeholder="100"></div>
+    <div class="f"><label for="cl">Loss per 100 ft (dB)</label><input id="cl" inputmode="decimal" placeholder="2.2"><span class="hint">½" plenum: VHF 1 · UHF 1.5 · 700/800 2.2</span></div>
+    <div class="f"><label for="extra">Pad / filter / splitter (dB)</label><input id="extra" inputmode="decimal" placeholder="0"></div>
+  </div>
+  <h2>BDA</h2>
+  <div class="grid">
+    <div class="f"><label for="pmax">Max DL output</label><div class="row"><input id="pmax" inputmode="decimal" placeholder="33"><select id="pmaxu" aria-label="Max output unit"><option>dBm</option><option>W</option></select></div></div>
+    <div class="f"><label for="ch">Channels</label><input id="ch" inputmode="numeric" placeholder="8"></div>
+    <div class="f"><label for="nf">Noise figure (dB)</label><input id="nf" inputmode="decimal" placeholder="5"></div>
+    <div class="f"><label for="tgt">DL output target (dBm)</label><input id="tgt" inputmode="decimal" placeholder="10"></div>
+  </div>
+  <h2>Building</h2>
+  <div class="grid">
+    <div class="f"><label for="das">DAS loss to worst antenna (dB)</label><input id="das" inputmode="decimal" placeholder="35"></div>
+    <div class="f"><label for="gs">Service antenna gain</label><div class="row"><input id="gs" inputmode="decimal" placeholder="2"><select id="gsu" aria-label="Service antenna gain unit"><option>dBi</option><option>dBd</option></select></div></div>
+    <div class="f"><label for="dr">Air distance, weakest spot to nearest antenna (ft)</label><input id="dr" inputmode="decimal" placeholder="40"></div>
+    <div class="f"><label for="N">Building N</label><input id="N" inputmode="decimal" placeholder="3.4"><span class="hint">2.8 warehouse · 3.1 mall · 3.4 office · 3.7 hospital · 4.0 prison</span></div>
+    <div class="f full"><label for="radio">Radio power (blank = 33 for 700/800, 35 for VHF/UHF)</label><div class="row"><input id="radio" inputmode="decimal" placeholder="auto"><select id="radiou" aria-label="Radio power unit"><option>dBm</option><option>W</option></select></div></div>
+  </div>
+  <h2>Rules</h2>
+  <div class="grid">
+    <div class="f"><label for="target">Target inside and at tower (dBm)</label><input id="target" inputmode="decimal" placeholder="−95"></div>
+    <div class="f"><label for="cap">AHJ gain cap (dB)</label><input id="cap" inputmode="decimal" placeholder="none"></div>
+    <div class="f"><label for="imargin">Isolation margin (dB)</label><input id="imargin" inputmode="decimal" placeholder="20"></div>
+    <div class="f"><label for="nmargin">Noise below tower floor (dB)</label><input id="nmargin" inputmode="decimal" placeholder="20"></div>
+  </div>
+  <h2>What you set (optional)</h2>
+  <div class="grid">
+    <div class="f"><label for="dlset">DL gain you set</label><input id="dlset" inputmode="decimal" placeholder="suggested"></div>
+    <div class="f"><label for="ulset">UL gain you set</label><input id="ulset" inputmode="decimal" placeholder="suggested"></div>
+  </div>
+</form>
+
+<main>
+  <div class="summary" id="summary"></div>
+  <div class="steps" id="steps"></div>
+  <div id="mini" aria-live="polite"></div>
+  <footer>Formulas: indoor path loss 32.5 + 20·log(GHz) + 10·N·log(ft ÷ 3.28) · free space loss 20·log(MHz) + 20·log(miles) + 36.6 · dBi = dBd + 2.15 · dBm = 10·log(W × 1000). Your numbers save in this browser only. Check against your AHJ rules, the design and your BDA manual.</footer>
+</main>
+</div>
+</div>
+
+<script>
+const PRESETS = [{"label": "Practice V1: Warehouse on 700", "f": 770, "ulf": 770, "mi": 3, "gd": 9, "gdu": "dBd", "cft": 150, "cl": 1.8, "extra": null, "inj": 10, "read": -82, "ch": 12, "nf": 5, "das": 38, "gs": 2, "gsu": "dBi", "dr": 30, "N": 3.4, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -58, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": 36, "radiou": "dBm"}, {"label": "Practice V3: Middle school on VHF", "f": 155, "ulf": 155, "mi": 1.5, "gd": 7, "gdu": "dBd", "cft": 120, "cl": 1.1, "extra": null, "inj": 10, "read": -85, "ch": 4, "nf": 5, "das": 30, "gs": 2, "gsu": "dBi", "dr": 50, "N": 3.7, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -45, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": 5, "radiou": "W"}, {"label": "Practice V4: Hospital on UHF", "f": 460, "ulf": 460, "mi": 4, "gd": 10, "gdu": "dBi", "cft": 200, "cl": 1.6, "extra": null, "inj": 10, "read": -80, "ch": 8, "nf": 5, "das": 36, "gs": 2, "gsu": "dBi", "dr": 35, "N": 3.7, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -65, "pin": null, "pmax": 5, "pmaxu": "W", "radio": null, "radiou": "dBm"}, {"label": "Practice V5: Shopping mall on 800", "f": 855, "ulf": 855, "mi": 5, "gd": 11, "gdu": "dBi", "cft": 100, "cl": 2.2, "extra": null, "inj": 10, "read": -84, "ch": 10, "nf": 6, "das": 34, "gs": 2, "gsu": "dBi", "dr": 45, "N": 3.1, "cap": null, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -62, "pin": null, "pmax": 5, "pmaxu": "W", "radio": 3, "radiou": "W"}, {"label": "Practice V6: Detention center on 700", "f": 772, "ulf": 772, "mi": 3, "gd": 12, "gdu": "dBi", "cft": 60, "cl": 2.0, "extra": null, "inj": 10, "read": -68, "ch": 6, "nf": 5, "das": 30, "gs": 2, "gsu": "dBi", "dr": 30, "N": 4.0, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -64, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}, {"label": "Practice V7: Office tower on 800 (field reading)", "f": 860, "ulf": 860, "mi": 4, "gd": 11, "gdu": "dBi", "cft": 90, "cl": 2.2, "extra": null, "inj": 10, "read": -92, "ch": 15, "nf": 5, "das": 28, "gs": 3, "gsu": "dBi", "dr": 40, "N": 3.4, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "port", "pin": -57, "sig": null, "pmax": 33, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}, {"label": "V9 Scenario 1: Public library on 700", "f": 771, "ulf": 771, "mi": 2.5, "gd": 9, "gdu": "dBd", "cft": 110, "cl": 1.9, "extra": null, "inj": 10, "read": -85, "ch": 8, "nf": 5, "das": 34, "gs": 2, "gsu": "dBi", "dr": 40, "N": 3.3, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -60, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}, {"label": "V9 Scenario 2: Apartment building on 800", "f": 858, "ulf": 858, "mi": 4, "gd": 11, "gdu": "dBi", "cft": 140, "cl": 2.2, "extra": null, "inj": 10, "read": -90, "ch": 6, "nf": 6, "das": 30, "gs": 3, "gsu": "dBi", "dr": 35, "N": 3.0, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -68, "pin": null, "pmax": 2, "pmaxu": "W", "radio": 3, "radiou": "W"}, {"label": "V9 Scenario 3: Warehouse on VHF", "f": 154, "ulf": 154, "mi": 2, "gd": 6, "gdu": "dBd", "cft": 90, "cl": 1.0, "extra": null, "inj": 10, "read": -88, "ch": 3, "nf": 5, "das": 28, "gs": 2, "gsu": "dBi", "dr": 60, "N": 3.0, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -48, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": 5, "radiou": "W"}, {"label": "V9 Scenario 4: Casino on UHF", "f": 465, "ulf": 465, "mi": 3, "gd": 10, "gdu": "dBi", "cft": 120, "cl": 1.5, "extra": null, "inj": 10, "read": -95, "ch": 30, "nf": 5, "das": 32, "gs": 2, "gsu": "dBi", "dr": 30, "N": 3.6, "cap": 70, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -62, "pin": null, "pmax": 0.25, "pmaxu": "W", "radio": null, "radiou": "dBm"}, {"label": "V9 Scenario 5: Hospital on 700 (field reading)", "f": 773, "ulf": 773, "mi": 1.5, "gd": 12, "gdu": "dBi", "cft": 70, "cl": 2.0, "extra": null, "inj": 10, "read": -90, "ch": 10, "nf": 5, "das": 36, "gs": 2, "gsu": "dBi", "dr": 35, "N": 3.8, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "port", "pin": -50, "sig": null, "pmax": 33, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}, {"label": "V9 Scenario 6: Stadium on 800 (no gain cap)", "f": 856, "ulf": 856, "mi": 12, "gd": 12, "gdu": "dBi", "cft": 200, "cl": 2.2, "extra": null, "inj": 10, "read": -96, "ch": 8, "nf": 5, "das": 33, "gs": 3, "gsu": "dBi", "dr": 45, "N": 2.8, "cap": null, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -78, "pin": null, "pmax": 37, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}, {"label": "V9 Scenario 7: County jail on UHF", "f": 460, "ulf": 460, "mi": 5, "gd": 10, "gdu": "dBi", "cft": 100, "cl": 1.6, "extra": null, "inj": 10, "read": -72, "ch": 6, "nf": 5, "das": 34, "gs": 2, "gsu": "dBi", "dr": 30, "N": 4.2, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -66, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}, {"label": "V9 Scenario 8: Hotel on 700 (no gain cap)", "f": 772, "ulf": 772, "mi": 8, "gd": 11, "gdu": "dBi", "cft": 160, "cl": 2.0, "extra": null, "inj": 10, "read": -98, "ch": 6, "nf": 5, "das": 34, "gs": 2, "gsu": "dBi", "dr": 40, "N": 3.3, "cap": null, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -70, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": 3, "radiou": "W"}, {"label": "V9 Scenario 9: Data center on 800", "f": 860, "ulf": 860, "mi": 3, "gd": 11, "gdu": "dBi", "cft": 80, "cl": 2.2, "extra": null, "inj": 10, "read": -95, "ch": 10, "nf": 5, "das": 48, "gs": 2, "gsu": "dBi", "dr": 50, "N": 3.8, "cap": 65, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -58, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}, {"label": "V9 Scenario 10: Office park on VHF (AHJ cap 60)", "f": 158, "ulf": 158, "mi": 6, "gd": 7, "gdu": "dBd", "cft": 150, "cl": 1.1, "extra": null, "inj": 10, "read": -90, "ch": 4, "nf": 5, "das": 30, "gs": 2, "gsu": "dBi", "dr": 55, "N": 3.2, "cap": 60, "tgt": 10, "target": -95, "imargin": 20, "nmargin": 20, "conv": "dBi", "src": "roof", "sig": -62, "pin": null, "pmax": 33, "pmaxu": "dBm", "radio": null, "radiou": "dBm"}];
+const FIELDS=['inj','read','f','ulf','mi','src','sig','pin','gd','gdu','cft','cl','extra','pmax','pmaxu','ch','nf','tgt','das','gs','gsu','dr','N','radio','radiou','target','cap','imargin','nmargin','dlset','ulset'];
+const KEY='bda-calc-v1';
+const $=id=>document.getElementById(id);
+let conv='dBi';
+
+/*CALC-START*/
+const L=x=>Math.log10(x);
+const isN=x=>typeof x==='number'&&isFinite(x);
+function calc(v,conv){
+  const o={conv}; const d=(x,def)=>isN(x)?x:def;
+  const toC=(g,u)=>!isN(g)?null:(u===conv?g:(u==='dBd'?g+2.15:g-2.15));
+  o.inj=d(v.inj,10); o.imargin=d(v.imargin,20); o.nmargin=d(v.nmargin,20); o.target=d(v.target,-95); o.tgt=d(v.tgt,10);
+  o.cap=isN(v.cap)?v.cap:null;
+  o.iso=isN(v.read)?o.inj-v.read:null; o.mg=isN(o.iso)?o.iso-o.imargin:null;
+  o.gdRaw=v.gd; o.gd=toC(v.gd,v.gdu); o.gs=toC(v.gs,v.gsu);
+  o.cab=(isN(v.cft)&&isN(v.cl))?v.cft*v.cl/100:null; o.loss=isN(o.cab)?o.cab+d(v.extra,0):null;
+  if(v.src==='port') o.bin=isN(v.pin)?v.pin:null;
+  else o.bin=(isN(v.sig)&&isN(o.gd)&&isN(o.loss))?v.sig+o.gd-o.loss:null;
+  o.pmax=isN(v.pmax)?(v.pmaxu==='W'?10*L(v.pmax*1000):v.pmax):null;
+  o.ceil=(isN(o.pmax)&&isN(v.ch)&&v.ch>0)?o.pmax-10*L(v.ch):null;
+  o.need=isN(o.bin)?o.tgt-o.bin:null;
+  const lows=a=>{a=a.filter(isN);return a.length?Math.min(...a):null};
+  o.dlsug=isN(o.need)?lows([o.need,o.cap,o.mg]):null;
+  o.dlset=isN(v.dlset)?v.dlset:o.dlsug;
+  o.out=(isN(o.bin)&&isN(o.dlset))?(isN(o.ceil)?Math.min(o.bin+o.dlset,o.ceil):o.bin+o.dlset):null;
+  o.f=v.f; o.ulf=isN(v.ulf)?v.ulf:(isN(v.f)?(v.f>=764&&v.f<=776?v.f+30:(v.f>=851&&v.f<=869?v.f-45:v.f)):null);
+  o.pl=(isN(v.f)&&isN(v.N)&&isN(v.dr)&&v.dr>0)?32.5+20*L(v.f/1000)+10*v.N*L(v.dr/3.28):null;
+  o.rx=(isN(o.out)&&isN(v.das)&&isN(o.gs)&&isN(o.pl))?o.out-v.das+o.gs-o.pl:null;
+  o.radio=isN(v.radio)?(v.radiou==='W'?10*L(v.radio*1000):v.radio):(isN(v.f)?(v.f>600?33:35):null);
+  o.radioAuto=!isN(v.radio);
+  o.fspl=(isN(o.ulf)&&isN(v.mi)&&v.mi>0)?20*L(o.ulf)+20*L(v.mi)+36.6:null;
+  o.ulin=(isN(o.radio)&&isN(o.pl)&&isN(o.gs)&&isN(v.das))?o.radio-o.pl+o.gs-v.das:null;
+  const okUL=isN(o.ulin)&&isN(o.loss)&&isN(o.gd)&&isN(o.fspl);
+  o.mn=okUL?o.target-o.ulin+o.loss-o.gd+o.fspl:null;
+  o.mx=(isN(o.fspl)&&isN(o.loss)&&isN(o.gd)&&isN(v.nf))?o.fspl+o.loss-o.gd-v.nf-o.nmargin:null;
+  o.lim=isN(o.mx)?lows([o.cap,o.mg,o.mx]):null;
+  if(isN(o.lim)&&isN(o.mn)){let X=Math.min(o.lim,o.mx-3); if(X<o.mn) X=o.lim; if(Math.floor(X)>=o.mn) X=Math.floor(X); o.ulsug=X;} else o.ulsug=null;
+  o.ulset=isN(v.ulset)?v.ulset:o.ulsug;
+  o.tower=(okUL&&isN(o.ulset))?o.ulin+o.ulset-o.loss+o.gd-o.fspl:null;
+  o.nzm=(isN(o.mx)&&isN(o.ulset))?o.mx-o.ulset:null;
+  return o;
+}
+/*CALC-END*/
+
+const f1=x=>isN(x)?(Math.round(x*10)/10).toFixed(1).replace('-','−'):'—';
+const sg=x=>isN(x)?(x<0?'− '+f1(-x):'+ '+f1(x)):'—';
+const p=x=>isN(x)?(x<0?'('+f1(x)+')':f1(x)):'—';
+function read(){const v={};for(const k of FIELDS){const el=$(k);if(el.tagName==='SELECT'){v[k]=el.value;continue}const t=el.value.trim().replace(/[−–]/g,'-');v[k]=t===''?null:Number(t);if(!isFinite(v[k]))v[k]=null}return v}
+function line(nm,fx,res,unit,need){return `<div class="line"><div><div class="nm">${nm}</div><div class="fx">${fx}</div></div><div class="res${isN(res)?'':' na'}">${isN(res)?f1(res)+' '+unit:(need||'needs inputs')}</div></div>`}
+const verdict=(cls,t)=>`<div class="v ${cls}">${t}</div>`;
+function step(n,title,body,note){return `<section class="step"><h3><span class="n">${n}</span>${title}</h3>${body}${note?`<p class="note">${note}</p>`:''}</section>`}
+function render(){
+  const v=read(),o=calc(v,conv),C=conv; const S=[];
+  $('f-sig').style.display=v.src==='port'?'none':''; $('f-pin').style.display=v.src==='port'?'':'none';
+  // 1 isolation
+  let b=line('Isolation',`Injected − Read = ${f1(o.inj)} − ${p(v.read)}`,o.iso,'dB','type the read')+line('Max gain',`Isolation − ${f1(o.imargin)} = ${f1(o.iso)} − ${f1(o.imargin)}`,o.mg,'dB');
+  if(isN(o.iso)) b+=verdict(o.iso>=80?'ok':'warn',o.iso>=80?`No gain, UL or DL, can go above ${f1(o.mg)} dB.`:`Only ${f1(o.mg)} dB of gain allowed. Low isolation: check donor placement before you set anything.`);
+  S.push(step(1,'Isolation and max gain',b,'Test both ways (inject donor side, read DAS side, then swap). Use the worse one.'));
+  // 2 donor gain + loss
+  b='';
+  if(isN(v.gd)) b+=line(`Donor gain (${C})`, v.gdu===C?`Label says ${f1(v.gd)} ${C}, use as is`:(v.gdu==='dBd'?`${f1(v.gd)} dBd + 2.15`:`${f1(v.gd)} dBi − 2.15`),o.gd,C);
+  else b+=line(`Donor gain (${C})`,'From the antenna label',null,'','type donor gain');
+  b+=line('Donor-side loss',`ft × loss ÷ 100${isN(v.extra)&&v.extra?' + pad/filter':''} = ${f1(v.cft)} × ${f1(v.cl)} ÷ 100${isN(v.extra)&&v.extra?' + '+f1(v.extra):''}`,o.loss,'dB');
+  S.push(step(2,'Donor gain and cable loss',b,C==='dBd'?'dBd mode: conservative, 2.15 dB under dBi. Common in public safety.':'Pick dBi or dBd at the top and stay with it.'));
+  // 3 BDA input
+  b=v.src==='port'?line('BDA input (strongest)','Reading at the BDA port / GUI Power IN is already the BDA input',o.bin,'dBm','type Power IN')
+     :line('BDA input (strongest)',`Donor signal + Donor gain − Loss = ${p(v.sig)} + ${f1(o.gd)} − ${f1(o.loss)}`,o.bin,'dBm');
+  S.push(step(3,'BDA input',b));
+  // 4 ceiling
+  b=line('Per-channel ceiling',`Max out − 10·log(channels) = ${f1(o.pmax)} − 10·log(${isN(v.ch)?v.ch:'—'}) = ${f1(o.pmax)} − ${isN(v.ch)&&v.ch>0?f1(10*L(v.ch)):'—'}`,o.ceil,'dBm');
+  if(isN(o.ceil)) b+=verdict(o.ceil>=o.tgt?'ok':'warn',o.ceil>=o.tgt?`+${f1(o.tgt)} target fits under ${f1(o.ceil)}.`:`Ceiling is under +${f1(o.tgt)}. Each channel tops out at ${f1(o.ceil)}.`);
+  S.push(step(4,'Per-channel ceiling',b));
+  // 5 DL gain
+  const lowTxt=[`need ${f1(o.need)}`,isN(o.cap)?`cap ${f1(o.cap)}`:null,isN(o.mg)?`max gain ${f1(o.mg)}`:null].filter(Boolean).join(', ');
+  b=line('DL gain needed',`Target − BDA input = ${f1(o.tgt)} − ${p(o.bin)}`,o.need,'dB')
+   +line(isN(v.dlset)?'DL gain you set':'DL gain to set',isN(v.dlset)?'Typed in by you':`Lowest of (${lowTxt})`,o.dlset,'dB')
+   +line('Real BDA output',`BDA input + gain = ${p(o.bin)} + ${f1(o.dlset)}${isN(o.ceil)&&isN(o.bin)&&isN(o.dlset)&&o.bin+o.dlset>o.ceil?' → held at ceiling':''}`,o.out,'dBm');
+  if(isN(o.dlset)&&isN(o.mg)&&o.dlset>o.mg) b+=verdict('bad',`DL gain is over the ${f1(o.mg)} isolation limit. Risk of oscillation.`);
+  else if(isN(o.dlset)&&isN(o.cap)&&o.dlset>o.cap) b+=verdict('bad',`DL gain is over the AHJ cap of ${f1(o.cap)}.`);
+  S.push(step(5,'Downlink gain',b));
+  // 6 indoor PL
+  b=line('Indoor path loss',`32.5 + 20·log(${isN(v.f)?String(+(v.f/1000).toFixed(4)):'GHz'}) + 10 × ${isN(v.N)?v.N:'N'} × log(${isN(v.dr)?v.dr:'ft'} ÷ 3.28) = 32.5 ${isN(v.f)?sg(20*L(v.f/1000)):''} + ${isN(v.N)&&isN(v.dr)&&v.dr>0?f1(10*v.N*L(v.dr/3.28)):'—'}`,o.pl,'dB');
+  S.push(step(6,'Indoor path loss',b,'Air distance from the weakest spot to the antenna closest to it. Not cable length.'));
+  // 7 radio inside
+  b=line('Radio inside hears',`BDA out − DAS loss + Ant gain − Indoor PL = ${p(o.out)} − ${f1(v.das)} + ${f1(o.gs)} − ${f1(o.pl)}`,o.rx,'dBm');
+  if(isN(o.rx)) b+=verdict(o.rx>=o.target?'ok':'bad',o.rx>=o.target?`PASS by ${f1(o.rx-o.target)} dB (need ${f1(o.target)} or stronger)`:`FAIL by ${f1(o.target-o.rx)} dB. Look at DAS loss, antenna spacing or BDA output.`);
+  S.push(step(7,'DOWNLINK: what the radio inside hears',b));
+  // 8 FSPL + UL input
+  b=line('Free space loss to tower',`20·log(${f1(o.ulf)}) + 20·log(${isN(v.mi)?v.mi:'mi'}) + 36.6 = ${isN(o.ulf)?f1(20*L(o.ulf)):'—'} + ${isN(v.mi)&&v.mi>0?f1(20*L(v.mi)):'—'} + 36.6`,o.fspl,'dB')
+   +line('BDA UL input',`Radio${o.radioAuto?' (auto)':''} − Indoor PL + Ant gain − DAS loss = ${f1(o.radio)} − ${f1(o.pl)} + ${f1(o.gs)} − ${f1(v.das)}`,o.ulin,'dBm');
+  S.push(step(8,'Free space loss and UL input',b,isN(v.ulf)?'':'UL frequency is auto from DL (700: +30, 800: −45). Type it if your pair is different.'));
+  // 9 window
+  b=line('Min UL gain (reach the tower)',`Target − UL input + Loss − Donor gain + FSPL = ${f1(o.target)} − ${p(o.ulin)} + ${f1(o.loss)} − ${f1(o.gd)} + ${f1(o.fspl)}`,o.mn,'dB')
+   +line('Max UL gain (don\'t desense it)',`FSPL + Loss − Donor gain − NF − ${f1(o.nmargin)} = ${f1(o.fspl)} + ${f1(o.loss)} − ${f1(o.gd)} − ${f1(v.nf)} − ${f1(o.nmargin)}`,o.mx,'dB')
+   +line('Limit',`Lowest of (${[isN(o.cap)?'cap '+f1(o.cap):null,isN(o.mg)?'max gain '+f1(o.mg):null,isN(o.mx)?'max UL '+f1(o.mx):null].filter(Boolean).join(', ')})`,o.lim,'dB');
+  if(isN(o.mn)&&isN(o.lim)) b+=verdict(o.lim>=o.mn?'ok':'bad',o.lim>=o.mn?`UL window: ${f1(o.mn)} to ${f1(o.lim)} dB`:`Window closed: need ${f1(o.mn)} but can only set ${f1(o.lim)}. Cut DAS loss or fix isolation first.`);
+  S.push(step(9,'Uplink window',b));
+  // 10 tower
+  b=line(isN(v.ulset)?'UL gain you set':'UL gain to set',isN(v.ulset)?'Typed in by you':'At least 2 over min, 3 under max when it fits',o.ulset,'dB')
+   +line('Tower hears',`UL input + UL gain − Loss + Donor gain − FSPL = ${p(o.ulin)} + ${f1(o.ulset)} − ${f1(o.loss)} + ${f1(o.gd)} − ${f1(o.fspl)}`,o.tower,'dBm')
+   +line('Noise margin','Max UL − UL gain set',o.nzm,'dB');
+  if(isN(o.tower)) b+=verdict(o.tower>=o.target?'ok':'bad',o.tower>=o.target?`PASS by ${f1(o.tower-o.target)} dB`:`FAIL by ${f1(o.target-o.tower)} dB`);
+  if(isN(o.nzm)&&o.nzm<0) b+=verdict('bad',`UL gain is ${f1(-o.nzm)} dB over the noise limit. It will desense the tower.`);
+  if(isN(o.ulset)&&isN(o.lim)&&o.ulset>o.lim+0.05) b+=verdict('bad',`UL gain is over the ${f1(o.lim)} limit.`);
+  S.push(step(10,'UPLINK: what the tower hears from that radio',b));
+  $('steps').innerHTML=S.join('');
+  const sb=(k,val,unit,pass,stxt)=>`<div class="sb${pass===true?' ok':pass===false?' bad':''}"><div class="k">${k}</div><div class="v">${isN(val)?f1(val):'—'}<small style="font-size:12px"> ${unit}</small></div>${stxt?`<div class="s">${stxt}</div>`:''}</div>`;
+  $('summary').innerHTML=sb('DL gain',o.dlset,'dB',null,isN(o.out)?`out ${f1(o.out)} dBm`:'')+sb('UL gain',o.ulset,'dB',null,isN(o.nzm)?`${f1(o.nzm)} under noise`:'')
+    +sb('Radio inside',o.rx,'dBm',isN(o.rx)?o.rx>=o.target:null,isN(o.rx)?(o.rx>=o.target?'PASS':'FAIL'):'')+sb('Tower hears',o.tower,'dBm',isN(o.tower)?o.tower>=o.target:null,isN(o.tower)?(o.tower>=o.target?'PASS':'FAIL'):'');
+  const mc=(k,val,pass)=>`<div class="${pass===true?'ok':pass===false?'bad':''}"><b>${isN(val)?f1(val):'—'}</b>${k}</div>`;
+  $('mini').innerHTML=mc('DL gain',o.dlset)+mc('UL gain',o.ulset)+mc('Inside',o.rx,isN(o.rx)?o.rx>=o.target:null)+mc('Tower',o.tower,isN(o.tower)?o.tower>=o.target:null);
+  try{localStorage.setItem(KEY,JSON.stringify({v:Object.fromEntries(FIELDS.map(k=>[k,$(k).value])),conv}))}catch(e){}
+}
+function setConv(c){conv=c;document.querySelectorAll('[data-conv]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.conv===c));render()}
+function fill(d){for(const k of FIELDS){const el=$(k);let x=d[k];if(el.tagName==='SELECT'){el.value=x||el.options[0].value}else el.value=(x===null||x===undefined)?'':String(x).replace('-','−')}}
+PRESETS.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.label;$('preset').appendChild(o)});
+$('preset').addEventListener('change',e=>{if(e.target.value==='')return;const d=PRESETS[+e.target.value];fill(d);setConv(d.conv||'dBi')});
+$('clear').addEventListener('click',()=>{fill({});$('preset').value='';render()});
+document.querySelectorAll('[data-conv]').forEach(b=>b.addEventListener('click',()=>setConv(b.dataset.conv)));
+$('form').addEventListener('input',render);$('form').addEventListener('change',render);
+(function(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(s&&s.v){for(const k of FIELDS)if(k in s.v)$(k).value=s.v[k];conv=s.conv||'dBi'}else{fill(PRESETS[0]);$('preset').value='0';conv='dBi'}
+  setConv(conv)})();
+</script>
+</body>
+</html>

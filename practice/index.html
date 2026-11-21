@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BDA Practice Sites</title>
+<meta name="description" content="Practice BDA link budget math on a random site: isolation, DL and UL gain, coverage and signal at the tower.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f6; --card:#fff; --ink:#151b20; --muted:#5d6b75; --line:#d5dce0; --soft:#f6f8f9;
+  --in-bg:#fff8e6; --in-line:#d9a520; --calc-bg:#eaf1fa; --calc:#1f5fa8; --accent:#cf5d16;
+  --ok:#2e7a33; --ok-bg:#e9f5ea; --bad:#b3261e; --bad-bg:#fbecea;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1418; --card:#171e24; --ink:#e6ecef; --muted:#9aa8b1; --line:#2a343b; --soft:#1b2329;
+  --in-bg:#2a2412; --in-line:#c99a1e; --calc-bg:#182838; --calc:#7fb6f2; --accent:#f08a46;
+  --ok:#79c77d; --ok-bg:#16291a; --bad:#f08a80; --bad-bg:#33191a; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+a{color:var(--calc)}
+.wrap{max-width:900px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 60px}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:900px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
+.top .home{font-weight:700;text-decoration:none;color:var(--ink);margin-right:auto;white-space:nowrap}
+.bands{display:flex;gap:4px}
+.bands a{font:600 13px var(--mono);text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 9px;background:var(--card)}
+.bands a[aria-current="page"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.burger{flex:none;width:40px;height:40px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.burger i,.burger i::before,.burger i::after{display:block;width:17px;height:2px;background:currentColor;border-radius:2px;position:relative}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}.burger i::before{top:-6px}.burger i::after{top:6px}
+.menu{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:54px;width:min(300px,calc(100vw - 32px));background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none}
+.menu.open{display:block}
+.menu .lbl{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.menu a{display:block;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink)}
+.menu a:hover{background:var(--soft)} .menu a small{display:block;color:var(--muted);font-size:12.5px}
+@media (max-width:560px){.bands{display:none}}
+h1{font-size:clamp(26px,5vw,34px);line-height:1.1;margin:14px 0 4px}
+.sub{color:var(--muted);margin:0 0 12px;max-width:68ch}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.tools button,.tools select{font:600 14px var(--sans);min-height:38px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tools button.main{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.score{margin-left:auto;font:600 14px var(--mono);color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:18px;margin:0 0 8px}
+.sitehead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sitehead .band{font:600 13px var(--mono);background:var(--accent);color:#fff;border-radius:6px;padding:2px 8px}
+.givens{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.gv h3{font:600 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.gv table{border-collapse:collapse;width:100%;font-size:14px}
+.gv td{border-top:1px solid var(--line);padding:4px 6px}
+.gv td:last-child{font:600 14px var(--mono);text-align:right;white-space:nowrap;width:1%}
+.gv td small{color:var(--muted)}
+.q{border-top:1px solid var(--line);padding:12px 0}
+.q:first-child{border-top:0;padding-top:0}
+.q .qt{font-weight:600;margin-bottom:4px}
+.q .qt .n{display:inline-grid;place-items:center;min-width:26px;height:24px;border-radius:6px;background:var(--ink);color:var(--card);font:600 12px var(--mono);margin-right:6px}
+.q .hint{font-size:13px;color:var(--muted);margin:0 0 6px}
+.ans{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end}
+.ans .a{display:flex;flex-direction:column;gap:3px;flex:1 1 150px;max-width:220px}
+.ans label{font-size:12.5px;color:var(--muted)}
+.ans input{font:16px var(--mono);min-height:40px;width:100%;padding:6px 8px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink)}
+.ans input.right{border-color:var(--ok);background:var(--ok-bg)} .ans input.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.ans button{font:600 14px var(--sans);min-height:40px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.fb{font-size:13.5px;font-weight:600;margin-top:6px}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+details.work{margin-top:6px;border:1px solid var(--line);border-radius:8px;background:var(--soft)}
+details.work summary{cursor:pointer;padding:6px 10px;font-size:13.5px;font-weight:600;color:var(--calc)}
+details.work .b{padding:0 10px 8px;font:13.5px/1.6 var(--mono);white-space:pre-wrap}
+.lesson{border-left:4px solid var(--accent);background:var(--soft);padding:8px 12px;border-radius:6px;margin-top:8px;display:none}
+.lesson.show{display:block}
+footer{font-size:13px;color:var(--muted);margin-top:20px}
+:focus-visible{outline:2px solid var(--calc);outline-offset:2px}
+</style>
+<style id="look-refresh">
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+/* ===== Look refresh: riser-drawing blueprint, fire-red callouts. Styling only, no content changes. ===== */
+:root{
+  --bg:#ECF0F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#13243A; --muted:#56677A; --line:#CBD5DC; --soft:#F3F6F8; --fixed-bg:#F1F4F6;
+  --accent:#C62828; --signal:#C62828; --link:#1B5E9E; --calc:#1B5E9E; --ans:#1B5E9E; --calc-bg:#E8F0F9; --ans-bg:#E8F0F9;
+  --in-bg:#FFF6D6; --in-line:#D4A000; --hook-bg:#EEF2F6;
+  --ok:#23733A; --ok-bg:#E5F3E8; --bad:#B42318; --bad-bg:#FBEAE8; --warn:#8A5A00; --warn-bg:#FDF2D8;
+  --gain:#23733A; --gain-bg:#EAF5EC; --loss:#B42318; --loss-bg:#FBEDEB;
+  --grid:rgba(19,36,58,.045); --panel:#0E1E30;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --body:var(--sans); --display:var(--sans); --font-ui:var(--sans);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --font-num:var(--mono);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B;
+  --grid:rgba(140,180,220,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B; --grid:rgba(140,180,220,.05); color-scheme:dark}
+body{background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+input,select,button{font-family:var(--sans)}
+a{text-underline-offset:3px}
+.burger{background:var(--card)}
+.menu{border-radius:10px;box-shadow:0 18px 40px -12px rgba(13,24,35,.35)}
+.menu .lbl{font:700 12px/1.3 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--accent)}
+.menu a{font-weight:600}
+.menu a small{font-weight:400}
+.menu a[aria-current="page"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
+@media print{body{background-image:none}}
+
+.top{background:color-mix(in srgb,var(--card) 90%,transparent)}
+.top .home{font-weight:800;font-stretch:85%;font-size:16px}
+.bands a{font:700 13px var(--sans);border-radius:6px;padding:6px 10px}
+h1{font-weight:800;font-stretch:72%;font-size:clamp(34px,6.5vw,52px);line-height:.95;letter-spacing:-.015em;margin:22px 0 10px}
+.sub{font-size:15.5px;line-height:1.6}
+.tools button,.tools select{font-weight:600}
+.tools button.main{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.score{font:700 15px var(--mono);color:var(--ink)}
+.card{border-radius:10px;padding:18px 20px}
+.card h2{font-size:21px;font-weight:800;font-stretch:85%}
+.sitehead .band{font:700 13px var(--sans);background:var(--accent);border-radius:999px;padding:3px 11px}
+.gv h3{font:700 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--accent);margin-bottom:6px}
+.q .qt{font-size:16px}
+.q .qt .n{background:transparent;color:var(--accent);border:2px solid var(--accent);border-radius:999px;min-width:30px;height:30px;font:700 12px var(--mono)}
+.ans button{font-weight:600}
+details.work summary{font-weight:700}
+.lesson{border-left-color:var(--accent);border-radius:4px 10px 10px 4px;padding:12px 16px}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="home" href="../">← lehongphuc.net</a>
+  <nav class="bands" aria-label="Bands"><a href="../700/">700</a><a href="../800/">800</a><a href="../uhf/">UHF</a><a href="../vhf/">VHF</a></nav>
+  <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i></button>
+  <nav class="menu" id="menu">
+    <div class="lbl">BDA Setting Gain</div>
+    <a href="../700/">700 MHz</a><a href="../800/">800 MHz</a><a href="../uhf/">UHF</a><a href="../vhf/">VHF</a>
+    <div class="lbl">Practice and tools</div>
+    <a href="../practice/" aria-current="page">Practice sites<small>A random site every refresh</small></a>
+    <a href="../calc/">Link Budget Calculator<small>Just the math</small></a>
+    <a href="../">Home</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+  <h1>Practice sites</h1>
+  <p class="sub">A different building every time you refresh (20 in all), or hit <b>Shuffle</b> to mix the numbers into a brand new site. Work it on paper the same way you would on site, type your answers, and check them. Round to one decimal; anything within about half a dB counts. All antenna gains are in dBd.</p>
+  <div class="tools">
+    <button class="main" id="new" type="button">New site</button>
+    <button class="main" id="shuffle" type="button" style="background:var(--accent);border-color:var(--accent)">Shuffle (make a new one)</button>
+    <select id="pick" aria-label="Pick a site"></select>
+    <button id="checkall" type="button">Check all</button>
+    <button id="showall" type="button">Show all answers</button>
+    <span class="score" id="score"></span>
+  </div>
+  <div id="app"></div>
+  <footer>Made-up sites for practice. Same math as the BDA Setting Gain pages. Rules of thumb: no radio info = 33 dBm for 700/800, 35 dBm for VHF/UHF · dBd = dBi − 2.15 · dBm = 10·log(W × 1000) · ½" plenum ≈ 2.2 dB/100 ft at 700/800, 1.5 at UHF, 1.0 at VHF.</footer>
+</div>
+
+<script>
+const SITES = [{"id":1,"title":"Open warehouse on 700","band":"700","N":2.8,"mi":6.9,"cap":null,"inj":10,"readA":-87.8,"readB":-86.4,"gd":8,"gdu":"dBd","cft":80,"cl":2.2,"pad":0,"chans":[{"f":773.11875,"p":-59.1,"cc":"N"},{"f":771.60625,"p":-61.6,"cc":"N"},{"f":771.14375,"p":-57.1,"cc":"N"},{"f":770.31875,"p":-54.6,"cc":"Y"}],"pmax":37,"das":{"dft":350,"dl":2.2,"taps":10,"th":2,"sp":1,"jmp":1},"gs":0,"dr":40,"radio":null,"nf":5,"pmaxu":"dBm","radiou":"dBm"},{"id":2,"title":"Distribution center on 800","band":"800","N":2.8,"mi":6.6,"cap":null,"inj":10,"readA":-95.9,"readB":-93.3,"gd":11,"gdu":"dBd","cft":120,"cl":2.2,"pad":6,"chans":[{"f":853.9125,"p":-53.5,"cc":"N"},{"f":851.1375,"p":-52.7,"cc":"Y"},{"f":857.8875,"p":-58.8,"cc":"N"},{"f":855.4625,"p":-55.8,"cc":"N"},{"f":853.3125,"p":-60.2,"cc":"N"},{"f":857.1625,"p":-55.3,"cc":"N"}],"pmax":37,"das":{"dft":200,"dl":2.2,"taps":6,"th":5,"sp":2,"jmp":1},"gs":-2,"dr":40,"radio":null,"nf":6,"pmaxu":"dBm","radiou":"dBm"},{"id":3,"title":"Parking garage on 700","band":"700","N":3.1,"mi":3.8,"cap":65,"inj":0,"readA":-94,"readB":-92.4,"gd":12,"gdu":"dBd","cft":120,"cl":2.2,"pad":0,"chans":[{"f":773.01875,"p":-56.5,"cc":"N"},{"f":773.80625,"p":-57.1,"cc":"N"},{"f":771.04375,"p":-56.8,"cc":"N"},{"f":773.36875,"p":-54.9,"cc":"N"},{"f":774.94375,"p":-60.8,"cc":"N"},{"f":770.84375,"p":-53.2,"cc":"Y"}],"pmax":37,"das":{"dft":400,"dl":2.2,"taps":15,"th":4,"sp":1,"jmp":1},"gs":0,"dr":35,"radio":3,"nf":7,"pmaxu":"dBm","radiou":"W"},{"id":4,"title":"Shopping mall on 800","band":"800","N":3.1,"mi":8.8,"cap":65,"inj":0,"readA":-97.5,"readB":-94.5,"gd":11,"gdu":"dBd","cft":150,"cl":2.2,"pad":0,"chans":[{"f":858.9625,"p":-54.6,"cc":"N"},{"f":851.975,"p":-54.4,"cc":"Y"},{"f":859.5625,"p":-58.7,"cc":"N"},{"f":853.0625,"p":-55.1,"cc":"N"},{"f":858.4625,"p":-56.9,"cc":"N"}],"pmax":2,"das":{"dft":200,"dl":2.2,"taps":10,"th":1,"sp":2,"jmp":1},"gs":0,"dr":30,"radio":5,"nf":7,"pmaxu":"W","radiou":"W"},{"id":5,"title":"Grocery store on UHF","band":"UHF","N":3.1,"mi":7,"cap":null,"inj":10,"readA":-91,"readB":-88.4,"gd":12,"gdu":"dBi","cft":120,"cl":1.5,"pad":10,"chans":[{"f":463.6125,"p":-61.6,"cc":"N"},{"f":458.3125,"p":-62,"cc":"N"},{"f":453.4875,"p":-55.8,"cc":"N"}],"pmax":5,"das":{"dft":500,"dl":1.5,"taps":15,"th":4,"sp":2,"jmp":1},"gs":0,"dr":40,"radio":null,"nf":7,"pmaxu":"W","radiou":"dBm"},{"id":6,"title":"Office tower on 700","band":"700","N":3.4,"mi":7.5,"cap":null,"inj":0,"readA":-104,"readB":-100.6,"gd":11,"gdu":"dBd","cft":150,"cl":2.2,"pad":6,"chans":[{"f":769.86875,"p":-54.6,"cc":"Y"},{"f":771.09375,"p":-56,"cc":"N"},{"f":774.60625,"p":-57.7,"cc":"N"},{"f":771.15625,"p":-54.8,"cc":"N"},{"f":771.66875,"p":-55.2,"cc":"N"},{"f":772.04375,"p":-59.9,"cc":"N"}],"pmax":37,"das":{"dft":350,"dl":2.2,"taps":10,"th":1,"sp":2,"jmp":1},"gs":-2,"dr":25,"radio":3,"nf":5,"pmaxu":"dBm","radiou":"W"},{"id":7,"title":"Hotel on 800","band":"800","N":3.4,"mi":2.1,"cap":65,"inj":10,"readA":-87,"readB":-86.7,"gd":10,"gdu":"dBd","cft":120,"cl":2.2,"pad":6,"chans":[{"f":855.8625,"p":-69,"cc":"N"},{"f":852.15,"p":-66.9,"cc":"N"},{"f":851.075,"p":-61.2,"cc":"Y"},{"f":855.675,"p":-62.2,"cc":"N"}],"pmax":2,"das":{"dft":200,"dl":2.2,"taps":10,"th":4,"sp":1,"jmp":1},"gs":0,"dr":35,"radio":null,"nf":5,"pmaxu":"W","radiou":"dBm"},{"id":8,"title":"Apartment building on VHF","band":"VHF","N":3.4,"mi":6.4,"cap":70,"inj":10,"readA":-92.8,"readB":-90.5,"gd":12,"gdu":"dBi","cft":180,"cl":1,"pad":10,"chans":[{"f":171.2875,"p":-56.9,"cc":"N"},{"f":166.665,"p":-55.8,"cc":"N"}],"pmax":5,"das":{"dft":250,"dl":1,"taps":15,"th":5,"sp":2,"jmp":1},"gs":0,"dr":50,"radio":null,"nf":5,"pmaxu":"W","radiou":"dBm"},{"id":9,"title":"Medical office on 700","band":"700","N":3.4,"mi":4.4,"cap":65,"inj":0,"readA":-100.8,"readB":-99.7,"gd":10,"gdu":"dBd","cft":80,"cl":2.2,"pad":0,"chans":[{"f":769.69375,"p":-52.7,"cc":"Y"},{"f":771.79375,"p":-53.3,"cc":"N"},{"f":771.60625,"p":-55.1,"cc":"N"},{"f":770.41875,"p":-59.6,"cc":"N"}],"pmax":2,"das":{"dft":500,"dl":2.2,"taps":6,"th":2,"sp":2,"jmp":1},"gs":0,"dr":25,"radio":5,"nf":5,"pmaxu":"W","radiou":"W"},{"id":10,"title":"Hospital on 800","band":"800","N":3.7,"mi":5,"cap":65,"inj":0,"readA":-91,"readB":-88.8,"gd":8,"gdu":"dBd","cft":150,"cl":2.2,"pad":0,"chans":[{"f":854.25,"p":-63.8,"cc":"N"},{"f":853.725,"p":-65.4,"cc":"N"},{"f":855.675,"p":-65.7,"cc":"N"},{"f":853.575,"p":-62.7,"cc":"Y"}],"pmax":5,"das":{"dft":500,"dl":2.2,"taps":10,"th":5,"sp":0,"jmp":1},"gs":0,"dr":25,"radio":null,"nf":6,"pmaxu":"W","radiou":"dBm"},{"id":11,"title":"High school on UHF","band":"UHF","N":3.7,"mi":3.7,"cap":null,"inj":0,"readA":-103.7,"readB":-101.5,"gd":12,"gdu":"dBi","cft":150,"cl":1.5,"pad":10,"chans":[{"f":466.9375,"p":-75.6,"cc":"N"},{"f":455.8875,"p":-70.5,"cc":"N"}],"pmax":2,"das":{"dft":500,"dl":1.5,"taps":15,"th":5,"sp":2,"jmp":1},"gs":0,"dr":25,"radio":null,"nf":5,"pmaxu":"W","radiou":"dBm"},{"id":12,"title":"University library on 700","band":"700","N":3.7,"mi":2,"cap":70,"inj":10,"readA":-94.4,"readB":-92.6,"gd":11,"gdu":"dBi","cft":100,"cl":2.2,"pad":0,"chans":[{"f":770.50625,"p":-68.7,"cc":"N"},{"f":773.30625,"p":-65.2,"cc":"N"},{"f":769.58125,"p":-64,"cc":"Y"},{"f":774.36875,"p":-69.8,"cc":"N"},{"f":770.71875,"p":-67.5,"cc":"N"},{"f":769.95625,"p":-67.7,"cc":"N"},{"f":774.25625,"p":-65,"cc":"N"},{"f":770.13125,"p":-68.1,"cc":"N"},{"f":773.06875,"p":-67.4,"cc":"N"},{"f":771.58125,"p":-64.4,"cc":"N"},{"f":770.06875,"p":-67.6,"cc":"N"},{"f":773.04375,"p":-69.1,"cc":"N"},{"f":772.35625,"p":-68.2,"cc":"N"},{"f":770.86875,"p":-71.9,"cc":"N"},{"f":771.41875,"p":-68.9,"cc":"N"},{"f":774.31875,"p":-64.4,"cc":"N"},{"f":770.95625,"p":-64.3,"cc":"N"},{"f":772.99375,"p":-68.3,"cc":"N"},{"f":770.51875,"p":-67.7,"cc":"N"},{"f":769.75625,"p":-72,"cc":"N"},{"f":773.51875,"p":-65.2,"cc":"N"},{"f":774.16875,"p":-70.3,"cc":"N"},{"f":771.28125,"p":-65.8,"cc":"N"},{"f":773.46875,"p":-64.1,"cc":"N"}],"pmax":0.1,"das":{"dft":300,"dl":2.2,"taps":10,"th":5,"sp":1,"jmp":1},"gs":0,"dr":30,"radio":null,"nf":7,"pmaxu":"W","radiou":"dBm"},{"id":13,"title":"County jail on 800","band":"800","N":4,"mi":2.5,"cap":70,"inj":10,"readA":-90.2,"readB":-89.7,"gd":11,"gdu":"dBd","cft":80,"cl":2.2,"pad":3,"chans":[{"f":854,"p":-58.4,"cc":"N"},{"f":853.625,"p":-51.6,"cc":"N"},{"f":852.45,"p":-50.6,"cc":"Y"},{"f":855.5625,"p":-52.1,"cc":"N"},{"f":854.825,"p":-55.5,"cc":"N"},{"f":855.825,"p":-50.7,"cc":"N"},{"f":860.7375,"p":-55.9,"cc":"N"},{"f":860.975,"p":-57.8,"cc":"N"}],"pmax":33,"das":{"dft":200,"dl":2.2,"taps":15,"th":3,"sp":1,"jmp":1},"gs":0,"dr":40,"radio":null,"nf":5,"pmaxu":"dBm","radiou":"dBm"},{"id":14,"title":"Courthouse on VHF","band":"VHF","N":3.7,"mi":2.6,"cap":70,"inj":0,"readA":-105.5,"readB":-102.6,"gd":12,"gdu":"dBd","cft":60,"cl":1,"pad":0,"chans":[{"f":162.1125,"p":-58,"cc":"N"},{"f":167.075,"p":-65.8,"cc":"N"}],"pmax":2,"das":{"dft":500,"dl":1,"taps":15,"th":4,"sp":0,"jmp":1},"gs":-2,"dr":50,"radio":null,"nf":5,"pmaxu":"W","radiou":"dBm"},{"id":15,"title":"Data center on 700","band":"700","N":3.7,"mi":2.6,"cap":65,"inj":0,"readA":-80.2,"readB":-77.6,"gd":10,"gdu":"dBi","cft":120,"cl":2.2,"pad":0,"chans":[{"f":770.21875,"p":-53,"cc":"Y"},{"f":771.35625,"p":-53.1,"cc":"N"},{"f":773.85625,"p":-58.1,"cc":"N"},{"f":771.66875,"p":-53.1,"cc":"N"},{"f":771.80625,"p":-59.3,"cc":"N"}],"pmax":5,"das":{"dft":500,"dl":2.2,"taps":6,"th":2,"sp":1,"jmp":1},"gs":0,"dr":25,"radio":null,"nf":5,"pmaxu":"W","radiou":"dBm"},{"id":16,"title":"Casino on 800","band":"800","N":3.4,"mi":2.5,"cap":null,"inj":0,"readA":-105.8,"readB":-102.1,"gd":6,"gdu":"dBi","cft":120,"cl":2.2,"pad":0,"chans":[{"f":851.5375,"p":-54.2,"cc":"Y"},{"f":859.9,"p":-59.4,"cc":"N"},{"f":857.3625,"p":-62.1,"cc":"N"},{"f":858.775,"p":-55.4,"cc":"N"},{"f":855.075,"p":-62,"cc":"N"}],"pmax":37,"das":{"dft":350,"dl":2.2,"taps":6,"th":5,"sp":1,"jmp":1},"gs":0,"dr":50,"radio":5,"nf":5,"pmaxu":"dBm","radiou":"W"},{"id":17,"title":"Stadium concourse on UHF","band":"UHF","N":2.8,"mi":5.3,"cap":70,"inj":10,"readA":-92.3,"readB":-91.5,"gd":10,"gdu":"dBi","cft":180,"cl":1.5,"pad":0,"chans":[{"f":465.45,"p":-60.8,"cc":"N"},{"f":462.9125,"p":-61,"cc":"N"},{"f":457.05,"p":-60.9,"cc":"N"},{"f":456.875,"p":-57.6,"cc":"N"}],"pmax":33,"das":{"dft":500,"dl":1.5,"taps":15,"th":5,"sp":2,"jmp":1},"gs":0,"dr":30,"radio":null,"nf":5,"pmaxu":"dBm","radiou":"dBm"},{"id":18,"title":"Senior living on 700","band":"700","N":3.4,"mi":3.8,"cap":65,"inj":0,"readA":-94.4,"readB":-92.8,"gd":6,"gdu":"dBd","cft":60,"cl":2.2,"pad":6,"chans":[{"f":774.41875,"p":-62.7,"cc":"N"},{"f":769.56875,"p":-59.9,"cc":"Y"},{"f":770.65625,"p":-66.4,"cc":"N"},{"f":773.10625,"p":-60.9,"cc":"N"},{"f":774.30625,"p":-62.2,"cc":"N"}],"pmax":33,"das":{"dft":300,"dl":2.2,"taps":10,"th":5,"sp":1,"jmp":1},"gs":0,"dr":35,"radio":null,"nf":6,"pmaxu":"dBm","radiou":"dBm"},{"id":19,"title":"Self storage on 800","band":"800","N":3.1,"mi":5.1,"cap":null,"inj":0,"readA":-98.5,"readB":-98,"gd":10,"gdu":"dBd","cft":60,"cl":2.2,"pad":0,"chans":[{"f":855.4,"p":-67.1,"cc":"N"},{"f":851.25,"p":-64.1,"cc":"Y"},{"f":859.7625,"p":-66.4,"cc":"N"}],"pmax":2,"das":{"dft":400,"dl":2.2,"taps":15,"th":5,"sp":0,"jmp":1},"gs":0,"dr":40,"radio":3,"nf":6,"pmaxu":"W","radiou":"W"},{"id":20,"title":"Police HQ on VHF","band":"VHF","N":4,"mi":2.4,"cap":65,"inj":10,"readA":-87.9,"readB":-85.9,"gd":9,"gdu":"dBd","cft":120,"cl":1,"pad":0,"chans":[{"f":167.145,"p":-55,"cc":"N"},{"f":157.4875,"p":-52.5,"cc":"N"}],"pmax":2,"das":{"dft":200,"dl":1,"taps":10,"th":4,"sp":2,"jmp":1},"gs":-2,"dr":50,"radio":null,"nf":6,"pmaxu":"W","radiou":"dBm"}];
+const BANDS = {'700':{fmid:772,uloff:30,radio:33,dl:'769–775 MHz',ul:'UL = DL + 30'},'800':{fmid:856,uloff:-45,radio:33,dl:'851–861 MHz',ul:'UL = DL − 45'},'UHF':{fmid:460,uloff:0,radio:35,dl:'450–470 MHz',ul:'UL = same as DL here'},'VHF':{fmid:160,uloff:0,radio:35,dl:'150–174 MHz',ul:'UL = same as DL here'}};
+const L=Math.log10; const isN=x=>typeof x==='number'&&isFinite(x);
+const lowest=a=>{a=a.filter(isN);return a.length?Math.min(...a):null};
+const num=v=>{if(v===''||v===null||v===undefined)return null;const n=Number(String(v).replace(/[−–]/g,'-'));return isFinite(n)?n:null};
+/*CALC-START*/
+function calc(s,chans,ants,band){
+  const v=k=>num(s[k]); const o={};
+  const ra=v('readA'), rb=v('readB'), inj=isN(v('inj'))?v('inj'):null;
+  const reads=[ra,rb].filter(isN);
+  o.readW=reads.length?Math.max(...reads):null;
+  o.iso=(isN(inj)&&isN(o.readW))?inj-o.readW:null; o.mg=isN(o.iso)?o.iso-20:null;
+  o.cap=v('cap');
+  o.gd=v('gd');
+  o.loss=(isN(v('cft'))&&isN(v('cl')))?v('cft')*v('cl')/100+(v('pad')||0):null;
+  const fs=chans.map(c=>num(c.f)).filter(isN), ps=chans.map(c=>num(c.p)).filter(isN);
+  o.nch=fs.length; o.strong=ps.length?Math.max(...ps):null; o.weak=ps.length?Math.min(...ps):null;
+  o.fdl=fs.length?Math.max(...fs):band.fmid;
+  o.tp=(isN(v('tpA'))&&isN(v('tpG')))?v('tpA')-(v('tpLoss')||0)-v('tpG'):null;
+  o.pmax=isN(v('pmax'))?(s.pmaxu==='W'?10*L(v('pmax')*1000):v('pmax')):null;
+  o.tlog=o.nch>0?10*L(o.nch):null;
+  o.ceil=(isN(o.pmax)&&isN(o.tlog))?o.pmax-o.tlog:null;
+  o.tgt=isN(v('tgt'))?v('tgt'):10;
+  o.need=isN(o.strong)?o.tgt-o.strong:null;
+  o.dlsug=isN(o.need)?lowest([o.need,o.cap,o.mg]):null;
+  o.dlset=isN(v('dlset'))?v('dlset'):o.dlsug;
+  o.strongOut=(isN(o.strong)&&isN(o.dlset))?o.strong+o.dlset:null;
+  o.weakOut=(isN(o.weak)&&isN(o.dlset))?(isN(o.ceil)?Math.min(o.weak+o.dlset,o.ceil):o.weak+o.dlset):null;
+  o.dasq=(isN(v('dft'))&&isN(v('dl')))?v('dft')/100*v('dl')+(v('taps')||0)+(v('th')||0)*1+(v('sp')||0)*3.3+(v('jmp')||0):null;
+  o.das=isN(v('dasOv'))?v('dasOv'):o.dasq;
+  o.gs=v('gs'); o.N=v('N'); o.dr=v('dr');
+  o.ghz=20*L(o.fdl/1000);
+  o.wall=(isN(o.N)&&isN(o.dr)&&o.dr>0)?10*o.N*L(o.dr/3.28):null;
+  o.pl=isN(o.wall)?32.5+o.ghz+o.wall:null;
+  o.rx=(isN(o.weakOut)&&isN(o.das)&&isN(o.gs)&&isN(o.pl))?o.weakOut-o.das+o.gs-o.pl:null;
+  o.radio=isN(v('radio'))?(s.radiou==='W'?10*L(v('radio')*1000):v('radio')):band.radio;
+  o.ulin=(isN(o.pl)&&isN(o.gs)&&isN(o.das))?o.radio-o.pl+o.gs-o.das:null;
+  o.ulf=isN(v('ulf'))?v('ulf'):(o.fdl+band.uloff);
+  o.mhz=20*L(o.ulf); o.mi=v('mi'); o.milog=(isN(o.mi)&&o.mi>0)?20*L(o.mi):null;
+  o.fspl=isN(o.milog)?o.mhz+o.milog+36.6:null;
+  const okUL=isN(o.ulin)&&isN(o.loss)&&isN(o.gd)&&isN(o.fspl);
+  o.mn=okUL?-95-o.ulin+o.loss-o.gd+o.fspl:null;
+  o.nf=v('nf');
+  o.mx=(isN(o.fspl)&&isN(o.loss)&&isN(o.gd)&&isN(o.nf))?o.fspl+o.loss-o.gd-o.nf-20:null;
+  o.lim=isN(o.mx)?lowest([o.cap,o.mg,o.mx]):null;
+  if(isN(o.lim)&&isN(o.mn)){let X=Math.min(o.lim,o.mx-3); if(X<o.mn) X=o.lim; if(Math.floor(X)>=o.mn) X=Math.floor(X); o.ulsug=X;} else o.ulsug=null;
+  o.ulset=isN(v('ulset'))?v('ulset'):o.ulsug;
+  o.tower=(okUL&&isN(o.ulset))?o.ulin+o.ulset-o.loss+o.gd-o.fspl:null;
+  o.nzm=(isN(o.mx)&&isN(o.ulset))?o.mx-o.ulset:null;
+  o.gchk=(isN(v('gOut'))&&isN(v('gIn')))?v('gOut')-v('gIn'):null;
+  return o;
+}
+/*CALC-END*/
+const f1=x=>isN(x)?(Math.round(x*10)/10).toFixed(1).replace('-','−'):'—';
+const p=x=>isN(x)&&x<0?'('+f1(x)+')':f1(x);
+const $=id=>document.getElementById(id);
+let cur, X, O, score={};
+
+function inputsFor(x){const gd=x.gdu==='dBi'?x.gd-2.15:x.gd;
+  return {inj:x.inj,readA:x.readA,readB:x.readB,cap:x.cap,gd,cft:x.cft,cl:x.cl,pad:x.pad,pmax:x.pmax,pmaxu:x.pmaxu,tgt:10,dft:x.das.dft,dl:x.das.dl,taps:x.das.taps,th:x.das.th,sp:x.das.sp,jmp:x.das.jmp,gs:x.gs,N:x.N,dr:x.dr,radio:x.radio,radiou:x.radiou,nf:x.nf,mi:x.mi}}
+function bldg(N){return {2.8:'open warehouse type',3.1:'garage / mall type',3.4:'office / hotel type',3.7:'hospital / school type',4.0:'prison / heavy concrete'}[N]||''}
+
+function questions(x,o){
+  const B=BANDS[x.band], Q=[];
+  const pmaxTxt=x.pmaxu==='W'?`${x.pmax} W → 10·log(${x.pmax} × 1000) = ${f1(o.pmax)} dBm`:`${x.pmax} dBm`;
+  const radioTxt=x.radio?`${x.radio} W → 10·log(${x.radio*1000}) = ${f1(o.radio)} dBm`:`not given → use ${B.radio} dBm`;
+  Q.push({t:'What is the isolation, and the max gain it allows?',h:'Isolation = injected − the worse read (closer to 0). Max gain = isolation − 20.',
+    a:[['Isolation (dB)',o.iso],['Max gain (dB)',o.mg]],
+    w:`Worse read = ${f1(o.readW)} (closer to 0)\nIsolation = ${f1(x.inj)} − ${p(o.readW)} = ${f1(o.iso)} dB\nMax gain = ${f1(o.iso)} − 20 = ${f1(o.mg)} dB`});
+  Q.push({t:'What is the donor gain in dBd?',h:'dBd = dBi − 2.15. If it already says dBd, use it as is.',a:[['Donor gain (dBd)',o.gd]],
+    w:x.gdu==='dBi'?`${x.gd} dBi − 2.15 = ${f1(o.gd)} dBd`:`Label already says ${x.gd} dBd. Use ${f1(o.gd)}.`});
+  Q.push({t:'What is the donor-side loss?',h:'ft × loss ÷ 100 + pad / filter.',a:[['Loss (dB)',o.loss]],
+    w:`${x.cft} × ${x.cl} ÷ 100 = ${f1(x.cft*x.cl/100)}\n+ pad / filter ${x.pad}\n= ${f1(o.loss)} dB`});
+  Q.push({t:'Which Power IN readings are the strongest and the weakest?',h:'Strongest = closest to 0. Weakest = most negative.',a:[['Strongest (dBm)',o.strong],['Weakest (dBm)',o.weak]],
+    w:`Readings: ${x.chans.map(c=>f1(c.p)).join(', ')}\nStrongest = ${f1(o.strong)} (sets DL gain)\nWeakest = ${f1(o.weak)} (checks coverage)`});
+  Q.push({t:'What is the per-channel ceiling? Does +10 fit?',h:'Max output (dBm) − 10·log(channels).',a:[['Ceiling (dBm)',o.ceil]],
+    w:`Max output: ${pmaxTxt}\n10·log(${o.nch}) = ${f1(o.tlog)}\nCeiling = ${f1(o.pmax)} − ${f1(o.tlog)} = ${f1(o.ceil)} dBm\n${o.ceil>=10?'+10 fits.':'Under +10: every channel tops out at '+f1(o.ceil)+'.'}`});
+  Q.push({t:'What DL gain do you need for +10, and what can you actually set?',h:'Needed = 10 − strongest. Set = lowest of needed, AHJ cap, max gain.',a:[['Needed (dB)',o.need],['DL gain set (dB)',o.dlset]],
+    w:`Needed = 10 − ${p(o.strong)} = ${f1(o.need)}\nLowest of: needed ${f1(o.need)}, cap ${x.cap==null?'none':x.cap}, max gain ${f1(o.mg)}\nSet = ${f1(o.dlset)} dB`});
+  Q.push({t:'What does the weakest channel put out?',h:'Weakest Power IN + DL gain set. If that is over the ceiling, use the ceiling.',a:[['Weakest out (dBm)',o.weakOut]],
+    w:`${p(o.weak)} + ${f1(o.dlset)} = ${f1(o.weak+o.dlset)}${o.weak+o.dlset>o.ceil?`\nOver the ${f1(o.ceil)} ceiling, so use ${f1(o.ceil)}`:''}\n= ${f1(o.weakOut)} dBm`});
+  Q.push({t:'What is the DAS loss to the worst antenna?',h:'Cable (ft ÷ 100 × loss) + tap + throughs × 1 + 2-way splitters × 3.3 + jumpers.',a:[['DAS loss (dB)',o.das]],
+    w:`Cable ${x.das.dft} ÷ 100 × ${x.das.dl} = ${f1(x.das.dft/100*x.das.dl)}\n+ tap ${x.das.taps}\n+ throughs ${x.das.th} × 1 = ${x.das.th}\n+ splitters ${x.das.sp} × 3.3 = ${f1(x.das.sp*3.3)}\n+ jumpers ${x.das.jmp}\n= ${f1(o.das)} dB`});
+  Q.push({t:'What is the indoor path loss?',h:'32.5 + 20·log(GHz) + 10 × N × log(ft ÷ 3.28). Use the highest DL frequency.',a:[['Indoor PL (dB)',o.pl]],
+    w:`Highest DL = ${o.fdl} MHz = ${(o.fdl/1000).toFixed(5).replace(/0+$/,'')} GHz\n20·log(${(o.fdl/1000).toFixed(4)}) = ${f1(o.ghz)}\n10 × ${x.N} × log(${x.dr} ÷ 3.28) = ${f1(o.wall)}\n32.5 + ${p(o.ghz)} + ${f1(o.wall)} = ${f1(o.pl)} dB`});
+  Q.push({t:'DOWNLINK: what does the radio inside hear? Pass or fail?',h:'Weakest out − DAS loss + antenna gain − indoor PL. Need −95 or stronger.',a:[['Radio inside (dBm)',o.rx]],
+    w:`${p(o.weakOut)} − ${f1(o.das)} + ${p(o.gs)} − ${f1(o.pl)} = ${f1(o.rx)} dBm\n${o.rx>=-95?'PASS by '+f1(o.rx+95):'FAIL by '+f1(-95-o.rx)} dB`});
+  Q.push({t:'What is the BDA UL input and the free space loss to the tower?',h:'UL input = radio − indoor PL + antenna gain − DAS loss. FSPL = 20·log(UL MHz) + 20·log(miles) + 36.6.',a:[['UL input (dBm)',o.ulin],['FSPL (dB)',o.fspl]],
+    w:`Radio: ${radioTxt}\nUL input = ${f1(o.radio)} − ${f1(o.pl)} + ${p(o.gs)} − ${f1(o.das)} = ${f1(o.ulin)} dBm\nUL freq = ${f1(o.ulf).replace(/\.0$/,'')} MHz (${B.ul})\nFSPL = ${f1(o.mhz)} + 20·log(${x.mi}) ${f1(o.milog)} + 36.6 = ${f1(o.fspl)} dB`});
+  Q.push({t:'What are the min UL, max UL and your limit?',h:'Min = −95 − UL input + loss − donor gain + FSPL. Max = FSPL + loss − donor gain − NF − 20. Limit = lowest of cap, max gain, max UL.',a:[['Min UL (dB)',o.mn],['Max UL (dB)',o.mx],['Limit (dB)',o.lim]],
+    w:`Min = −95 − ${p(o.ulin)} + ${f1(o.loss)} − ${f1(o.gd)} + ${f1(o.fspl)} = ${f1(o.mn)}\nMax = ${f1(o.fspl)} + ${f1(o.loss)} − ${f1(o.gd)} − ${x.nf} − 20 = ${f1(o.mx)}\nLimit = lowest of cap ${x.cap==null?'none':x.cap}, max gain ${f1(o.mg)}, max UL ${f1(o.mx)} = ${f1(o.lim)}\n${o.lim>=o.mn?'Window: '+f1(o.mn)+' to '+f1(o.lim):'Window CLOSED: you need '+f1(o.mn)+' but can only set '+f1(o.lim)}`});
+  Q.push({t:'What UL gain do you set, and what does the tower hear?',h:'Pick a UL gain inside your window (or the limit if it is closed). Tower = UL input + UL gain − loss + donor gain − FSPL.',ul:true,
+    a:[['UL gain you set (dB)',null],['Tower hears (dBm)',null]],w:''});
+  return Q;
+}
+function lessonFor(o,x){
+  const open=o.lim>=o.mn, P=o.rx>=-95, T=isN(o.tower)?o.tower>=-95:null, L=[];
+  const limBy=o.lim===o.cap?'the AHJ cap':o.lim===o.mg?'isolation (max gain)':'the noise limit at the tower';
+  if(o.ceil<10) L.push(`Lots of channels on a small BDA: the ceiling (${f1(o.ceil)}) is under +10, so the ceiling is the real output.`);
+  if(isN(o.need)&&o.dlset<o.need-0.05) L.push(`The DL wanted ${f1(o.need)} dB but ${o.dlset===o.cap?'the AHJ cap':'isolation'} held it to ${f1(o.dlset)}. ${P?'Coverage still passes, so that is fine.':''}`);
+  if(!P) L.push(`Downlink fails inside by ${f1(-95-o.rx)} dB. That is a DAS problem: too much loss or the weak spot is too far from an antenna. More antennas, not more gain.`);
+  if(!open) L.push(`The UL window is closed: the tower needs ${f1(o.mn)} dB but ${limBy} only allows ${f1(o.lim)}. Cut DAS loss or improve the donor / isolation. Never go over the limit to fix it.`);
+  if(open&&o.lim===o.mx) L.push(`The noise limit (${f1(o.mx)}) is the tightest limit on UL here, usually a close tower or a big donor.`);
+  if(!L.length) L.push('A normal site. Everything lines up and both directions pass.');
+  return L.join(' ');
+}
+
+function givens(x,o){const B=BANDS[x.band];const row=(a,b)=>`<tr><td>${a}</td><td>${b}</td></tr>`;
+  const ch=x.chans.map(c=>row(`${c.f} MHz${c.cc==='Y'?' (control)':''}`,`${f1(c.p)} dBm`)).join('');
+  return `<div class="givens">
+  <div class="gv"><h3>Tower and donor</h3><table>${row('DL band',B.dl)}${row('Miles to tower',x.mi)}${row('Donor antenna',`${x.gd} ${x.gdu}`)}${row('Donor cable',x.cft+' ft')}${row('Cable loss',x.cl+' dB / 100 ft')}${row('Pad / filter',x.pad+' dB')}</table></div>
+  <div class="gv"><h3>Isolation test (RF off)</h3><table>${row('Injected',(x.inj>0?'+':'')+x.inj+' dBm')}${row('Read A',f1(x.readA)+' dBm')}${row('Read B',f1(x.readB)+' dBm')}</table>
+  <h3 style="margin-top:10px">BDA</h3><table>${row('Max DL output',x.pmax+' '+x.pmaxu)}${row('Noise figure',x.nf+' dB')}</table></div>
+  <div class="gv"><h3>Power IN (GUI)</h3><table>${ch}</table></div>
+  <div class="gv"><h3>DAS (worst antenna)</h3><table>${row('Cable',x.das.dft+' ft')}${row('Loss',x.das.dl+' dB / 100 ft')}${row('Tap at antenna','DC'+x.das.taps)}${row('Taps passed through',x.das.th)}${row('2-way splitters',x.das.sp)}${row('Jumpers',x.das.jmp+' dB')}</table></div>
+  <div class="gv"><h3>Building</h3><table>${row('Building N <small>('+bldg(x.N)+')</small>',x.N)}${row('Air distance to nearest antenna',x.dr+' ft')}${row('Service antenna gain',x.gs+' dBd')}${row('Radio power',x.radio?x.radio+' W':'not given')}</table></div>
+  <div class="gv"><h3>Rules</h3><table>${row('Target inside and at tower','−95 dBm')}${row('DL output target','+10 dBm / ch')}${row('AHJ gain cap',x.cap==null?'none':x.cap+' dB')}${row('Isolation and noise margin','20 dB')}</table></div></div>`}
+
+function render(idx,site){
+  cur=idx; X=site||SITES[idx]; O=calc(inputsFor(X),X.chans,[],BANDS[X.band]); score={};
+  if(!site){try{localStorage.setItem('bda-practice-last',idx)}catch(e){}$('pick').value=idx}else{$('pick').value=''}
+  const Q=questions(X,O);
+  let h=`<section class="card"><div class="sitehead"><h2>${site?'Shuffled site':'Site '+X.id}: ${X.title.replace(/ on \w+$/,'')}</h2><span class="band">${X.band}</span></div>${givens(X,O)}</section><section class="card">`;
+  Q.forEach((q,i)=>{h+=`<div class="q" data-q="${i}"><div class="qt"><span class="n">${i+1}</span>${q.t}</div><p class="hint">${q.h}</p><div class="ans">`+
+    q.a.map(([lb],j)=>`<div class="a"><label for="a${i}_${j}">${lb}</label><input id="a${i}_${j}" inputmode="decimal" autocomplete="off"></div>`).join('')+
+    `<button type="button" data-check="${i}">Check</button></div><div class="fb" id="fb${i}"></div><details class="work" id="w${i}"><summary>Show the work</summary><div class="b">${q.w}</div></details></div>`});
+  h+=`<div class="lesson" id="lesson"><b>What this site teaches:</b> ${lessonFor(O,X)}</div></section>`;
+  $('app').innerHTML=h; window.Q=Q; updScore(); scrollTo(0,0);
+}
+function within(v,t,tol=0.6){return isN(v)&&isN(t)&&Math.abs(v-t)<=tol}
+function check(i){const q=window.Q[i];let all=true,msg=[];
+  if(q.ul){const u=num($(`a${i}_0`).value),tw=num($(`a${i}_1`).value);
+    const lo=O.lim>=O.mn?O.mn-0.05:O.lim-0.6, hi=O.lim+0.05;
+    const uok=isN(u)&&u>=lo&&u<=hi; const towerFor=isN(u)?O.ulin+u-O.loss+O.gd-O.fspl:null; const tok=uok&&within(tw,towerFor);
+    $(`a${i}_0`).className=uok?'right':'wrong'; $(`a${i}_1`).className=tok?'right':'wrong'; all=uok&&tok;
+    msg.push(uok?'UL gain is inside the window.':(O.lim>=O.mn?`Pick something from ${f1(O.mn)} to ${f1(O.lim)}.`:`Window is closed, so the most you can set is the limit, ${f1(O.lim)}.`));
+    if(uok) msg.push(tok?`Tower hears ${f1(towerFor)} dBm: ${towerFor>=-95?'PASS':'FAIL'}.`:`Tower should be about ${f1(towerFor)} with your UL gain.`);
+    const ex=isN(u)&&uok?u:(O.lim>=O.mn?O.ulsug:O.lim); const t2=O.ulin+ex-O.loss+O.gd-O.fspl;
+    $(`w${i}`).querySelector('.b').textContent=`Window: ${O.lim>=O.mn?f1(O.mn)+' to '+f1(O.lim):'closed, limit '+f1(O.lim)}\nUsing UL gain ${f1(ex)}:\nTower = ${p(O.ulin)} + ${f1(ex)} − ${f1(O.loss)} + ${f1(O.gd)} − ${f1(O.fspl)} = ${f1(t2)} dBm\n${t2>=-95?'PASS by '+f1(t2+95):'FAIL by '+f1(-95-t2)} dB\nNoise margin: ${f1(O.mx)} − ${f1(ex)} = ${f1(O.mx-ex)} dB`;
+  } else {
+    q.a.forEach(([lb,val],j)=>{const el=$(`a${i}_${j}`);const v=num(el.value);const ok=within(v,val,lb.includes('Strongest')||lb.includes('Weakest')?0.05:0.6);el.className=ok?'right':'wrong';if(!ok)all=false});
+    msg.push(all?'Nice, that\'s right.':'Not quite. Check your math, or open the work.');
+  }
+  const fb=$(`fb${i}`);fb.className='fb '+(all?'ok':'bad');fb.textContent=msg.join(' ');
+  score[i]=all; updScore(); if(Object.keys(score).length===window.Q.length) $('lesson').classList.add('show');
+}
+function updScore(){const n=Object.values(score).filter(Boolean).length;$('score').textContent=`${n} / ${window.Q?window.Q.length:13} right`}
+document.addEventListener('click',e=>{const t=e.target;if(t.dataset.check)check(+t.dataset.check)});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){const q=e.target.closest('.q');if(q)check(+q.dataset.q)}});
+$('checkall').onclick=()=>window.Q.forEach((_,i)=>check(i));
+$('showall').onclick=()=>{window.Q.forEach((q,i)=>{if(q.ul)check(i);$(`w${i}`).open=true});$('lesson').classList.add('show')};
+$('new').onclick=()=>render(randomIdx());
+const GEN={'700':{lo:769.50625,hi:774.99375,st:0.0125,cl:2.2},'800':{lo:851.0125,hi:860.9875,st:0.0125,cl:2.2},'UHF':{lo:451,hi:469,st:0.0125,cl:1.5},'VHF':{lo:151,hi:173,st:0.0025,cl:1.0}};
+const PLACES=[['Open warehouse',2.8],['Distribution center',2.8],['Stadium concourse',2.8],['Parking garage',3.1],['Shopping mall',3.1],['Grocery store',3.1],['Self storage',3.1],['Office tower',3.4],['Hotel',3.4],['Apartment building',3.4],['Medical office',3.4],['Casino',3.4],['Senior living',3.4],['Hospital',3.7],['High school',3.7],['University library',3.7],['Courthouse',3.7],['Data center',3.7],['County jail',4.0],['Police HQ',4.0]];
+function shuffleSite(){
+  const pick=a=>a[Math.floor(Math.random()*a.length)], uni=(a,b)=>a+Math.random()*(b-a), r1=v=>Math.round(v*10)/10;
+  for(let t=0;t<5000;t++){
+    const band=pick(['700','700','800','800','UHF','VHF']),G=GEN[band],[name,N]=pick(PLACES);
+    const many=Math.random()<0.1;
+    const nch=many?pick([15,20,24]):(band==='700'||band==='800'?pick([3,4,5,6,8]):pick([2,3,4]));
+    const fset=new Set();while(fset.size<nch)fset.add(+(G.lo+G.st*Math.floor(Math.random()*((G.hi-G.lo)/G.st))).toFixed(5));
+    const base=uni(-66,-48),fsArr=[...fset].sort((a,b)=>a-b);
+    const chans=fsArr.map((f,j)=>({f,p:r1(j?base-uni(0,8):base),cc:(j===0&&(band==='700'||band==='800'))?'Y':'N'})).sort(()=>Math.random()-0.5);
+    const inj=pick([0,10]),iso=Math.random()<0.15?uni(76,84):uni(86,105),rb=r1(-(iso-inj)),ra=r1(rb-uni(0,4));
+    const x={id:0,title:name+' on '+band,band,N,mi:r1(uni(1.5,10)),cap:pick([65,65,65,null,60,70]),inj,readA:ra,readB:rb,
+      gd:pick([6,7,8,9,10,11,12]),gdu:pick(['dBd','dBd','dBi']),cft:pick([60,80,100,120,150,180]),cl:G.cl,pad:pick([0,0,3,6,10]),chans,
+      pmax:many?pick([20,0.1,0.25]):pick([33,33,37,2,5]),das:{dft:pick([200,250,300,350,400,500,600]),dl:G.cl,taps:pick([6,6,10,10,15]),th:Math.floor(uni(1,7)),sp:Math.floor(uni(0,3)),jmp:1},
+      gs:pick([0,0,0,-2]),dr:pick([25,30,35,40,50,60]),radio:pick([null,null,null,3,5]),nf:pick([5,5,6,7])};
+    x.pmaxu=[2,5,0.1,0.25].includes(x.pmax)?'W':'dBm'; x.radiou=x.radio?'W':'dBm';
+    const o=calc(inputsFor(x),x.chans,[],BANDS[band]);
+    const sane=o.das>=20&&o.das<=45&&o.rx>-108&&o.rx<-70&&isN(o.lim)&&isN(o.mn)&&o.mn-o.lim<8&&o.mx>40;
+    if(sane) return x;
+  }
+  return SITES[randomIdx()];
+}
+$('shuffle').onclick=()=>render(null,shuffleSite());
+{const o=document.createElement('option');o.value='';o.textContent='Pick one of the 20 sites…';$('pick').appendChild(o)}
+SITES.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`Site ${s.id}: ${s.title}`;$('pick').appendChild(o)});
+$('pick').onchange=e=>{if(e.target.value!=='')render(+e.target.value)};
+function randomIdx(){let last=-1;try{last=+localStorage.getItem('bda-practice-last')}catch(e){}let i;do{i=Math.floor(Math.random()*SITES.length)}while(i===last&&SITES.length>1);return i}
+const qs=new URLSearchParams(location.search).get('site');
+render(qs&&+qs>=1&&+qs<=SITES.length?+qs-1:randomIdx());
+const bg=$('burger'),mn=$('menu');bg.onclick=e=>{e.stopPropagation();const o=!mn.classList.contains('open');mn.classList.toggle('open',o);bg.setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!mn.contains(e.target)&&e.target!==bg){mn.classList.remove('open');bg.setAttribute('aria-expanded',false)}});
+</script>
+</body>
+</html>
