@@ -112,6 +112,25 @@ ul.certs .s{font:600 13px var(--mono);color:var(--muted);align-self:center}
 ul.certs .s.earned{color:var(--ok)}
 footer{border-top:1px solid var(--line);padding-top:18px;font-weight:500}
 footer a{font-weight:600}
+
+.scope .chain{display:block;width:100%;height:auto;padding:8px 6px 0}
+.scope .chain .hw{fill:none;stroke:rgba(200,222,240,.7);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.scope .chain path.hw[d*="a10"]{fill:rgba(200,222,240,.18)}
+.scope .chain .ground{stroke:rgba(200,222,240,.25);stroke-width:1.2}
+.scope .chain .bldg{fill:rgba(255,255,255,.025);stroke:rgba(200,222,240,.35);stroke-width:1.4}
+.scope .chain .floor{stroke:rgba(200,222,240,.16);stroke-width:1}
+.scope .chain .cable{fill:none;stroke:rgba(95,176,255,.35);stroke-width:2}
+.scope .chain .node{fill:#0E1E30;stroke:rgba(95,176,255,.6);stroke-width:1.4}
+.scope .chain .air{fill:none;stroke:rgba(200,222,240,.18);stroke-width:1.2;stroke-dasharray:3 5}
+.scope .chain .arcs{fill:none;stroke:#5fb0ff;stroke-width:1.5;stroke-linecap:round;animation:arcs 2s ease-in-out infinite}
+.scope .chain .bda{fill:#13304d;stroke:#5fb0ff;stroke-width:1.6;animation:bda 2s ease-in-out infinite}
+.scope .chain .lbl text{font:500 12px var(--sans);fill:rgba(228,235,241,.72)}
+.scope .chain .lbl text.b{font-weight:800;font-size:12.5px;fill:#fff;letter-spacing:.04em}
+@keyframes arcs{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes bda{0%,100%{filter:none}50%{filter:drop-shadow(0 0 6px rgba(95,176,255,.7))}}
+.scope canvas{height:64px;border-top:1px solid rgba(200,222,240,.08)}
+@media (max-width:560px){.scope .chain .lbl text{font-size:17px}.scope .chain .lbl text.b{font-size:16px}}
+@media (prefers-reduced-motion:reduce){.scope .chain .arcs,.scope .chain .bda{animation:none}}
 </style>
 </head>
 <body>
@@ -135,7 +154,34 @@ footer a{font-weight:600}
   <h1>Luke Le</h1>
   <p class="lede">I commission ERRCS public safety radio systems, the BDAs and DAS that keep first responders' radios working inside buildings. Computer science background, so I build my own tools for the job.</p>
 
-  <div class="scope" aria-hidden="true"><canvas id="scope"></canvas></div>
+  <div class="scope"><svg class="chain" viewBox="0 0 760 244" role="img" aria-label="How a BDA works: the tower's signal is picked up by the donor antenna on the roof, boosted by the BDA, carried through the DAS to antennas on every floor, and heard by the radio inside. The radio's uplink goes back the same way to the tower.">
+<defs><filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><path id="pAir" d="M80,40 Q240,0 398,40"/><path id="pDon" d="M430,42 L430,98 L440,98"/><path id="pT" d="M504,98 L540,98 L540,74 L620,74"/><path id="pM" d="M504,98 L540,98 L540,124 L620,124"/><path id="pB" d="M504,98 L540,98 L540,174 L620,174"/><path id="pRad" d="M632,184 Q660,180 681,186"/><path id="rRad" d="M681,186 Q660,180 632,184"/><path id="rB" d="M620,174 L540,174 L540,98 L504,98"/><path id="rDon" d="M440,98 L430,98 L430,42"/><path id="rAir" d="M398,40 Q240,0 80,40"/></defs>
+<g class="lines">
+<line x1="16" y1="220" x2="744" y2="220" class="ground"/>
+<path d="M50,220 L70,52 L90,220 M56,170 L84,170 M60,125 L80,125 M64,85 L76,85 M50,220 L84,170 L56,170 L80,125 L60,125 L76,85 L64,85 L70,52 M70,52 L70,36" class="hw"/>
+<path d="M80,30 q7,8 0,16 M86,25 q12,13 0,26 M60,30 q-7,8 0,16 M54,25 q-12,13 0,26" class="arcs"/>
+<rect x="380" y="70" width="330" height="150" class="bldg"/>
+<line x1="380" y1="120" x2="710" y2="120" class="floor"/><line x1="380" y1="170" x2="710" y2="170" class="floor"/>
+<path d="M398,40 H452 M404,33 V47 M414,32 V48 M424,33 V47 M434,34 V46 M444,35 V45 M430,40 V70" class="hw"/>
+<path d="M430,70 V98 H440" class="cable"/>
+<path d="M504,98 H540 M540,74 V174 M540,74 H620 M540,124 H620 M540,174 H620" class="cable"/>
+<circle cx="540" cy="98" r="2.6" class="node"/><circle cx="540" cy="124" r="2.6" class="node"/><circle cx="540" cy="174" r="2.6" class="node"/>
+<path d="M620,70 h20 v2 a10,7 0 0 1 -20,0 z" class="hw"/><path d="M620,120 h20 v2 a10,7 0 0 1 -20,0 z" class="hw"/><path d="M620,170 h20 v2 a10,7 0 0 1 -20,0 z" class="hw"/>
+<rect x="440" y="86" width="64" height="24" rx="4" class="bda"/>
+<rect x="677" y="190" width="11" height="22" rx="2" class="hw"/><path d="M681,190 V182" class="hw"/>
+</g>
+<path d="M398,40 Q240,0 80,40" class="air"/>
+<circle r="2.6" fill="#5fb0ff" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="0s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;1" keyTimes="0;0.28;1"><mpath href="#pAir"/></animateMotion><animate attributeName="opacity" dur="4s" begin="0s" repeatCount="indefinite" calcMode="discrete" values="1;0" keyTimes="0;0.28"/></circle><circle r="2.6" fill="#5fb0ff" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="0s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.28;0.38;1"><mpath href="#pDon"/></animateMotion><animate attributeName="opacity" dur="4s" begin="0s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.28;0.38"/></circle><circle r="4.4" fill="#5fb0ff" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="0s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.38;0.62;1"><mpath href="#pT"/></animateMotion><animate attributeName="opacity" dur="4s" begin="0s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.38;0.62"/></circle><circle r="4.4" fill="#5fb0ff" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="0s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.38;0.62;1"><mpath href="#pM"/></animateMotion><animate attributeName="opacity" dur="4s" begin="0s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.38;0.62"/></circle><circle r="4.4" fill="#5fb0ff" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="0s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.38;0.62;1"><mpath href="#pB"/></animateMotion><animate attributeName="opacity" dur="4s" begin="0s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.38;0.62"/></circle><circle r="4.4" fill="#5fb0ff" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="0s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.62;0.74;1"><mpath href="#pRad"/></animateMotion><animate attributeName="opacity" dur="4s" begin="0s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.62;0.74"/></circle><circle r="2.6" fill="#ff7a59" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;1" keyTimes="0;0.12;1"><mpath href="#rRad"/></animateMotion><animate attributeName="opacity" dur="4s" begin="2s" repeatCount="indefinite" calcMode="discrete" values="1;0" keyTimes="0;0.12"/></circle><circle r="2.6" fill="#ff7a59" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.12;0.36;1"><mpath href="#rB"/></animateMotion><animate attributeName="opacity" dur="4s" begin="2s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.12;0.36"/></circle><circle r="4.4" fill="#ff7a59" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.36;0.46;1"><mpath href="#rDon"/></animateMotion><animate attributeName="opacity" dur="4s" begin="2s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.36;0.46"/></circle><circle r="4.4" fill="#ff7a59" opacity="0" filter="url(#glow)"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.46;0.74;1"><mpath href="#rAir"/></animateMotion><animate attributeName="opacity" dur="4s" begin="2s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.46;0.74"/></circle>
+<g class="lbl">
+<text x="70" y="238" text-anchor="middle">Tower</text>
+<text x="425" y="22" text-anchor="middle">Donor antenna</text>
+<text x="472" y="102.5" text-anchor="middle" class="b">BDA</text>
+<text x="548" y="152">DAS</text>
+<text x="648" y="85">Antennas</text>
+<text x="683" y="238" text-anchor="middle">Radio</text>
+<circle cx="586" cy="18" r="4" fill="#5fb0ff"/><text x="595" y="22">Downlink</text>
+<circle cx="672" cy="18" r="4" fill="#ff7a59"/><text x="681" y="22">Uplink</text>
+</g></svg><canvas id="scope" aria-hidden="true"></canvas></div>
 
   <div class="block">
     <h2>Certifications</h2>
@@ -175,6 +221,8 @@ document.getElementById('yr').textContent=new Date().getFullYear();
 (function(){const e=document.getElementById('em');if(!e)return;const r=x=>x.split('').reverse().join('');
 e.addEventListener('click',ev=>{ev.preventDefault();location.href='mai'+'lto:'+r(e.dataset.b)+'@'+r(e.dataset.a)});})();
 
+/* signal path: freeze the moving dots for people who turn off animation */
+(function(){const s=document.querySelector('.scope .chain');if(s&&matchMedia('(prefers-reduced-motion: reduce)').matches){s.pauseAnimations();s.setCurrentTime(1.9)}})();
 /* spectrum trace */
 (function(){
   const cv=document.getElementById('scope'),ctx=cv.getContext('2d');
