@@ -246,7 +246,7 @@ const f1 = x => isN(x) ? (Math.round(x*10)/10).toFixed(1).replace('-','−') : '
 const lowest = a => { a=a.filter(isN); return a.length?Math.min(...a):null; };
 const num = v => { if(v===''||v===null||v===undefined) return null; const n=Number(String(v).replace(/[−–]/g,'-')); return isFinite(n)?n:null; };
 /* typed once, used by both bands (physical stuff) */
-const SHK = ['mi','cap','inj','cft','pad','dft','taps','th','sp','jmp','gs','N','dr','tgt','rlDonor','rlDas','gridGen','gridCrit','talk'];
+const SHK = ['cap','inj','dft','taps','th','sp','jmp','gs','N','dr','tgt','rlDonor','rlDas','gridGen','gridCrit','talk'];
 const DEF = () => ({sh:{site:{},tgt:10,ants:[{},{},{}],checks:{}}, b:PAIR.bands.map(B=>({cl:B.cable,chans:[{},{},{},{}]}))});
 let S; try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){} if(!S||!S.sh||!S.b) S=DEF();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
@@ -336,8 +336,9 @@ function render(){
   uid=0; const H=[];
   H.push(card('','Site',`<div class="fields">
     ${['name:Site','date:Date','tech:Tech','model:BDA model'].map(x=>{const [k,l]=x.split(':');return `<div class="fld"><label for="site-${k}">${l}</label><input data-k="sh.site.${k}" id="site-${k}" value="${S.sh.site[k]??''}" style="font-family:var(--sans)"></div>`}).join('')}
-    ${fld('mi','Miles to tower','e.g. 3')}${fld('cap','AHJ gain cap (dB)','blank = none')}</div>
+    ${fld('cap','AHJ gain cap (dB)','blank = none')}</div>
     <p class="note">${both(B=>`DL ${B.dl}, ${B.ulrule}`)}.</p>
+    <p class="note">Two donors? Each band has its own miles, donor gain and donor cable in step 2, so a 700 donor and an 800 donor aimed at different towers both work.</p>
     <p class="note">Boxes outside the band columns are shared: type them once. Anything that changes with frequency is worked per band, side by side.</p>`));
 
   H.push(card('0A','Sweep the lines',
@@ -377,9 +378,8 @@ function render(){
 
   H.push(card(2,'Donor antenna and line',
     `<p class="use"><b>Use:</b> donor antenna label or design, cable spec sheet, riser.</p>`+
-    `<ul class="ins"><li>Donor gain in <b>dBd</b>. Spec sheet only shows dBi? Subtract 2.15. Wideband donors list a different gain per band.</li><li>½" plenum loss per 100 ft: ${both(B=>`about <b>${B.cable} dB</b>`)}.</li><li>Add anything between the donor and the BDA: pad, filter, splitter, jumpers.</li></ul>`+
-    `<div class="fields">${fld('cft','Donor cable (ft), both bands','100')}${fld('pad','Pad / filter (dB), both bands','0')}</div>`+
-    duo(i=>`<div class="fields">${fld('gd','Donor gain (dBd)','9',i)}</div>`+
+    `<ul class="ins"><li>Donor gain in <b>dBd</b>. Spec sheet only shows dBi? Subtract 2.15. Wideband donors list a different gain per band.</li><li>½" plenum loss per 100 ft: ${both(B=>`about <b>${B.cable} dB</b>`)}.</li><li>Add anything between the donor and the BDA: pad, filter, splitter, jumpers. One donor feeding both bands through a combiner/diplexer? Put the same cable in both columns and add the combiner loss.</li><li><b>Two donors</b> (each band aimed at its own tower): fill each column with that band's own donor, cable and miles.</li></ul>`+
+    duo(i=>`<div class="fields">${fld('mi','Miles to its tower','e.g. 8',i)}${fld('gd','Donor gain (dBd)','9',i)}${fld('cft','Donor cable (ft)','100',i)}${fld('pad','Pad / combiner / filter (dB)','0',i)}</div>`+
       eq('Donor-side loss = ft × loss ÷ 100 + pad / filter',[['','Cable (ft)','in','cft'],['×','Loss / 100 ft','in','cl'],['÷','','fixed','100'],['+','Pad / filter','in','pad']],'Loss (dB)','loss',i))));
 
   H.push(card(3,'Program the BDA (RF output still off)',
@@ -428,7 +428,7 @@ function render(){
       eq('Radio inside = Weakest out − DAS loss + Ant gain − Indoor PL',[['','Weakest out','calc','weakOut'],['−','DAS loss','calc','das'],['+','Ant gain','calc','gs'],['−','Indoor PL','calc','pl']],'Radio inside (dBm)','rx',i)+vbox('rx',i))));
 
   H.push(card(9,'Uplink gain',
-    `<p class="use"><b>Use:</b> donor site info (miles in the Site box), BDA spec sheet (noise figure). No radio info? Leave it blank and it uses ${both(B=>`${B.radio} dBm`)}.</p>`+
+    `<p class="use"><b>Use:</b> donor site info (miles in step 2), BDA spec sheet (noise figure). No radio info? Leave it blank and it uses ${both(B=>`${B.radio} dBm`)}.</p>`+
     duo((i,B)=>`<div class="fields">${fld('radio','Radio power','auto',i,`<div class="row">${inp('radio','auto '+B.radio,i)}${unit('radiou',i)}</div>`)}${fld('nf','BDA noise figure (dB)','5',i)}${fld('ulf','UL frequency (MHz)',B.ulph,i)}</div>`+
       eq('BDA UL input = Radio − Indoor PL + Ant gain − DAS loss',[['','Radio','calc','radio'],['−','Indoor PL','calc','pl'],['+','Ant gain','calc','gs'],['−','DAS loss','calc','das']],'UL input (dBm)','ulin',i)+
       eq('FSPL = 20·log(UL MHz) + 20·log(miles) + 36.6',[['','20·log(MHz)','calc','mhz'],['+','20·log(miles)','calc','milog'],['+','Fixed','fixed','36.6']],'FSPL (dB)','fspl',i)+
