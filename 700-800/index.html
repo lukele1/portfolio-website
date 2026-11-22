@@ -274,7 +274,7 @@ const f1 = x => isN(x) ? (Math.round(x*10)/10).toFixed(1).replace('-','−') : '
 const lowest = a => { a=a.filter(isN); return a.length?Math.min(...a):null; };
 const num = v => { if(v===''||v===null||v===undefined) return null; const n=Number(String(v).replace(/[−–]/g,'-')); return isFinite(n)?n:null; };
 /* typed once, used by both bands (physical stuff) */
-const SHK = ['cap','inj','dft','taps','th','sp','jmp','gs','N','dr','tgt','rlDonor','rlDas','gridGen','gridCrit','talk'];
+const SHK = ['donors','cap','inj','dft','taps','th','sp','jmp','gs','N','dr','tgt','rlDonor','rlDas','gridGen','gridCrit','talk'];
 const DEF = () => ({sh:{site:{},tgt:10,ants:[{},{},{}],checks:{}}, b:PAIR.bands.map(B=>({cl:B.cable,chans:[{},{},{},{}]}))});
 let S; try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){} if(!S||!S.sh||!S.b) S=DEF();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
@@ -330,6 +330,7 @@ function calc(s,chans,ants,band){
 
 // ---------- rendering helpers ----------
 const BN = PAIR.bands.map(b=>b.name);
+const two = () => String(S.sh.donors||'1')==='2';
 const both = f => PAIR.bands.map((B,i)=>`<b>${B.name}:</b> ${f(B,i)}`).join(' · ');
 const P = t => `<span class="port">${t}</span>`;
 const path = (k,i) => SHK.includes(k) ? `sh.${k}` : `b.${i}.${k}`;
@@ -364,9 +365,9 @@ function render(){
   uid=0; const H=[];
   H.push(card('','Site',`<div class="fields">
     ${['name:Site','date:Date','tech:Tech','model:BDA model'].map(x=>{const [k,l]=x.split(':');return `<div class="fld"><label for="site-${k}">${l}</label><input data-k="sh.site.${k}" id="site-${k}" value="${S.sh.site[k]??''}" style="font-family:var(--sans)"></div>`}).join('')}
-    ${fld('cap','AHJ gain cap (dB)','blank = none')}</div>
+    ${fld('donors','Donor antennas','',0,sel('donors',0,[['1','One donor (both bands)'],['2','Two donors (one per band)']]))}${fld('cap','AHJ gain cap (dB)','blank = none')}</div>
     <p class="note">${both(B=>`DL ${B.dl}, ${B.ulrule}`)}.</p>
-    <p class="note">Two donors? Each band has its own miles, donor gain and donor cable in step 2, so a 700 donor and an 800 donor aimed at different towers both work.</p>
+    <p class="note">${two()?'<b>Two donors:</b> each band has its own donor, cable and pad in step 2. If they meet at a combiner, put the combiner loss in each band\'s pad.':'<b>One donor:</b> one antenna and one cable feed both bands. Type the cable length once in step 2. Gain, loss per foot and pad stay per band, since they change with frequency.'}</p>
     <p class="note">Boxes outside the band columns are shared: type them once. Anything that changes with frequency is worked per band, side by side.</p>`));
 
   H.push(card('0A','Sweep the lines',
@@ -377,7 +378,7 @@ function render(){
       `Save Return Loss and DTF. Then do the same on the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`])+
     how('Anritsu settings',[['Mode','Vector Network Analyzer (cable &amp; antenna)'],['Measurement','Return Loss, then DTF Return Loss'],['Frequency','Start/Stop '+PAIR.sweep],['Limit line','−12 dB, pass/fail on'],['DTF distance','0 ft to the last antenna (or the donor)'],['Save','Name it SITE_TEST_LOCATION, e.g. SITE_DTF_DONOR']])+
     `<div class="fields">${fld('rlDonor','Donor line return loss (dB)','−18')}${fld('rlDas','DAS line return loss (dB)','−16')}</div>`+
-    `<p class="note">Pass: the trace stays below −12 dB across ${PAIR.sweepNote}. A spike on DTF at 140 ft means a bad connector, kink or water about 140 ft down the cable.</p>`,'BDA OFF'));
+    (two()?`<p class="note"><b>Two donors:</b> sweep each donor run on its own, one per band. Through a combiner, each band only reaches its own antenna, so sweep the shared cable once in each band's range and save each trace separately.</p>`:'')+`<p class="note">Pass: the trace stays below −12 dB across ${PAIR.sweepNote}. A spike on DTF at 140 ft means a bad connector, kink or water about 140 ft down the cable.</p>`,'BDA OFF'));
 
   const antRows=S.sh.ants.map((a,j)=>`<tr><td><input data-k="sh.ants.${j}.id" value="${a.id??''}" placeholder="A${j+1}" style="font-family:var(--sans)"></td><td><input data-k="sh.ants.${j}.fl" value="${a.fl??''}" placeholder="Floor" style="font-family:var(--sans)"></td><td><input data-k="sh.ants.${j}.r" value="${a.r??''}" inputmode="decimal" placeholder="−65"></td><td class="out" data-ant="${j}">—</td><td><button class="x" data-del="sh.ants.${j}" aria-label="Remove antenna">×</button></td></tr>`).join('');
   H.push(card('0B','Antenna verification',
@@ -406,9 +407,10 @@ function render(){
 
   H.push(card(2,'Donor antenna and line',
     `<p class="use"><b>Use:</b> donor antenna label or design, cable spec sheet, riser.</p>`+
-    `<ul class="ins"><li>Donor gain in <b>dBd</b>. Spec sheet only shows dBi? Subtract 2.15. Wideband donors list a different gain per band.</li><li>½" plenum loss per 100 ft: ${both(B=>`about <b>${B.cable} dB</b>`)}.</li><li>Add anything between the donor and the BDA: pad, filter, splitter, jumpers. One donor feeding both bands through a combiner/diplexer? Put the same cable in both columns and add the combiner loss.</li><li><b>Two donors</b> (each band aimed at its own tower): fill each column with that band's own donor, cable and miles.</li></ul>`+
-    duo(i=>`<div class="fields">${fld('mi','Miles to its tower','e.g. 8',i)}${fld('gd','Donor gain (dBd)','9',i)}${fld('cft','Donor cable (ft)','100',i)}${fld('pad','Pad / combiner / filter (dB)','0',i)}</div>`+
-      eq('Donor-side loss = ft × loss ÷ 100 + pad / filter',[['','Cable (ft)','in','cft'],['×','Loss / 100 ft','in','cl'],['÷','','fixed','100'],['+','Pad / filter','in','pad']],'Loss (dB)','loss',i))));
+    `<ul class="ins"><li>Donor gain in <b>dBd</b>. Spec sheet only shows dBi? Subtract 2.15. Wideband donors list a different gain per band.</li><li>½" plenum loss per 100 ft: ${both(B=>`about <b>${B.cable} dB</b>`)}.</li><li>Add anything between the donor and the BDA: pad, filter, splitter, jumpers.</li>${two()?"<li><b>Two donors:</b> each column gets its own donor, cable and miles. A combiner or 2-way splitter joining them goes in each band's pad (a 2-way splitter is about 3 dB).</li>":"<li><b>One donor:</b> type the cable length once below. A diplexer or filter in line goes in each band's pad.</li>"}</ul>`+
+    (two()?'':`<div class="fields">${fld('cft','Donor cable (ft), both bands','100',0,`<input data-k="b.0.cft" data-mirror="b.1.cft" id="f${++uid}" inputmode="decimal" placeholder="100" value="${S.b[0].cft??''}">`)}</div>`)+
+    duo(i=>`<div class="fields">${fld('mi','Miles to its tower','e.g. 8',i)}${fld('gd','Donor gain (dBd)','9',i)}${two()?fld('cft','Donor cable (ft)','100',i):''}${fld('pad','Pad / combiner / filter (dB)','0',i)}</div>`+
+      eq('Donor-side loss = ft × loss ÷ 100 + pad / filter',[['','Cable (ft)',two()?'in':'calc',two()?'cft':'b_cft'],['×','Loss / 100 ft','in','cl'],['÷','','fixed','100'],['+','Pad / filter','in','pad']],'Loss (dB)','loss',i))));
 
   H.push(card(3,'Program the BDA (RF output still off)',
     `<ul class="ins"><li>Laptop → BDA (USB, Ethernet or web GUI).</li><li>Turn on both bands: ${BN.join(' and ')}.</li><li>Program every licensed DL channel and its UL pair (Class A filters) in each band. Set the filter width.</li><li>DL = TX column on the frequency list. ${both(B=>B.ulrule)}.</li><li>Once channels are in, the GUI shows Power IN per channel.</li></ul>`));
@@ -497,7 +499,7 @@ function update(){
   const O=PAIR.bands.map((B,i)=>calc(Object.assign({},S.sh,S.b[i]),S.b[i].chans,S.sh.ants,B));
   const fixed=['taps','th','sp','jmp'].map(k=>num(S.sh[k]));
   const extra={inj:num(S.sh.inj),__dft:num(S.sh.dft),__fixed:(fixed[0]||0)+(fixed[1]||0)*1+(fixed[2]||0)*3.3+(fixed[3]||0)};
-  document.querySelectorAll('[data-o]').forEach(e=>{const [i,k]=e.dataset.o.split(':');const o=O[+i];const v=k in extra?extra[k]:(k==='nch'?(o.nch||null):o[k]);e.textContent=isN(v)?(k==='nch'?String(v):f1(v)):'—'});
+  document.querySelectorAll('[data-o]').forEach(e=>{const [i,k]=e.dataset.o.split(':');const o=O[+i];const v=k.startsWith('b_')?num(S.b[+i][k.slice(2)]):k in extra?extra[k]:(k==='nch'?(o.nch||null):o[k]);e.textContent=isN(v)?(k==='nch'?String(v):f1(v)):'—'});
   document.querySelectorAll('[data-ant]').forEach(e=>{const r=num(S.sh.ants[+e.dataset.ant].r);if(!isN(r)){e.textContent='—';e.style.color='';return}const d=-r-30;e.textContent=f1(d)+' dB'+(r<-90?' ✗ check this run':' ✓');e.style.color=r<-90?'var(--bad)':'var(--ok)'});
   O.forEach((o,i)=>{
     if(isN(o.iso)) setV(i,'iso',o.iso>=80?'ok':'warn',o.iso>=80?`No gain, DL or UL, can go above ${f1(o.mg)} dB.`:`Only ${f1(o.mg)} dB of gain allowed. Check donor placement before going on.`); else setV(i,'iso','na','Type the injected level and at least one read.');
@@ -517,8 +519,8 @@ function update(){
 // ---------- events ----------
 function setPath(p,val){const a=p.split('.');let t=S;for(let i=0;i<a.length-1;i++)t=t[a[i]];t[a[a.length-1]]=val}
 function sync(t){document.querySelectorAll(`[data-k="${t.dataset.k}"]`).forEach(x=>{if(x!==t)x.value=t.value})}
-document.addEventListener('input',e=>{const t=e.target;if(t.dataset.k){setPath(t.dataset.k,t.value);sync(t);save();update()}});
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset.k){setPath(t.dataset.k,t.value);sync(t);save();update()}if(t.dataset.chk){S.sh.checks[t.dataset.chk]=t.checked;save()}});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.k){setPath(t.dataset.k,t.value);if(t.dataset.mirror)setPath(t.dataset.mirror,t.value);sync(t);save();update()}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.k){setPath(t.dataset.k,t.value);if(t.dataset.mirror)setPath(t.dataset.mirror,t.value);sync(t);if(t.dataset.k==='sh.donors'){if(!two())S.b[1].cft=S.b[0].cft;save();render();return}save();update()}if(t.dataset.chk){S.sh.checks[t.dataset.chk]=t.checked;save()}});
 document.addEventListener('click',e=>{const t=e.target;
   if(t.dataset.add){getP(t.dataset.add).push({});save();render();}
   if(t.dataset.del){const a=t.dataset.del.split('.');const j=+a.pop();const arr=getP(a.join('.'));arr.splice(j,1);if(!arr.length)arr.push({});save();render();}
