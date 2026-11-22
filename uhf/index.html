@@ -312,6 +312,8 @@ const verdictBox=id=>`<div class="verdict na" id="v-${id}">Fill in the boxes abo
 const card=(n,title,body,tag='')=>`<section class="card" id="step-${n}"><h2><span class="n">${n}</span>${title}${tag?`<span class="tag${tag==='RF OFF'||tag==='BDA OFF'?' off':''}">${tag}</span>`:''}</h2>${body}</section>`;
 const chk=(k,t)=>`<label class="chk"><input type="checkbox" data-chk="${k}" ${S.checks[k]?'checked':''}><span>${t}</span></label>`;
 
+const ISOEX={'700':'772 MHz for A, 802 MHz for B','800':'855 MHz for A, 810 MHz for B','UHF':'an unused DL frequency for A, and its UL pair off the RX column for B','VHF':'an unused DL frequency for A, and its UL pair off the RX column for B'};
+const isoNote=B=>`<b>Not a frequency hunt.</b> A and B are the same isolation test in two directions: one unused test frequency in the downlink range for A, one in the uplink range for B (${B.name}: ${ISOEX[B.key]}). Keep the <b>worse</b> reading, the one closer to 0. The sheet picks it for you. Never use the best one.`;
 function render(){
   const B=BAND, H=[];
   H.push(card('','Site',`<div class="fields">
@@ -349,7 +351,7 @@ function render(){
       `<b>Read B:</b> swap the two cables. UL test frequency.`,
       `Use unused test frequencies, not assigned channels. The <b>stronger read (closer to 0)</b> is the worse one. Or use the BDA's built-in isolation test.`])+
     how('Anritsu settings',[['Mode','NFBM / interference analyzer with sig-gen ON (model dependent)'],['Sig-gen level','0.0 dBm'],['Ref level','about −68 dBm, auto RX range on'],['Frequency','DL test frequency for Read A, UL test frequency for Read B']])+
-    `<div class="fields">${fld('readA','Read A (dBm)','−92')}${fld('readB','Read B (dBm)','−90')}</div>`+
+    `<div class="fields">${fld('readA','Read A: downlink direction (dBm)','−92')}${fld('readB','Read B: uplink direction (dBm)','−90')}</div><p class="note">${isoNote(BAND)}</p>`+
     eq('Isolation = Injected − Read (worse one)',[['','Injected (dBm)','in','inj'],['−','Read (worse)','calc','readW']],'Isolation (dB)','iso')+
     eq('Max gain = Isolation − 20',[['','Isolation','calc','iso'],['−','Safety margin','fixed','20']],'Max gain (dB)','mg')+verdictBox('iso'),'RF OFF'));
 

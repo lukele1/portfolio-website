@@ -275,7 +275,7 @@ function givens(x,o){const B=BANDS[x.band];const row=(a,b)=>`<tr><td>${a}</td><t
   const ch=x.chans.map(c=>row(`${c.f} MHz${c.cc==='Y'?' (control)':''}`,`${f1(c.p)} dBm`)).join('');
   return `<div class="givens">
   <div class="gv"><h3>Tower and donor</h3><table>${row('DL band',B.dl)}${row('Miles to tower',x.mi)}${row('Donor antenna',`${x.gd} ${x.gdu}`)}${row('Donor cable',x.cft+' ft')}${row('Cable loss',x.cl+' dB / 100 ft')}${row('Pad / filter',x.pad+' dB')}</table></div>
-  <div class="gv"><h3>Isolation test (RF off)</h3><table>${row('Injected',(x.inj>0?'+':'')+x.inj+' dBm')}${row('Read A',f1(x.readA)+' dBm')}${row('Read B',f1(x.readB)+' dBm')}</table>
+  <div class="gv"><h3>Isolation test (RF off)</h3><table>${row('Injected',(x.inj>0?'+':'')+x.inj+' dBm')}${row('Read A (downlink)',f1(x.readA)+' dBm')}${row('Read B (uplink)',f1(x.readB)+' dBm')}</table>
   <h3 style="margin-top:10px">BDA</h3><table>${row('Max DL output',x.pmax+' '+x.pmaxu)}${row('Noise figure',x.nf+' dB')}</table></div>
   <div class="gv"><h3>Power IN (GUI)</h3><table>${ch}</table></div>
   <div class="gv"><h3>DAS (worst antenna)</h3><table>${row('Cable',x.das.dft+' ft')}${row('Loss',x.das.dl+' dB / 100 ft')}${row('Tap at antenna','DC'+x.das.taps)}${row('Taps passed through',x.das.th)}${row('2-way splitters',x.das.sp)}${row('Jumpers',x.das.jmp+' dB')}</table></div>
