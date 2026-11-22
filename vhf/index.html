@@ -195,6 +195,28 @@ button.add{font-weight:700}
 #bar .ok b{color:#7BD88F} #bar .bad b{color:#FF8A80}
 footer{line-height:1.6}
 .jmsg{align-self:center;font-size:13.5px;font-weight:600;color:var(--ok)}
+table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
+
+@media (max-width:560px){
+  #step-4 .tw,#step-0B .tw{overflow:visible}
+  #step-4 table.grid,#step-0B table.grid,.duo #step-4 table.grid{min-width:0!important;table-layout:auto}
+  #step-4 table.grid tr:first-child,#step-0B table.grid tr:first-child{display:none}
+  #step-4 table.grid tr,#step-0B table.grid tr{display:grid;gap:6px 8px;padding:8px 0;border-bottom:1px solid var(--line);align-items:end}
+  #step-4 table.grid tr{grid-template-columns:1fr 76px 36px;grid-template-areas:"f c x" "p s s"}
+  #step-0B table.grid tr{grid-template-columns:1fr 1fr 36px;grid-template-areas:"a l x" "r o o"}
+  #step-4 table.grid td,#step-0B table.grid td{border:0;padding:0;display:flex;flex-direction:column;gap:3px;min-width:0}
+  #step-4 table.grid td::before,#step-0B table.grid td::before{font-size:12px;color:var(--muted)}
+  #step-4 td:nth-child(1){grid-area:f}#step-4 td:nth-child(1)::before{content:"DL freq (MHz)"}
+  #step-4 td:nth-child(2){grid-area:c}#step-4 td:nth-child(2)::before{content:"Control ch?"}
+  #step-4 td:nth-child(3){grid-area:p}#step-4 td:nth-child(3)::before{content:"Power IN (dBm)"}
+  #step-4 td:nth-child(4){grid-area:s}#step-4 td:nth-child(4)::before{content:"How you got it"}
+  #step-4 td:nth-child(5){grid-area:x;align-self:center}
+  #step-0B td:nth-child(1){grid-area:a}#step-0B td:nth-child(1)::before{content:"Antenna"}
+  #step-0B td:nth-child(2){grid-area:l}#step-0B td:nth-child(2)::before{content:"Floor / area"}
+  #step-0B td:nth-child(3){grid-area:r}#step-0B td:nth-child(3)::before{content:"PCTEL read (dBm)"}
+  #step-0B td:nth-child(4){grid-area:o;justify-content:flex-end}#step-0B td:nth-child(4)::before{content:"DAS loss"}
+  #step-0B td:nth-child(5){grid-area:x;align-self:center}
+}
 </style>
 </head>
 <body>
