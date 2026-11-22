@@ -204,6 +204,7 @@ footer{line-height:1.6}
 .wrap{padding-bottom:140px}
 #bar .in{grid-template-columns:auto repeat(5,minmax(0,1fr));row-gap:6px}
 #bar .bn{align-self:center;font:700 12px var(--sans);color:#fff;background:var(--accent);border-radius:999px;padding:2px 9px;text-align:center}
+.jmsg{align-self:center;font-size:13.5px;font-weight:600;color:var(--ok)}
 </style>
 </head>
 <body>
@@ -502,6 +503,38 @@ document.addEventListener('click',e=>{if(!mn.contains(e.target)&&e.target!==bg){
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){mn.classList.remove('open');bg.setAttribute('aria-expanded',false)}});
 render();
 
+/* job files: keep your numbers safe and move them between devices */
+(function(){
+  const t=document.querySelector('.tools'); if(!t) return;
+  t.insertAdjacentHTML('beforeend','<button type="button" id="jsave">Save job file</button><button type="button" id="jopen">Open job file</button><button type="button" id="jlink">Copy job link</button><input type="file" id="jfile" accept=".json,application/json" hidden><span id="jmsg" class="jmsg" role="status"></span>');
+  const say=x=>{const m=$('jmsg');m.textContent=x;clearTimeout(say.t);say.t=setTimeout(()=>m.textContent='',6000)};
+  const name=()=>((S.sh?S.sh.site:S.site)||{}).name||'job';
+  const slug=x=>String(x).trim().replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'job';
+  const sheet=KEY.replace('bda-gain-','');
+  const fits=d=>d&&typeof d==='object'&&Object.keys(DEF()).every(k=>k in d);
+  function load(d){
+    if(!fits(d)) return say('That job is from a different sheet, so nothing was loaded.');
+    if(JSON.stringify(S)!==JSON.stringify(DEF())&&!confirm('Replace what is on this sheet now with the saved job?')) return;
+    S=d; save(); render(); say('Job loaded.');
+  }
+  $('jsave').onclick=()=>{
+    const blob=new Blob([JSON.stringify({sheet,saved:new Date().toISOString(),data:S})],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=slug(name())+'_'+sheet+'.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    say('Saved to your downloads. Email it to yourself or drop it in Drive to open on another device.');
+  };
+  $('jopen').onclick=()=>$('jfile').click();
+  $('jfile').onchange=e=>{const f=e.target.files[0]; e.target.value=''; if(!f) return;
+    f.text().then(x=>{const j=JSON.parse(x); load(j.data||j)}).catch(()=>say('That file could not be read.'))};
+  $('jlink').onclick=()=>{
+    const url=location.origin+location.pathname+'#job='+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+    const done=()=>say('Link copied. Text or email it to yourself and open it on site.');
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done,()=>prompt('Copy this link:',url)); else prompt('Copy this link:',url);
+  };
+  const h=location.hash.match(/^#job=(.+)$/);
+  if(h){ try{ const d=JSON.parse(decodeURIComponent(escape(atob(h[1])))); history.replaceState(null,'',location.pathname+location.search); load(d); }catch(e){ say('That job link is broken.'); } }
+  try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); }catch(e){ say('This browser is not saving your numbers. Use Save job file before you close it.'); }
+})();
 </script>
 </body>
 </html>
