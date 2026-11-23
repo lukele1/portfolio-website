@@ -217,6 +217,14 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
   #step-0B td:nth-child(4){grid-area:o;justify-content:flex-end}#step-0B td:nth-child(4)::before{content:"DAS loss"}
   #step-0B td:nth-child(5){grid-area:x;align-self:center}
 }
+
+.why{font-size:13.5px;color:var(--muted);margin:-2px 0 10px;border-left:3px solid var(--accent);padding:2px 0 2px 10px}
+.why b{color:var(--ink)}
+.measure{border:1.5px solid var(--ok);background:var(--ok-bg);border-radius:10px;padding:10px 12px;margin:10px 0}
+.measure .t{display:block;color:var(--ok);margin-bottom:2px}
+.explain{font-size:13.5px;margin:6px 0 0;color:var(--ink)}
+.explain b{color:var(--ink)}
+#m-src,[id^="m-src-"]{font-weight:600}
 </style>
 </head>
 <body>
@@ -277,6 +285,7 @@ function calc(s,chans,ants,band){
   o.nch=fs.length; o.strong=ps.length?Math.max(...ps):null; o.weak=ps.length?Math.min(...ps):null;
   o.fdl=fs.length?Math.max(...fs):band.fmid;
   o.tp=(isN(v('tpA'))&&isN(v('tpG')))?v('tpA')-(v('tpLoss')||0)-v('tpG'):null;
+  o.tp2=(isN(v('tpA2'))&&isN(v('tpG2')))?v('tpA2')-(v('tpLoss2')||0)-v('tpG2'):null;
   o.pmax=isN(v('pmax'))?(s.pmaxu==='W'?10*L(v('pmax')*1000):v('pmax')):null;
   o.tlog=o.nch>0?10*L(o.nch):null;
   o.ceil=(isN(o.pmax)&&isN(o.tlog))?o.pmax-o.tlog:null;
@@ -293,8 +302,10 @@ function calc(s,chans,ants,band){
   o.wall=(isN(o.N)&&isN(o.dr)&&o.dr>0)?10*o.N*L(o.dr/3.28):null;
   o.pl=isN(o.wall)?32.5+o.ghz+o.wall:null;
   o.rx=(isN(o.weakOut)&&isN(o.das)&&isN(o.gs)&&isN(o.pl))?o.weakOut-o.das+o.gs-o.pl:null;
+  o.pout=v('pout'); o.pwalk=v('pwalk'); o.mpath=(isN(o.pout)&&isN(o.pwalk))?o.pout-o.pwalk:null; o.rxEst=o.rx; if(isN(o.pwalk)) o.rx=o.pwalk;
   o.radio=isN(v('radio'))?(s.radiou==='W'?10*L(v('radio')*1000):v('radio')):band.radio;
   o.ulin=(isN(o.pl)&&isN(o.gs)&&isN(o.das))?o.radio-o.pl+o.gs-o.das:null;
+  o.ulinEst=o.ulin; if(isN(o.mpath)) o.ulin=o.radio-o.mpath;
   o.ulf=isN(v('ulf'))?v('ulf'):(o.fdl+band.uloff);
   o.mhz=20*L(o.ulf); o.mi=v('mi'); o.milog=(isN(o.mi)&&o.mi>0)?20*L(o.mi):null;
   o.fspl=isN(o.milog)?o.mhz+o.milog+36.6:null;
@@ -332,11 +343,28 @@ function eq(formula,terms,resLabel,resKey){
 const hook=(title,items)=>`<div class="hook"><div class="t">${title}</div><ol>${items.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;
 const how=(title,rows)=>`<details class="how"><summary>${title}</summary><div class="b"><table class="set">${rows.map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div></details>`;
 const verdictBox=id=>`<div class="verdict na" id="v-${id}">Fill in the boxes above to see this.</div>`;
-const card=(n,title,body,tag='')=>`<section class="card" id="step-${n}"><h2><span class="n">${n}</span>${title}${tag?`<span class="tag${tag==='RF OFF'||tag==='BDA OFF'?' off':''}">${tag}</span>`:''}</h2>${body}</section>`;
+const card=(n,title,body,tag='')=>`<section class="card" id="step-${n}"><h2><span class="n">${n}</span>${title}${tag?`<span class="tag${tag==='RF OFF'||tag==='BDA OFF'?' off':''}">${tag}</span>`:''}</h2>${WHY[n]?`<p class="why"><b>Why:</b> ${WHY[n]}</p>`:''}${body}</section>`;
 const chk=(k,t)=>`<label class="chk"><input type="checkbox" data-chk="${k}" ${S.checks[k]?'checked':''}><span>${t}</span></label>`;
 
 const ISOEX={'700':'772 MHz for A, 802 MHz for B','800':'855 MHz for A, 810 MHz for B','UHF':'an unused DL frequency for A, and its UL pair off the RX column for B','VHF':'an unused DL frequency for A, and its UL pair off the RX column for B'};
 const isoNote=B=>`<b>Not a frequency hunt.</b> A and B are the same isolation test in two directions: one unused test frequency in the downlink range for A, one in the uplink range for B (${B.name}: ${ISOEX[B.key]}). Keep the <b>worse</b> reading, the one closer to 0. The sheet picks it for you. Never use the best one.`;
+const WHY={'0A':"Bad coax or a loose connector makes every reading after this wrong. Sweeping first proves the cables before you trust any number.",
+'0B':"Proves every antenna is connected and putting out signal before the BDA is even on. Compare antennas to each other: one way lower than its neighbors is a bad run.",
+1:"If the building antennas leak back into the donor, the BDA hears its own output and oscillates (feedback). Isolation sets the most gain you can safely run.",
+2:"Everything between the donor and the BDA eats signal, both ways. This loss goes into the uplink math, because the radio's signal climbs back up this same cable.",
+3:"The BDA only boosts the channels you program. Class A means only the licensed channels get through, nothing else.",
+4:"Power IN is how strong each tower channel arrives. The strongest one sets your downlink gain, the weakest tells you if coverage will reach.",
+5:"The BDA's power is shared by every channel. More channels means less power each. This is the most any one channel can put out.",
+6:"Gain is how much the BDA boosts the tower signal. Enough to hit the target, but never more than isolation or the AHJ allows.",
+7:"The loss from the BDA out to the farthest antenna. It's an estimate of what the weakest area gets. The measured path in step 8 replaces it once you have readings.",
+8:"What a firefighter's radio actually hears at the worst spot in the building. It needs −95 dBm or better.",
+9:"How much to boost the radio's signal back to the tower. Too little and the tower can't hear the radio. Too much and the BDA's own noise deafens the tower.",
+10:"The last uplink check: the radio's signal has to reach the tower at −95 dBm or better.",
+11:"Proves the BDA really does what you set, and that the uplink isn't spraying noise at the tower.",
+12:"Alarms, battery and the walk test are what the AHJ actually signs off on."};
+const MEXPL=`<p class="explain"><b>What this is:</b> the real loss between the BDA and the weakest spot, all in one number: DAS cable, splitters, the antenna and the walls.</p><p class="explain"><b>How:</b> pick a control channel (always on). Read its <b>Power OUT</b> in the BDA GUI. Walk to the weakest spot (the worst grid or the weak area on the heat map), hold the PCTEL at radio height, and read the same channel. Type both dBm readings.</p><p class="explain"><b>Why it helps:</b> the path is the same in both directions, since DL and UL are only 30–45 MHz apart. So the radio's uplink loses this same amount on the way back to the BDA. That gives you a real uplink number without keying up on the live system. Once both boxes are filled, "Radio inside" uses your reading and step 9 uses this path instead of the N, distance and DAS loss guesses.</p>`;
+const TPEXPL=`<p class="explain"><b>What this is:</b> proof that the BDA's GUI reads the tower signal right, since your DL gain is set off those GUI numbers. Do it on the <b>strongest</b> channel (first check) and the <b>weakest</b> (second check). Type the Anritsu's dBm reading and the GUI's Power IN for that same channel. Within 2 dB means you can trust the GUI. Weakest one is a voice channel? Use Max Hold for a few minutes, or use the weakest control channel.</p>`;
+const MEAS=()=>`<div class="measure"><b class="t">Measured on site (replaces the estimate)</b><div class="fields">${fld('pout','BDA Power OUT in the GUI (dBm)','25')}${fld('pwalk','PCTEL at the worst spot (dBm)','−72')}</div>`+eq('Building path loss = Power OUT − PCTEL reading',[['','Power OUT','calc','pout'],['−','PCTEL at worst spot','calc','pwalk']],'Path loss (dB)','mpath')+`<p class="note" id="m-src"></p>`+MEXPL+`</div>`;
 function render(){
   const B=BAND, H=[];
   H.push(card('','Site',`<div class="fields">
@@ -401,7 +429,7 @@ function render(){
       <li><b>Still nothing?</b> Ask the radio shop or dispatch to key that repeater while you watch. Never key a public safety channel yourself.</li>
       <li><b>Can't get it today:</b> use the design's predicted level, pick "Est", and come back for a real reading before sign-off.</li></ol></div>`+
     `<div class="eq"><div class="f">Strongest and weakest (from the table)</div><div class="row"><div class="cell"><div class="lb">Strongest (closest to 0) → sets DL gain</div><div class="v calc" data-o="strong">—</div></div><div class="cell"><div class="lb">Weakest (most negative) → checks coverage</div><div class="v calc" data-o="weak">—</div></div><div class="cell"><div class="lb">Channels counted</div><div class="v calc" data-o="nch">—</div></div></div></div>`+
-    eq('Two-point check = (Anritsu on cable − loss after that point) − GUI Power IN',[['','Anritsu on cable','in','tpA'],['−','Loss after that point (0 if at BDA)','in','tpLoss'],['−','GUI Power IN, same channel','in','tpG']],'Difference (dB)','tp')+verdictBox('tp')));
+    eq('Two-point check = (Anritsu on cable − loss after that point) − GUI Power IN',[['','Anritsu on cable','in','tpA'],['−','Loss after that point (0 if at BDA)','in','tpLoss'],['−','GUI Power IN, same channel','in','tpG']],'Difference (dB)','tp')+verdictBox('tp')+eq('Second check, weakest channel = (Anritsu − loss after) − GUI',[['','Anritsu on cable','in','tpA2'],['−','Loss after (0 if at BDA)','in','tpLoss2'],['−','GUI Power IN, same channel','in','tpG2']],'Difference (dB)','tp2')+verdictBox('tp2')+TPEXPL));
 
   H.push(card(5,'Per-channel ceiling',
     `<p class="use"><b>Use:</b> BDA spec sheet (max DL output). Channel count comes from step 4.</p>`+
@@ -425,12 +453,12 @@ function render(){
     `<p class="use"><b>Use:</b> floor plan. Pick the weakest spot on the heat map, then the antenna closest to it. Measure straight across (air), not cable.</p>`+
     `<div class="fields">${fld('gs','Service antenna gain (dBd)','0')}${fld('dr','Air distance to nearest antenna (ft)','40')}${fld('N','Building N','3.4',`<select data-k="s.N" id="i-s-N">${[['','Pick…'],['2.8','2.8 open warehouse'],['3.1','3.1 garage, mall'],['3.4','3.4 office, hotel'],['3.7','3.7 hospital, school'],['4.0','4.0 prison, heavy concrete']].map(([v,t])=>`<option value="${v}" ${String(S.s.N??'')===v?'selected':''}>${t}</option>`).join('')}</select>`)}</div>`+
     eq('Indoor path loss = 32.5 + 20·log(GHz) + 10 × N × log(ft ÷ 3.28)',[['','Fixed','fixed','32.5'],['+','20·log(GHz)','calc','ghz'],['+','10 × N × log(ft ÷ 3.28)','calc','wall']],'Indoor PL (dB)','pl')+
-    eq('Radio inside = Weakest out − DAS loss + Antenna gain − Indoor PL',[['','Weakest out (step 6)','calc','weakOut'],['−','DAS loss (step 7)','calc','das'],['+','Antenna gain','calc','gs'],['−','Indoor PL','calc','pl']],'Radio inside (dBm)','rx')+verdictBox('rx')));
+    eq('Radio inside = Weakest out − DAS loss + Antenna gain − Indoor PL',[['','Weakest out (step 6)','calc','weakOut'],['−','DAS loss (step 7)','calc','das'],['+','Antenna gain','calc','gs'],['−','Indoor PL','calc','pl']],'Radio inside, estimate (dBm)','rxEst')+verdictBox('rx')+MEAS()));
 
   H.push(card(9,'Uplink gain',
     `<p class="use"><b>Use:</b> donor site info (miles in the Site box), BDA spec sheet (noise figure). No radio info? Leave it blank and it uses <b>${B.radio} dBm</b>.</p>`+
     `<div class="fields">${fld('radio','Radio power','auto',`<div class="row">${inp('radio','auto '+B.radio)}<select data-k="s.radiou"><option ${S.s.radiou!=='W'?'selected':''}>dBm</option><option ${S.s.radiou==='W'?'selected':''}>W</option></select></div>`)}${fld('nf','BDA noise figure (dB)','5')}${fld('ulf','UL frequency (MHz)',B.ulph)}</div>`+
-    eq('BDA UL input = Radio − Indoor PL + Antenna gain − DAS loss',[['','Radio (dBm)','calc','radio'],['−','Indoor PL','calc','pl'],['+','Antenna gain','calc','gs'],['−','DAS loss','calc','das']],'UL input (dBm)','ulin')+
+    eq('BDA UL input = Radio − Indoor PL + Antenna gain − DAS loss',[['','Radio (dBm)','calc','radio'],['−','Indoor PL','calc','pl'],['+','Antenna gain','calc','gs'],['−','DAS loss','calc','das']],'UL input (dBm)','ulin')+`<p class="note" id="ul-src"></p>`+
     eq('Free space loss = 20·log(UL MHz) + 20·log(miles) + 36.6',[['','20·log(MHz)','calc','mhz'],['+','20·log(miles)','calc','milog'],['+','Fixed','fixed','36.6']],'FSPL (dB)','fspl')+
     eq('Min UL = −95 − UL input + Loss − Donor gain + FSPL',[['','Target','fixed','−95'],['−','UL input','calc','ulin'],['+','Loss (step 2)','calc','loss'],['−','Donor gain','calc','gd'],['+','FSPL','calc','fspl']],'Min UL (dB)','mn')+
     eq('Max UL = FSPL + Loss − Donor gain − Noise figure − 20',[['','FSPL','calc','fspl'],['+','Loss','calc','loss'],['−','Donor gain','calc','gd'],['−','Noise figure','calc','nf'],['−','Margin','fixed','20']],'Max UL (dB)','mx')+
@@ -471,10 +499,13 @@ function update(){
   document.querySelectorAll('[data-ant]').forEach(e=>{const r=num(S.ants[+e.dataset.ant].r);if(!isN(r)){e.textContent='—';e.style.color='';return}const d=-r-30;e.textContent=f1(d)+' dB'+(r<-90?' ✗ check this run':' ✓');e.style.color=r<-90?'var(--bad)':'var(--ok)'});
   if(isN(o.iso)) setV('iso',o.iso>=80?'ok':'warn',o.iso>=80?`No gain, DL or UL, can go above ${f1(o.mg)} dB.`:`Only ${f1(o.mg)} dB of gain allowed. Check donor placement before going on.`); else setV('iso','na','Type the injected level and at least one read.');
   if(isN(o.tp)) setV('tp',Math.abs(o.tp)<=2?'ok':'bad',Math.abs(o.tp)<=2?`Within 2 dB (${f1(o.tp)}). Reading, pad value and GUI agree.`:`${f1(o.tp)} dB off. Check connectors, the pad value, or that both are the same channel.`); else setV('tp','na','Optional: compare the Anritsu cable reading to the GUI on the same channel.');
+  if(isN(o.tp2)) setV('tp2',Math.abs(o.tp2)<=2?'ok':'bad',Math.abs(o.tp2)<=2?`Within 2 dB (${f1(o.tp2)}). The GUI reads right on the weak end too.`:`${f1(o.tp2)} dB off. Check the connector, the loss-after number, or that both are the same channel. Voice channel? Use Max Hold.`); else setV('tp2','na','Optional: the same check on the weakest channel.');
+  {const m=$('m-src');if(m)m.textContent=isN(o.mpath)?`Measured path: ${f1(o.mpath)} dB. Radio inside now uses your ${f1(o.pwalk)} dBm reading, and step 9 uses this path for the uplink.`:'Fill in both boxes to switch from the estimate to real numbers.';
+   const u=$('ul-src');if(u)u.textContent=isN(o.mpath)?`UL input from your measured path (step 8): ${f1(o.radio)} − ${f1(o.mpath)} = ${f1(o.ulin)} dBm.`:'UL input is an estimate (indoor path loss + DAS loss). Fill in the measured boxes in step 8 to use real numbers.';}
   if(isN(o.ceil)) setV('ceil',o.ceil>=o.tgt?'ok':'warn',o.ceil>=o.tgt?`+${f1(o.tgt)} fits under the ${f1(o.ceil)} ceiling.`:`Ceiling ${f1(o.ceil)} is under +${f1(o.tgt)}. Each channel tops out at the ceiling.`); else setV('ceil','na','Needs max output and channels in step 4.');
   if(isN(o.dlset)){const bad=[];if(isN(o.mg)&&o.dlset>o.mg+0.05)bad.push(`over the ${f1(o.mg)} isolation limit (oscillation risk)`);if(isN(o.cap)&&o.dlset>o.cap+0.05)bad.push(`over the AHJ cap of ${f1(o.cap)}`);if(isN(o.ceil)&&isN(o.strongOut)&&o.strongOut>o.ceil+0.05)bad.push(`strongest channel would be ${f1(o.strongOut)} dBm, over the ${f1(o.ceil)} ceiling`);
     setV('dl',bad.length?'bad':'ok',bad.length?'DL gain is '+bad.join('; ')+'.':`Set ${f1(o.dlset)} dB. Strongest channel out: ${f1(o.strongOut)} dBm.`)} else setV('dl','na','Needs Power IN readings in step 4.');
-  if(isN(o.rx)) setV('rx',o.rx>=-95?'ok':'bad',o.rx>=-95?`PASS by ${f1(o.rx+95)} dB (need −95 or stronger).`:`FAIL by ${f1(-95-o.rx)} dB. Look at DAS loss, antenna spacing or output.`); else setV('rx','na','Needs steps 4, 6, 7 and the boxes above.');
+  if(isN(o.rx)) setV('rx',o.rx>=-95?'ok':'bad',o.rx>=-95?`${isN(o.pwalk)?'Your measured reading: ':'Estimate: '}PASS by ${f1(o.rx+95)} dB (need −95 or stronger).`:`${isN(o.pwalk)?'Your measured reading: ':'Estimate: '}FAIL by ${f1(-95-o.rx)} dB. Look at DAS loss, antenna spacing or output.`); else setV('rx','na','Needs steps 4, 6, 7 and the boxes above.');
   if(isN(o.mn)&&isN(o.lim)) setV('win',o.lim>=o.mn?'ok':'bad',o.lim>=o.mn?`UL window: ${f1(o.mn)} to ${f1(o.lim)} dB.`:`Window closed: need ${f1(o.mn)} but the limit is ${f1(o.lim)}. Cut DAS loss or fix isolation first.`); else setV('win','na','Needs miles, donor gain, loss, noise figure and steps 7–8.');
   if(isN(o.tower)){const msgs=[];let cls=o.tower>=-95?'ok':'bad';msgs.push(o.tower>=-95?`PASS by ${f1(o.tower+95)} dB.`:`FAIL by ${f1(-95-o.tower)} dB.`);if(isN(o.nzm)&&o.nzm<0){cls='bad';msgs.push(`UL gain is ${f1(-o.nzm)} dB over the noise limit: it will desense the tower.`)}if(isN(o.lim)&&isN(o.ulset)&&o.ulset>o.lim+0.05){cls='bad';msgs.push(`UL gain is over the ${f1(o.lim)} limit.`)}setV('tower',cls,msgs.join(' '))} else setV('tower','na','Needs step 9.');
   if(isN(o.gchk)&&isN(o.dlset)) setV('gchk',Math.abs(o.gchk-o.dlset)<=2?'ok':'bad',Math.abs(o.gchk-o.dlset)<=2?`Within 2 dB of the ${f1(o.dlset)} you set.`:`${f1(o.gchk-o.dlset)} dB off the setting. Check the channel, the pad, or the BDA limiting (injected too hot?).`); else setV('gchk','na','Read Power OUT and IN on the same channel.');
