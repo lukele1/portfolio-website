@@ -366,6 +366,53 @@ const WHY={'0A':"Bad coax or a loose connector makes every reading after this wr
 const MEXPL=`<p class="explain"><b>What this is:</b> the real loss between the BDA and the weakest spot, all in one number: DAS cable, splitters, the antenna and the walls.</p><p class="explain"><b>How:</b> pick a control channel (always on). Read its <b>Power OUT</b> in the BDA GUI. Walk to the weakest spot (the worst grid or the weak area on the heat map), hold the PCTEL at radio height, and read the same channel. Type both dBm readings.</p><p class="explain"><b>Why it helps:</b> the path is the same in both directions, since DL and UL are only 30–45 MHz apart. So the radio's uplink loses this same amount on the way back to the BDA. That gives you a real uplink number without keying up on the live system. Once both boxes are filled, "Radio inside" uses your reading and step 9 uses this path instead of the N, distance and DAS loss guesses.</p>`;
 const TPEXPL=`<p class="explain"><b>What this is:</b> proof that the BDA's GUI reads the tower signal right, since your DL gain is set off those GUI numbers. Do it on the <b>strongest</b> channel (first check) and the <b>weakest</b> (second check). Type the Anritsu's dBm reading and the GUI's Power IN for that same channel. Within 2 dB means you can trust the GUI. Weakest one is a voice channel? Use Max Hold for a few minutes, or use the weakest control channel.</p>`;
 const MEAS=()=>`<div class="measure"><b class="t">Measured on site (replaces the estimate)</b><div class="fields">${fld('pout','BDA Power OUT in the GUI (dBm)','25')}${fld('pwalk','PCTEL at the worst spot (dBm)','−72')}</div>`+eq('Building path loss = Power OUT − PCTEL reading',[['','Power OUT','calc','pout'],['−','PCTEL at worst spot','calc','pwalk']],'Path loss (dB)','mpath')+`<p class="note" id="m-src"></p>`+MEXPL+`</div>`;
+const IG=bands=>`<details class="how guide"><summary>Step by step: isolation on the Anritsu</summary><div class="b">
+<p class="explain"><b>Hook up:</b> BDA RF off, both cables unhooked from the BDA. A tone goes into one cable and the Anritsu listens on the other. Whatever leaks across the air from the donor antenna to the inside antennas (or back) is what you read. The quieter it is, the better.</p>
+<ol class="gl">
+<li><b>Pick a test frequency</b> nobody's using, one for each direction${bands.length>1?' and each band':''}. ${bands.map(B=>`<b>${B.name}:</b> ${ISOEX[B.key]}`).join('<br>')}</li>
+<li><b>Check it's empty first.</b> Tone off, look at the test frequency on the Anritsu. You want flat floor there. If something's already on it, pick another frequency.</li>
+<li><b>Tone:</b> ${P('Sig gen out')} → donor cable for Read A (DAS cable for Read B), CW at <b>0 dBm</b>. Write down the exact level, it's your "Injected" below. If your Anritsu can't run the generator and the analyzer at the same time, use a separate signal generator for the tone.</li>
+<li><b>Mode:</b> Spectrum Analyzer. ${P('RF In')} → the other cable.</li>
+<li><b>Amplitude:</b> Ref Level <b>−30 dBm</b>, Input Atten <b>0 dB</b>, Detection <b>Peak</b>, no external loss. You're hunting a tiny signal, so keep the top of the screen low.</li>
+<li><b>Freq / Span:</b> Center = your test frequency, Span <b>1 MHz</b>.</li>
+<li><b>BW:</b> RBW <b>3 kHz</b>, VBW <b>1 kHz</b>. This drops the floor to about −110, so even a weak leak shows up.</li>
+<li><b>Trace:</b> <b>Normal</b> (not Max Hold). Max Hold would keep a radio that keyed up next door and fool you.</li>
+<li><b>Marker:</b> Marker 1 → <b>type the test frequency</b>. Don't just hit Peak Search, a stronger signal nearby can grab the marker.</li>
+<li><b>Read:</b> the marker dBm goes in Read A. Swap the cables, move to the UL test frequency, do it again for Read B.</li>
+<li><b>Save:</b> Screen Shot, name it <code>SITE_ISO_A</code> and <code>SITE_ISO_B</code>.</li>
+</ol>
+<p class="explain"><b>How to read it:</b> isolation = what you put in minus what you read. 0 dBm in and a read of −88 means 88 dB of isolation. A read of −72 means 72 dB, that's the worse one, 16 dB more leak. The sheet keeps the worse one for you.</p>
+<p class="explain"><b>Your tone sits in the floor (no spike at all):</b> isolation is at least "injected minus the floor." With a −110 floor and 0 dBm in, that's 110 dB or more. Write the floor number in as the read, it's the safe answer.</p>
+<p class="explain"><b>A big spike next to your tone</b> (example: one at −48 sitting a couple hundred kHz away while your tone read −92): that's someone else on the air, not leak. Ignore it, read only your marker.</p>
+<p class="explain"><b>Reads jump around between tries:</b> make sure nobody's standing near the donor or an inside antenna, all doors stay the same, and every connector's tight. Take the worst of a few tries.</p>
+<p class="explain"><b>Built-in isolation test:</b> Fiplex and most BDAs have one in the GUI. Fine to use, but grab one Anritsu read too so you can trust it.</p>
+</div></details>`;
+const OG=bands=>`<details class="how guide"><summary>Step by step: output power, gain step and noise on the Anritsu</summary><div class="b">
+<p class="explain"><b>Protect the Anritsu first.</b> BDA output goes through a <b>30 dB pad</b> before ${P('RF In')}, every time. RF In takes damage at +33 dBm. Then tell the Anritsu about the pad: Amplitude → <b>External Loss 30 dB</b>. The screen shows "30.0 dB Ext Loss" under Ref Lvl when it's on, and now every reading is the real BDA output.</p>
+<p class="explain"><b>A. Output power per channel</b> (BDA ${P('DAS / Server')} → 30 dB pad → ${P('RF In')})</p>
+<ol class="gl">
+<li><b>Amplitude:</b> Ref Level <b>+20 dBm</b> (go to +30 if the spikes hit the top), Input Atten <b>10 dB</b> (20 dB at Ref +30), Detection Peak.</li>
+<li><b>Freq / Span:</b> ${bands.map(B=>B.key==='700'||B.key==='800'?`<b>${B.name}:</b> Start ${B.dlStart}, Stop ${B.dlStop} MHz`:`<b>${B.name}:</b> center on a channel, Span 1 MHz`).join('<br>')}</li>
+<li><b>BW:</b> RBW 3 kHz, VBW 1 kHz. <b>Trace:</b> Max Hold.</li>
+<li><b>Markers:</b> one on each channel, Marker Table On. Put one marker on an empty spot too, that's your floor.</li>
+<li><b>Save:</b> <code>SITE_DL_OUT</code>.</li>
+</ol>
+<p class="explain"><b>What good looks like:</b> every channel within a couple dB of each other (example: +8.5 to +9.7 dBm), all under the per-channel ceiling from step 5, and the floor 60+ dB below them (example: channels near +9, floor near −60). One channel way low = it's not programmed, or it hadn't keyed yet.</p>
+<p class="explain"><b>B. Gain step check</b> (same hookup, one channel, Marker 1 on it)</p>
+<ol class="gl">
+<li>Note the output. Raise the BDA gain <b>10 dB</b> in the GUI. Bump Ref Level up 10 so the spike stays on screen.</li>
+<li>Read it again. It should go up <b>about 10 dB</b> (example: +4.6 → +14.1, that's 9.5, good).</li>
+<li>Went up a lot less than 10 (like 5 or 6)? The amp is squashing (AGC or compression). Back the gain off until the step is clean again. Put the gain back where step 6 says when you're done.</li>
+</ol>
+<p class="explain"><b>C. Noise check</b> (BDA ${P('Donor')} → 30 dB pad → ${P('RF In')} for UL noise, no radios keyed)</p>
+<ol class="gl">
+<li><b>Amplitude:</b> Ref Level <b>−20 dBm</b>, Atten 0, <b>External Loss 30 dB still on</b> (forget it and your reading is 30 dB too good).</li>
+<li><b>Freq / Span:</b> wide, ${bands.map(B=>B.key==='700'||B.key==='800'?`${B.name}: about 40 MHz around the band`:`${B.name}: 50 MHz centered on the band`).join(', ')}. You want to see past both edges.</li>
+<li><b>BW:</b> RBW <b>10 kHz</b>, VBW 3 kHz. <b>Trace:</b> Average.</li>
+<li>Screenshot with the BDA <b>on</b>, then turn RF off and take another. Name them <code>SITE_UL_NOISE_ON</code> and <code>_OFF</code>.</li>
+</ol>
+<p class="explain"><b>What good looks like:</b> BDA on, you'll see a wide flat hump across the band that drops off at the edges. That's the amp's own noise, normal. BDA off, it goes flat. The top of the hump has to stay under <b>−43 dBm</b> (FCC) with the pad entered. Thin spikes poking out of the hump, or anything outside the band edges = spurs or the start of oscillation. Stop and find out why before you leave it on.</p>
+</div></details>`;
 const DG=bands=>{const sp=B=>(B.key==='700'||B.key==='800')?`Start ${B.dlStart} MHz, Stop ${B.dlStop} MHz (the whole DL band fits)`:`Center = middle of your channels, Span 2–3 MHz (the full ${B.dl} band is too wide to see narrow channels)`;
 return `<details class="how guide"><summary>Step by step: reading the donor on the Anritsu</summary><div class="b">
 <p class="explain"><b>Hook up:</b> BDA off. Unhook the donor jumper at the BDA ${P('Donor')} port and connect it to Anritsu ${P('RF In')}. No pad needed, donor signal is weak (around −40 to −70).</p>
@@ -420,7 +467,7 @@ function render(){
       `<b>Read A:</b> Anritsu ${P('Sig gen out')} → <b>donor</b> cable. Anritsu ${P('RF In')} → <b>DAS</b> cable. DL test frequency.`,
       `<b>Read B:</b> swap the two cables. UL test frequency.`,
       `Use unused test frequencies, not assigned channels. The <b>stronger read (closer to 0)</b> is the worse one. Or use the BDA's built-in isolation test.`])+
-    how('Anritsu settings',[['Mode','NFBM / interference analyzer with sig-gen ON (model dependent)'],['Sig-gen level','0.0 dBm'],['Ref level','about −68 dBm, auto RX range on'],['Frequency','DL test frequency for Read A, UL test frequency for Read B']])+
+    IG([B])+
     `<div class="fields">${fld('readA','Read A: downlink direction (dBm)','−92')}${fld('readB','Read B: uplink direction (dBm)','−90')}</div><p class="note">${isoNote(BAND)}</p>`+
     eq('Isolation = Injected − Read (worse one)',[['','Injected (dBm)','in','inj'],['−','Read (worse)','calc','readW']],'Isolation (dB)','iso')+
     eq('Max gain = Isolation − 20',[['','Isolation','calc','iso'],['−','Safety margin','fixed','20']],'Max gain (dB)','mg')+verdictBox('iso'),'RF OFF'));
@@ -494,7 +541,7 @@ function render(){
       `<b>Gain check (Anritsu):</b> BDA disconnected first. Anritsu ${P('Sig gen out')} at the real donor level (about −60, <b>never above −30 dBm</b>) → BDA ${P('Donor')}. BDA ${P('DAS / Server')} → <b>30 dB pad</b> → Anritsu ${P('RF In')}. Enter the pad as external loss.`,
       `<b>UL noise:</b> BDA ${P('Donor')} → <b>30 dB pad</b> → Anritsu ${P('RF In')}. RBW 10 kHz, no radios keyed. Must be under −43 dBm (FCC). Look outside the band too: no spurs.`,
       `Reconnect everything, torque it, clear alarms.`])+
-    eq('Gain check = Power OUT − Power IN (same channel)',[['','Power OUT','in','gOut'],['−','Power IN','in','gIn']],'Measured gain (dB)','gchk')+verdictBox('gchk')+
+    OG([B])+eq('Gain check = Power OUT − Power IN (same channel)',[['','Power OUT','in','gOut'],['−','Power IN','in','gIn']],'Measured gain (dB)','gchk')+verdictBox('gchk')+
     `<div class="fields">${fld('ulNoise','UL noise reading (dBm)','−68')}</div>`));
 
   H.push(card(12,'Finish and prove it',
