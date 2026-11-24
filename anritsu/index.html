@@ -233,6 +233,8 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
 td.out.ok{color:var(--ok)} td.out.bad{color:var(--bad)}
 .sumline{font-size:14px;color:var(--muted);margin:8px 0 0}
 .jump{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.jump a{font:600 13px var(--sans);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--card)}
+.stack small{color:var(--muted);font-weight:400}
+@media (max-width:620px){table.stack,table.stack tbody,table.stack tr,table.stack td{display:block;width:100%;min-width:0!important;box-sizing:border-box}table.stack tr:first-child{display:none}table.stack tr{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px}table.stack td{border:0;padding:4px 0}table.stack td[data-l]{display:flex;align-items:center;gap:10px}table.stack td[data-l]::before{content:attr(data-l);flex:0 0 120px;font-size:13px;color:var(--muted)}table.stack td[data-l] input{flex:1;min-width:0}}
 @media print{.bandpick,.jump,.del{display:none!important}}
 </style>
 </head>
@@ -332,7 +334,7 @@ function render(){
     `<div class="sumline" data-o="chsum"></div>`,'BDA OFF'));
 
   H.push(card(3,'Isolation',
-    hook('Hook up',[`BDA RF off, both cables unhooked from the BDA.`,`<b>Read A:</b> ${P('Sig gen out')} → donor cable, ${P('RF In')} → DAS cable, DL test frequency.`,`<b>Read B:</b> swap the cables, UL test frequency.`])+
+    hook('Hook up',[`BDA RF off, both cables unhooked from the BDA.`,`<b>DL (Read A):</b> ${P('Sig gen out')} → <b>donor</b> cable, ${P('RF In')} → <b>DAS</b> cable, DL test frequency.`,`<b>UL (Read B):</b> swap them. ${P('Sig gen out')} → <b>DAS</b> cable, ${P('RF In')} → <b>donor</b> cable, UL test frequency.`,`Both directions, every site. They're often a few dB different, and the worse one sets your gain.`])+
     ol([`<b>Pick test frequencies</b> nobody's using. ${B.name}: ${ISOEX[B.key]}. Never an assigned channel.`,
       `<b>Check it's empty first.</b> Tone off, look at the test frequency. Flat floor = good.`,
       `<b>Tone:</b> CW at <b>0 dBm</b> (the S412E tops out there). If your unit can't run the generator and analyzer at once, use a separate signal generator.`,
@@ -341,12 +343,15 @@ function render(){
       `<b>BW:</b> RBW <b>3 kHz</b>, VBW <b>1 kHz</b>. Floor drops to about −110.`,
       `<b>Trace:</b> <b>Normal</b>, not Max Hold.`,
       `<b>Marker:</b> type the test frequency in. Don't Peak Search, a bigger signal nearby can grab it.`,
-      `<b>Save:</b> <code>SITE_ISO_A</code> and <code>SITE_ISO_B</code>.`])+
+      `<b>DL done? Now UL.</b> Swap the two cables at the Anritsu, move the tone and the center to the <b>UL test frequency</b>, read again. Same settings.`,`<b>Save:</b> <code>SITE_ISO_DL</code> and <code>SITE_ISO_UL</code>.`])+
     ex('Tone buried in the floor:',`write the floor as your read. Isolation is at least that much.`)+
     ex('A big spike next to your tone:',`someone else on the air, not leak. Read only your marker.`)+
     ex('Reads jump around:',`nobody near the antennas, doors the same, connectors tight. Keep the worst of a few tries.`)+
-    `<div class="tw"><table class="grid"><tr><th>Injected (dBm)</th><th>Read A (dBm)</th><th>Read B (dBm)</th></tr><tr><td>${inp('iso.inj','0')}</td><td>${inp('iso.a','−88',{neg:1})}</td><td>${inp('iso.b','−85',{neg:1})}</td></tr></table></div><div class="tw"><table class="grid"><tr><th>Isolation (dB)</th><th>Max gain (dB)</th></tr><tr><td class="out" data-o="iso">—</td><td class="out" data-o="mg">—</td></tr></table></div>`+
-    `<p class="note">Isolation = injected − the <b>worse</b> read (the one closer to 0). Max gain = isolation − 20. Example: 0 in, worst read −72 → 72 dB isolation → 52 dB max gain.</p>`,'RF OFF'));
+    `<div class="tw"><table class="grid stack"><tr><th>Direction</th><th>Test freq (MHz)</th><th>Injected (dBm)</th><th>Read (dBm)</th><th>Isolation (dB)</th></tr>`+
+    `<tr><td><b>DL</b> (Read A)<br><small>tone → donor cable, read the DAS cable</small></td><td data-l="Test freq (MHz)">${inp('iso.dlf',B.key==='700'?'772':B.key==='800'?'855':'test freq')}</td><td data-l="Injected (dBm)">${inp('iso.dlinj','0')}</td><td data-l="Read (dBm)">${inp('iso.a','−88',{neg:1})}</td><td class="out" data-l="Isolation (dB)" data-o="isoDL">—</td></tr>`+
+    `<tr><td><b>UL</b> (Read B)<br><small>tone → DAS cable, read the donor cable</small></td><td data-l="Test freq (MHz)">${inp('iso.ulf',B.key==='700'?'802':B.key==='800'?'810':'test freq')}</td><td data-l="Injected (dBm)">${inp('iso.ulinj','0')}</td><td data-l="Read (dBm)">${inp('iso.b','−85',{neg:1})}</td><td class="out" data-l="Isolation (dB)" data-o="isoUL">—</td></tr></table></div>`+
+    `<div class="tw"><table class="grid"><tr><th>Worse direction</th><th>Isolation to use (dB)</th><th>Max gain (dB)</th></tr><tr><td class="out" data-o="isoW">—</td><td class="out" data-o="iso">—</td><td class="out" data-o="mg">—</td></tr></table></div>`+
+    `<p class="note">Do <b>both</b> directions every time. Isolation = injected − read, for each one. Use the <b>lower</b> isolation of the two (that's the read closer to 0). Max gain = that − 20. Example: DL 88 dB, UL 72 dB → use 72 → 52 dB max gain for both DL and UL.</p>`,'RF OFF'));
 
   H.push(card(4,'Antenna verification (injection)',
     hook('Hook up',[`At the head end: ${P('Sig gen out')} → the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`,`CW tone at <b>0 dBm</b> on an <b>unused test frequency</b> in ${B.dl}. Ask your lead which one.`])+
@@ -383,8 +388,11 @@ function update(){
   S.lines.forEach((l,i)=>{const r=num(l.rl);if(r==null)return setO(`lines.${i}.ok`,'—');const v=-Math.abs(r);setO(`lines.${i}.ok`,v<=-12?'Pass':'Fail',v<=-12?'ok':'bad')});
   const rs=S.ch.map(c=>num(c.r)).filter(v=>v!=null);
   setO('chsum',rs.length?`Strongest ${f1(Math.max(...rs))} dBm, weakest ${f1(Math.min(...rs))} dBm.${rs.some(v=>v<=-95)?' Something reads near the floor, let Max Hold run longer.':''}`:'');
-  const inj=num(S.iso.inj),a=num(S.iso.a),b=num(S.iso.b),w=[a,b].filter(v=>v!=null);
-  const iso=inj!=null&&w.length?inj-Math.max(...w):null;
+  const one=(inj,r)=>{const i=num(inj??'0'),v=num(r);return i!=null&&v!=null?i-v:null};
+  const dl=one(S.iso.dlinj,S.iso.a),ul=one(S.iso.ulinj,S.iso.b);
+  setO('isoDL',dl==null?'—':f1(dl));setO('isoUL',ul==null?'—':f1(ul));
+  const both=[dl,ul].filter(v=>v!=null),iso=both.length?Math.min(...both):null;
+  setO('isoW',iso==null?'—':dl!=null&&ul!=null?(dl<=ul?'DL':'UL')+(Math.abs(dl-ul)<0.05?' (tie)':''):'Do the other direction too','');
   setO('iso',iso==null?'—':f1(iso),iso==null?'':iso>=60?'ok':'bad');setO('mg',iso==null?'—':f1(iso-20));
   const ls=[];S.ants.forEach((x,i)=>{const r=num(x.r);if(r==null)return setO(`ants.${i}.loss`,'—');const l=0-r-30;ls.push(r);setO(`ants.${i}.loss`,f1(l)+' dB')});
   setO('antsum',ls.length>1?`Best ${f1(Math.max(...ls))}, worst ${f1(Math.min(...ls))} dBm, a ${f1(Math.max(...ls)-Math.min(...ls))} dB spread.${Math.min(...ls)<=-90?' One is down near −90 or lower, check that run.':''}`:'');
