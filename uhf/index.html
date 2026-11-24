@@ -559,6 +559,13 @@ render();
   if(h){ try{ const d=JSON.parse(decodeURIComponent(escape(atob(h[1])))); history.replaceState(null,'',location.pathname+location.search); load(d); }catch(e){ say('That job link is broken.'); } }
   try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); }catch(e){ say('This browser is not saving your numbers. Use Save job file before you close it.'); }
 })();
+/* phones: the number pad has no minus key, so readings that are always negative get the minus added for you */
+(function(){
+  const NEG=/\.(readA|readB|p|r|pwalk|tpA|tpG|tpA2|tpG2|gIn|ulNoise|rlDonor|rlDas)$/;
+  const isNeg=el=>el.tagName==='INPUT'&&((el.dataset.k&&NEG.test(el.dataset.k))||/^(read|sig|pin)$/.test(el.id));
+  document.addEventListener('input',e=>{const el=e.target;if(isNeg(el)&&/^[1-9.]/.test(el.value))el.value='-'+el.value;},true);
+  document.addEventListener('focusin',e=>{const el=e.target;if(el.tagName==='INPUT'&&el.dataset.k&&/\.(gs|inj|pout|gOut)$/.test(el.dataset.k))el.setAttribute('inputmode','text');},true);
+})();
 </script>
 </body>
 </html>

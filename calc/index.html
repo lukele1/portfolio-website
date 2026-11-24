@@ -342,6 +342,13 @@ $('form').addEventListener('input',render);$('form').addEventListener('change',r
 (function(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}
   if(s&&s.v){for(const k of FIELDS)if(k in s.v)$(k).value=s.v[k];conv=s.conv||'dBi'}else{fill(PRESETS[0]);$('preset').value='0';conv='dBi'}
   setConv(conv)})();
+/* phones: the number pad has no minus key, so readings that are always negative get the minus added for you */
+(function(){
+  const NEG=/\.(readA|readB|p|r|pwalk|tpA|tpG|tpA2|tpG2|gIn|ulNoise|rlDonor|rlDas)$/;
+  const isNeg=el=>el.tagName==='INPUT'&&((el.dataset.k&&NEG.test(el.dataset.k))||/^(read|sig|pin)$/.test(el.id));
+  document.addEventListener('input',e=>{const el=e.target;if(isNeg(el)&&/^[1-9.]/.test(el.value))el.value='-'+el.value;},true);
+  document.addEventListener('focusin',e=>{const el=e.target;if(el.tagName==='INPUT'&&el.dataset.k&&/\.(gs|inj|pout|gOut)$/.test(el.dataset.k))el.setAttribute('inputmode','text');},true);
+})();
 </script>
 </body>
 </html>
