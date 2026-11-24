@@ -594,7 +594,10 @@ function render(){
 const rtMsg=o=>{if(!isN(o.strongOut))return['na','Needs Power IN readings in step 4.'];const out=o.strongOut,sg=x=>(x>=0?'+':'')+f1(x),lo=o.rtLo,hi=o.rtHi;const lim=lowest([o.cap,o.mg].filter(isN));
  if(out>=4.95&&out<=10.05)return['ok',`${sg(out)} dBm out on the strongest channel. Inside the +5 to +10 rule of thumb.`];
  if(out<5){let t=`${sg(out)} dBm out, ${f1(5-out)} dB under +5. To land at +5 to +10 you'd set ${f1(lo)} to ${f1(hi)} dB of DL gain.`;if(isN(lim)&&lim<lo)t+=` But max gain / AHJ cap stops you at ${f1(lim)} dB, so this site can't reach +5 without more isolation (or more signal at the donor).`;return['warn',t];}
- return['warn',`${sg(out)} dBm out, ${f1(out-10)} dB over +10. Set ${f1(hi)} dB of DL gain or less to stay at +10 or under.`];};
+ const ce=isN(o.ceil)?o.ceil:null;
+ if(isN(ce)&&out>ce+0.05)return['bad',`${sg(out)} dBm out is over the per-channel ceiling (${sg(ce)} dBm, step 5). The amp will compress and get worse, not better. Back DL gain down to ${f1(ce-o.strong)} dB or less.`];
+ if(isN(o.mg)&&o.dlset>o.mg+0.05)return['bad',`${sg(out)} dBm out, but that gain is over max gain (${f1(o.mg)} dB). Oscillation risk, back it down.`];
+ return['warn',`${sg(out)} dBm out, over the usual +10. Fine if the grids need it, just stay under the ceiling (${isN(ce)?sg(ce)+' dBm':'step 5'}) and max gain (${isN(o.mg)?f1(o.mg)+' dB':'step 1'}). Only a few grids failing? Check that run (step 0B) before adding gain. ${f1(hi)} dB gets you back to +10.`];};
 function setV(i,id,cls,txt){const e=$('v-'+i+'-'+id);if(!e)return;e.className='verdict '+cls;e.textContent=txt}
 function update(){
   const O=PAIR.bands.map((B,i)=>calc(Object.assign({},S.sh,S.b[i]),S.b[i].chans,S.sh.ants,B));
@@ -619,7 +622,7 @@ function update(){
   });
   const gg=num(S.sh.gridGen),gc=num(S.sh.gridCrit); if(isN(gg)||isN(gc)){const ok=(!isN(gg)||gg>=95)&&(!isN(gc)||gc>=99);setV('s','grid',ok?'ok':'bad',ok?'Grid walk passes.':'Grid walk short: general needs 95%, critical needs 99%.')} else setV('s','grid','na','Enter the grid results.');
   const bx=(k,val,pass)=>`<div class="${pass===true?'ok':pass===false?'bad':pass==='warn'?'warn':''}"><b>${isN(val)?f1(val):'—'}</b>${k}</div>`;
-  $('barin').innerHTML=O.map((o,i)=>`<div class="bn">${BN[i]}</div>`+bx('Max gain',o.mg)+bx('DL gain',o.dlset)+bx('Out<span class="rg"> (+5 to +10)</span>',o.strongOut,isN(o.strongOut)?(o.strongOut>=4.95&&o.strongOut<=10.05?true:'warn'):null)+bx('UL gain',o.ulset)+bx('Inside',o.rx,isN(o.rx)?o.rx>=-95:null)+bx('Tower',o.tower,isN(o.tower)?o.tower>=-95:null)).join('');
+  $('barin').innerHTML=O.map((o,i)=>`<div class="bn">${BN[i]}</div>`+bx('Max gain',o.mg)+bx('DL gain',o.dlset)+bx('Out<span class="rg"> (+5 to +10)</span>',o.strongOut,isN(o.strongOut)?((isN(o.ceil)&&o.strongOut>o.ceil+0.05)||(isN(o.mg)&&o.dlset>o.mg+0.05)?false:(o.strongOut>=4.95&&o.strongOut<=10.05?true:'warn')):null)+bx('UL gain',o.ulset)+bx('Inside',o.rx,isN(o.rx)?o.rx>=-95:null)+bx('Tower',o.tower,isN(o.tower)?o.tower>=-95:null)).join('');
 }
 // ---------- events ----------
 function setPath(p,val){const a=p.split('.');let t=S;for(let i=0;i<a.length-1;i++)t=t[a[i]];t[a[a.length-1]]=val}
