@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anritsu S412E Step by Step</title>
+<meta name="description" content="Anritsu S412E step by step for BDA commissioning: sweeps, donor reading, isolation, antenna verification, output and noise.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f6; --card:#fff; --ink:#151b20; --muted:#5d6b75; --line:#d5dce0; --soft:#f6f8f9;
+  --in-bg:#fff8e6; --in-line:#d9a520; --calc-bg:#eaf1fa; --calc:#1f5fa8; --accent:#cf5d16;
+  --hook-bg:#eef2f6; --ok:#2e7a33; --ok-bg:#e9f5ea; --bad:#b3261e; --bad-bg:#fbecea; --warn:#8a6100; --warn-bg:#fdf3dc;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1418; --card:#171e24; --ink:#e6ecef; --muted:#9aa8b1; --line:#2a343b; --soft:#1b2329;
+  --in-bg:#2a2412; --in-line:#c99a1e; --calc-bg:#182838; --calc:#7fb6f2; --accent:#f08a46;
+  --hook-bg:#1c252c; --ok:#79c77d; --ok-bg:#16291a; --bad:#f08a80; --bad-bg:#33191a; --warn:#e2b552; --warn-bg:#2e2510; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+a{color:var(--calc)}
+.wrap{max-width:900px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 90px}
+/* top */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:900px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
+.top .home{font-weight:700;text-decoration:none;color:var(--ink);margin-right:auto;white-space:nowrap}
+.bands{display:flex;gap:4px}
+.bands a{font:600 13px var(--mono);text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 9px;background:var(--card)}
+.bands a[aria-current="page"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.burger{flex:none;width:40px;height:40px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center;position:relative}
+.burger i,.burger i::before,.burger i::after{display:block;width:17px;height:2px;background:currentColor;border-radius:2px;position:relative}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}.burger i::before{top:-6px}.burger i::after{top:6px}
+.menu{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:54px;width:min(300px,calc(100vw - 32px));background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none}
+.menu.open{display:block}
+.menu .lbl{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.menu a{display:block;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink)}
+.menu a:hover{background:var(--soft)} .menu a small{display:block;color:var(--muted);font-size:12.5px}
+@media (max-width:560px){.bands{display:none}}
+header h1{font-size:clamp(26px,5vw,34px);line-height:1.1;margin:14px 0 4px}
+header p{color:var(--muted);margin:0 0 12px;max-width:68ch}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.tools button{font:600 14px var(--sans);min-height:38px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tools button.danger{color:var(--bad)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.legend .l1::before{background:var(--in-bg);border:1.5px solid var(--in-line)} .legend .l2::before{background:var(--calc-bg);border:1.5px solid var(--calc)}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:17px;margin:0 0 6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card h2 .n{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 6px;border-radius:6px;background:var(--ink);color:var(--card);font:600 13px var(--mono)}
+.tag{margin-left:auto;font:600 11px var(--mono);border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
+.tag.off{color:var(--bad);border-color:var(--bad)}
+.use{font-size:13.5px;color:var(--muted);margin:0 0 8px}.use b{color:var(--ink)}
+.ins{margin:4px 0 8px;padding-left:20px}.ins li{margin:3px 0}
+.hook{background:var(--hook-bg);border-left:4px solid var(--ink);border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}
+.hook .t{font:600 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.hook ol{margin:0;padding-left:20px}.hook li{margin:3px 0}
+details.how{border:1px solid var(--line);border-radius:8px;margin:8px 0;background:var(--soft)}
+details.how summary{cursor:pointer;padding:8px 12px;font-weight:600;font-size:14px}
+details.how .b{padding:0 12px 10px;font-size:13.5px}
+table.set{border-collapse:collapse;width:100%;font-size:13px}
+table.set td{border-top:1px solid var(--line);padding:5px 6px;vertical-align:top}
+table.set td:first-child{font-weight:600;width:34%}
+.port{display:inline-block;border:1.4px solid currentColor;border-radius:4px;padding:0 5px;font:600 12px var(--mono);white-space:nowrap}
+/* fields */
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 10px;margin:8px 0}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fld label{font-size:12.5px;color:var(--muted);line-height:1.25}
+.fld .row{display:flex;gap:6px}
+input,select{font:16px var(--mono);min-height:40px;width:100%;min-width:0;padding:6px 8px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink)}
+select{font-family:var(--sans);font-size:15px}
+.fld .row select{width:auto;flex:none;border-color:var(--line);background:var(--card)}
+input::placeholder{color:var(--muted);opacity:.75}
+/* equations */
+.eq{border:1.5px dashed var(--line);border-radius:10px;padding:9px 10px;margin:9px 0;background:var(--soft)}
+.eq .f{font-weight:600;font-size:14px;margin-bottom:6px}
+.eq .row{display:flex;align-items:flex-end;gap:6px}
+.eq .cell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:3px}
+.eq .cell .lb{font-size:11.5px;color:var(--muted);line-height:1.2;min-height:28px;display:flex;align-items:flex-end}
+.eq .cell .v{min-height:40px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 16px var(--mono);border:1.5px solid var(--line);background:var(--card);padding:0 4px;overflow:hidden;white-space:nowrap}
+.eq .cell .v.calc{background:var(--calc-bg);border-color:var(--calc);color:var(--calc)}
+.eq .cell .v.fixed{color:var(--muted)}
+.eq .cell input{text-align:center}
+.eq .cell.res .v{border-width:2.5px;border-color:var(--calc);background:var(--calc-bg);color:var(--calc);font-size:17px}
+.eq .cell.res .lb{font-weight:700;color:var(--ink)}
+.eq .op{flex:none;font:700 20px var(--mono);padding-bottom:7px;width:16px;text-align:center;color:var(--muted)}
+@media (max-width:640px){
+  .eq .row{flex-wrap:wrap}
+  .eq .cell{flex:1 1 calc(50% - 24px)}
+  .eq .op{width:12px}
+  .eq .cell.res{flex-basis:100%}
+  .eq .op.eqs{display:none}
+}
+.verdict{border-radius:8px;padding:7px 10px;font-weight:600;font-size:14px;margin:8px 0 2px}
+.verdict.ok{background:var(--ok-bg);color:var(--ok)} .verdict.bad{background:var(--bad-bg);color:var(--bad)} .verdict.warn{background:var(--warn-bg);color:var(--warn)} .verdict.na{background:var(--soft);color:var(--muted);font-weight:500}
+.note{font-size:13px;color:var(--muted);margin:6px 0 0}
+.rule{border:1.5px solid var(--in-line);background:var(--in-bg);border-radius:8px;padding:9px 12px;margin:10px 0;font-size:13.5px}
+.rule b.t{display:block;margin-bottom:3px}
+.rule ol{margin:0;padding-left:20px}.rule li{margin:3px 0}
+/* tables */
+.tw{overflow-x:auto;margin:8px 0}
+table.grid{border-collapse:collapse;width:100%;min-width:520px}
+table.grid th{font-size:12px;text-align:left;color:var(--muted);font-weight:600;padding:4px 5px;border-bottom:1px solid var(--line)}
+table.grid td{padding:3px 4px;border-bottom:1px solid var(--line)}
+table.grid td.out{font:600 14px var(--mono);white-space:nowrap}
+table.grid .x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;min-height:36px;min-width:36px}
+button.add{font:600 13.5px var(--sans);border:1px dashed var(--line);background:none;color:var(--calc);border-radius:8px;padding:7px 12px;cursor:pointer;min-height:38px}
+.chk{display:flex;gap:9px;align-items:flex-start;padding:6px 0;font-size:14.5px}
+.chk input{width:20px;height:20px;min-height:0;flex:none;margin-top:2px;accent-color:var(--ok)}
+/* result bar */
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.1)}
+#bar .in{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:7px max(12px,env(safe-area-inset-left,0px)) calc(7px + env(safe-area-inset-bottom,0px))}
+#bar div{text-align:center;font-size:11px;color:var(--muted);line-height:1.2}
+#bar b{display:block;font:600 15px var(--mono);color:var(--ink)}
+#bar .ok b{color:var(--ok)} #bar .bad b{color:var(--bad)}
+footer{font-size:13px;color:var(--muted);margin-top:20px}
+:focus-visible{outline:2px solid var(--calc);outline-offset:2px}
+@media print{
+  .top,#bar,.tools,button.add,table.grid .x{display:none!important}
+  body{background:#fff;color:#000;font-size:11px}
+  .card{break-inside:avoid;border-color:#999}
+  details.how{display:none}
+  .wrap{padding:0}
+}
+</style>
+<style id="look-refresh">
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+/* ===== Look refresh: riser-drawing blueprint, fire-red callouts. Styling only, no content changes. ===== */
+:root{
+  --bg:#ECF0F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#13243A; --muted:#56677A; --line:#CBD5DC; --soft:#F3F6F8; --fixed-bg:#F1F4F6;
+  --accent:#C62828; --signal:#C62828; --link:#1B5E9E; --calc:#1B5E9E; --ans:#1B5E9E; --calc-bg:#E8F0F9; --ans-bg:#E8F0F9;
+  --in-bg:#FFF6D6; --in-line:#D4A000; --hook-bg:#EEF2F6;
+  --ok:#23733A; --ok-bg:#E5F3E8; --bad:#B42318; --bad-bg:#FBEAE8; --warn:#8A5A00; --warn-bg:#FDF2D8;
+  --gain:#23733A; --gain-bg:#EAF5EC; --loss:#B42318; --loss-bg:#FBEDEB;
+  --grid:rgba(19,36,58,.045); --panel:#0E1E30;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --body:var(--sans); --display:var(--sans); --font-ui:var(--sans);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --font-num:var(--mono);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B;
+  --grid:rgba(140,180,220,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B; --grid:rgba(140,180,220,.05); color-scheme:dark}
+body{background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+input,select,button{font-family:var(--sans)}
+a{text-underline-offset:3px}
+.burger{background:var(--card)}
+.menu{border-radius:10px;box-shadow:0 18px 40px -12px rgba(13,24,35,.35)}
+.menu .lbl{font:700 12px/1.3 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--accent)}
+.menu a{font-weight:600}
+.menu a small{font-weight:400}
+.menu a[aria-current="page"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
+@media print{body{background-image:none}}
+
+.top{background:color-mix(in srgb,var(--card) 90%,transparent)}
+.top .home{font-weight:800;font-stretch:85%;font-size:16px}
+.bands a{font:700 13px var(--sans);border-radius:6px;padding:6px 10px}
+.bands a[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:#fff}
+header h1{font-weight:800;font-stretch:72%;font-size:clamp(34px,6.5vw,52px);line-height:.95;letter-spacing:-.015em;margin:22px 0 10px}
+header p{font-size:15.5px;line-height:1.6}
+.tools button{font-weight:600;border-radius:8px}
+.legend{font-weight:500}
+.card{border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.card h2{font-size:19px;font-weight:700;font-stretch:90%;gap:10px;margin-bottom:10px}
+.card h2 .n{background:transparent;color:var(--accent);border:2px solid var(--accent);border-radius:999px;min-width:34px;height:34px;padding:0 7px;font:700 13px var(--mono)}
+.tag{font:700 11px var(--sans);letter-spacing:.02em;padding:3px 9px}
+.tag.off{background:var(--bad-bg)}
+.hook{border-left-color:var(--ink);border-radius:4px 8px 8px 4px;padding:10px 14px}
+.hook .t{font:700 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink)}
+.port{font:700 11.5px var(--mono);border-radius:4px;padding:1px 6px;background:var(--card)}
+details.how summary{font-weight:700}
+.eq{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--soft)}
+.eq .f{font-weight:700;font-size:14.5px}
+.eq .op{color:var(--accent)}
+.verdict{border-radius:8px;padding:9px 12px}
+.rule{border-radius:10px}
+table.grid th{font-weight:700}
+button.add{font-weight:700}
+#bar{background:var(--panel);border-top:2px solid var(--accent);box-shadow:none}
+#bar div{color:rgba(228,235,241,.62)}
+#bar b{color:#fff}
+#bar .ok b{color:#7BD88F} #bar .bad b{color:#FF8A80}
+footer{line-height:1.6}
+.jmsg{align-self:center;font-size:13.5px;font-weight:600;color:var(--ok)}
+table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
+
+@media (max-width:560px){
+  #step-4 .tw,#step-0B .tw{overflow:visible}
+  #step-4 table.grid,#step-0B table.grid,.duo #step-4 table.grid{min-width:0!important;table-layout:auto}
+  #step-4 table.grid tr:first-child,#step-0B table.grid tr:first-child{display:none}
+  #step-4 table.grid tr,#step-0B table.grid tr{display:grid;gap:6px 8px;padding:8px 0;border-bottom:1px solid var(--line);align-items:end}
+  #step-4 table.grid tr{grid-template-columns:1fr 76px 36px;grid-template-areas:"f c x" "p s s"}
+  #step-0B table.grid tr{grid-template-columns:1fr 1fr 36px;grid-template-areas:"a l x" "r o o"}
+  #step-4 table.grid td,#step-0B table.grid td{border:0;padding:0;display:flex;flex-direction:column;gap:3px;min-width:0}
+  #step-4 table.grid td::before,#step-0B table.grid td::before{font-size:12px;color:var(--muted)}
+  #step-4 td:nth-child(1){grid-area:f}#step-4 td:nth-child(1)::before{content:"DL freq (MHz)"}
+  #step-4 td:nth-child(2){grid-area:c}#step-4 td:nth-child(2)::before{content:"Control ch?"}
+  #step-4 td:nth-child(3){grid-area:p}#step-4 td:nth-child(3)::before{content:"Power IN (dBm)"}
+  #step-4 td:nth-child(4){grid-area:s}#step-4 td:nth-child(4)::before{content:"How you got it"}
+  #step-4 td:nth-child(5){grid-area:x;align-self:center}
+  #step-0B td:nth-child(1){grid-area:a}#step-0B td:nth-child(1)::before{content:"Antenna"}
+  #step-0B td:nth-child(2){grid-area:l}#step-0B td:nth-child(2)::before{content:"Floor / area"}
+  #step-0B td:nth-child(3){grid-area:r}#step-0B td:nth-child(3)::before{content:"PCTEL read (dBm)"}
+  #step-0B td:nth-child(4){grid-area:o;justify-content:flex-end}#step-0B td:nth-child(4)::before{content:"DAS loss"}
+  #step-0B td:nth-child(5){grid-area:x;align-self:center}
+}
+
+.why{font-size:13.5px;color:var(--muted);margin:-2px 0 10px;border-left:3px solid var(--accent);padding:2px 0 2px 10px}
+.why b{color:var(--ink)}
+.measure{border:1.5px solid var(--ok);background:var(--ok-bg);border-radius:10px;padding:10px 12px;margin:10px 0}
+.measure .t{display:block;color:var(--ok);margin-bottom:2px}
+.explain{font-size:13.5px;margin:6px 0 0;color:var(--ink)}
+.explain b{color:var(--ink)}
+#m-src,[id^="m-src-"]{font-weight:600}
+.guide{border-color:var(--accent)}.guide summary{color:var(--accent)}.gl{padding-left:20px;margin:6px 0}.gl li{margin:5px 0}
+.bandpick{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card);margin:4px 0 14px}
+.bandpick button{font:700 14px var(--sans);border:0;background:none;color:var(--muted);min-height:40px;padding:6px 16px;cursor:pointer}
+.bandpick button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.del{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;min-width:32px;min-height:32px}
+td.out.ok{color:var(--ok)} td.out.bad{color:var(--bad)}
+.sumline{font-size:14px;color:var(--muted);margin:8px 0 0}
+.jump{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.jump a{font:600 13px var(--sans);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--card)}
+@media print{.bandpick,.jump,.del{display:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="home" href="../">← lehongphuc.net</a>
+  <nav class="bands" aria-label="Bands"><a href="../700/">700</a><a href="../800/">800</a><a href="../uhf/">UHF</a><a href="../vhf/">VHF</a><a href="../700-800/">700/800</a><a href="../uhf-vhf/">UHF/VHF</a></nav>
+  <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i></button>
+  <nav class="menu" id="menu">
+    <div class="lbl">BDA Setting Gain</div>
+    <a href="../700/">700 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../800/">800 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../uhf/">UHF<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../vhf/">VHF<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../700-800/">700/800 together<small>Dual-band BDA: both bands side by side</small></a><a href="../uhf-vhf/">UHF/VHF together<small>Dual-band BDA: both bands side by side</small></a>
+    <div class="lbl">Practice and tools</div>
+    <a href="../anritsu/" aria-current="page">Anritsu step by step<small>Sweep, donor, isolation, antenna check</small></a>
+    <a href="../practice/">Practice sites<small>A random site every refresh</small></a>
+    <a href="../calc/">Link Budget Calculator<small>Just the math, with practice scenarios</small></a>
+    <a href="../">Home</a>
+  </nav>
+</div></div>
+<div class="wrap">
+<header>
+  <h1>Anritsu S412E step by step</h1>
+  <p>Just the Anritsu part of the job, in the order you do it on site. Pick your band and the frequencies change to match. Type readings in the <b>yellow</b> boxes, they save in this browser.</p>
+</header>
+<div class="tools">
+  <button type="button" id="print">Print / save PDF</button>
+  <button type="button" class="danger" id="clear">Clear this sheet</button>
+</div>
+<div class="bandpick" id="bandpick" role="group" aria-label="Band"><button data-b="700">700</button><button data-b="800">800</button><button data-b="UHF">UHF</button><button data-b="VHF">VHF</button></div>
+<nav class="jump" aria-label="Steps"><a href="#step-1">1 Sweep</a><a href="#step-2">2 Donor</a><a href="#step-3">3 Isolation</a><a href="#step-4">4 Antenna check</a><a href="#step-5">5 Output and noise</a></nav>
+<div id="app"></div>
+<footer>Menus can be named a little differently by firmware version. Check against your AHJ rules, the design and your BDA manual.</footer>
+</div>
+<script>
+const BANDS={
+"700":{"key":"700","name":"700 MHz","dl":"769–775 MHz","sweep":"about 700–810 MHz","dlStart":769,"dlStop":775},
+"800":{"key":"800","name":"800 MHz","dl":"851–861 MHz","sweep":"about 800–870 MHz","dlStart":851,"dlStop":861},
+"UHF":{"key":"UHF","name":"UHF","dl":"450–470 MHz","sweep":"about 440–480 MHz","dlStart":450,"dlStop":470},
+"VHF":{"key":"VHF","name":"VHF","dl":"150–174 MHz","sweep":"about 140–180 MHz","dlStart":150,"dlStop":174}};
+const ISOEX={'700':'772 MHz for A, 802 MHz for B','800':'855 MHz for A, 810 MHz for B','UHF':'an unused DL frequency for A, and its UL pair off the RX column for B','VHF':'an unused DL frequency for A, and its UL pair off the RX column for B'};
+const KEY='anritsu-sheet';
+const $=id=>document.getElementById(id);
+const P=t=>`<span class="port">${t}</span>`;
+const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const blank=()=>({band:'700',lines:[{n:'Donor'},{n:'DAS'}],ch:[{},{},{}],iso:{inj:'0'},ants:[{},{},{}],out:[{},{}],chk:{}});
+let S;try{S=Object.assign(blank(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=blank()}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const get=p=>p.split('.').reduce((o,k)=>o==null?o:o[k],S);
+const setP=(p,v)=>{const ks=p.split('.');let o=S;ks.slice(0,-1).forEach(k=>{o=o[k]??(o[k]={})});o[ks.at(-1)]=v};
+const num=v=>{const n=parseFloat(String(v??'').replace('−','-'));return isFinite(n)?n:null};
+const inp=(k,ph,o={})=>`<input data-k="${k}" value="${esc(get(k))}" placeholder="${ph}" ${o.text?'style="font-family:var(--sans)"':'inputmode="decimal"'} ${o.neg?'data-neg="1"':''}>`;
+const chk=(k,t)=>`<label class="chk"><input type="checkbox" data-chk="${k}" ${S.chk[k]?'checked':''}><span>${t}</span></label>`;
+const card=(n,title,body,tag='')=>`<section class="card" id="step-${n}"><h2><span class="n">${n}</span>${title}${tag?`<span class="tag${/OFF/.test(tag)?' off':''}">${tag}</span>`:''}</h2>${body}</section>`;
+const hook=(t,items)=>`<div class="hook"><div class="t">${t}</div><ol>${items.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;
+const ol=items=>`<ol class="gl">${items.map(x=>`<li>${x}</li>`).join('')}</ol>`;
+const ex=(b,t)=>`<p class="explain"><b>${b}</b> ${t}</p>`;
+const table=(arr,key,cols,addLbl)=>`<div class="tw"><table class="grid"><tr>${cols.map(c=>`<th>${c.h}</th>`).join('')}<th></th></tr>${arr.map((r,i)=>`<tr>${cols.map(c=>c.out?`<td class="out" data-o="${key}.${i}.${c.k}">—</td>`:`<td>${inp(`${key}.${i}.${c.k}`,c.ph==='A1'?'A'+(i+1):c.ph,c)}</td>`).join('')}<td><button class="del" data-del="${key}.${i}" aria-label="Remove row">×</button></td></tr>`).join('')}</table></div><button class="add" data-add="${key}">+ ${addLbl}</button>`;
+
+function render(){
+  const B=BANDS[S.band], big=B.key==='700'||B.key==='800';
+  document.querySelectorAll('#bandpick button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.b===S.band));
+  const H=[];
+  H.push(card(0,'Before you start',
+    ex('Ports on the S412E:',`${P('VNA Port 1')} for sweeps. ${P('RF In')} for the spectrum analyzer. ${P('Sig gen out')} for the test tone (on some units it shares Port 1, check your front panel).`)+
+    ex('Two rules that save the Anritsu:',`RF In gets damaged at <b>+33 dBm</b>, so anything coming out of the BDA goes through a <b>30 dB pad</b> first. And never put the generator into a cable that's still hooked to a powered BDA.`)+
+    ex('Bring:',`cal kit (open / short / load) or the auto-cal module, a good test jumper, a 30 dB pad, DC block if you have one, charged battery, and a USB stick for the files.`)+
+    ex('File names:',`<code>SITE_TEST_LOCATION</code>, for example <code>SITE_DTF_DONOR</code>. Same pattern every job makes the closeout package easy.`)+
+    chk('c0','Gear checked, battery charged, band set at the top of this page')));
+
+  H.push(card(1,'Sweep the lines',
+    hook('Hook up',[`BDA <b>off</b>. Unhook the cable you're sweeping from the BDA.`,`Test jumper on ${P('VNA Port 1')}. The other end of the jumper connects to the cable.`])+
+    ol([`<b>Mode:</b> Shift → Mode (9) → <b>Cable &amp; Antenna Analyzer</b> (VNA).`,
+      `<b>Freq:</b> Start / Stop ${B.sweep} (${B.name}).`,
+      `<b>Calibrate:</b> Shift → Calibrate (2) → Start Cal. Put open, short and load on the <b>end of the test jumper</b> (not on the Anritsu), one at a time when it asks. Cal again any time you change frequency or jumper.`,
+      `<b>Measurement:</b> Return Loss. Limit line on at <b>−12 dB</b> (or your company's number), pass/fail on.`,
+      `<b>Connect the cable</b> and read the worst point across the band. Save it as <code>SITE_RL_LINE</code>.`,
+      `<b>Now DTF:</b> Measurement → DTF Return Loss. Distance 0 to just past the end of the run (last antenna, or the donor). Enter the cable type so the distance and loss are right.`,
+      `<b>Read the peaks:</b> Marker → Peak Search. Write down the biggest peak and how far out it is. Save as <code>SITE_DTF_LINE</code>.`])+
+    ex('What good looks like:',`Return Loss stays under the limit line across the whole band. On DTF, small bumps at each connector and splitter, and the last antenna at the end.`)+
+    ex('A tall spike on DTF:',`that's a bad connector, a crushed or kinked cable, or water. The distance tells you where to walk to. Fix it and sweep again.`)+
+    ex('Return Loss "fails" but DTF looks clean:',`check your cal and your jumper first. A bad jumper fails every line.`)+
+    table(S.lines,'lines',[{k:'n',h:'Line',ph:'Donor',text:1},{k:'rl',h:'Worst RL (dB)',ph:'−18'},{k:'dtf',h:'Worst DTF peak (dB)',ph:'−25'},{k:'ft',h:'At (ft)',ph:'120'},{k:'ok',h:'Pass?',out:1}],'Add line'),'BDA OFF'));
+
+  H.push(card(2,'Donor reading',
+    hook('Hook up',[`BDA off. Unhook the donor jumper at the BDA ${P('Donor')} port and connect it to ${P('RF In')}. No pad needed, the donor signal is weak (around −40 to −70).`])+
+    ol([`<b>Mode:</b> Shift → Mode (9) → <b>Spectrum Analyzer</b>.`,
+      `<b>Amplitude:</b> Ref Level <b>−20 dBm</b>, Input Atten <b>0 dB</b>, Detection <b>Peak</b>. Preamp off (on only if your channels are down near −90).`,
+      `<b>Freq / Span:</b> ${big?`Start ${B.dlStart} MHz, Stop ${B.dlStop} MHz (the whole DL band fits).`:`Center = middle of your channels, Span 2–3 MHz (the full ${B.dl} band is too wide to see narrow channels).`}`,
+      `<b>BW:</b> RBW <b>3 kHz</b>, VBW <b>1 kHz</b>.`,
+      `<b>Trace:</b> Shift → Trace (5) → <b>Max Hold</b>. Leave it 5–15 min. Voice channels only key during calls.`,
+      `<b>Markers:</b> Marker 1 → type the first channel. Markers 2–6 for the next ones. <b>Marker Table On</b> to see them all. More than 6? Read them, then move the markers.`,
+      `<b>Save:</b> Shift → File (7) → Save → Screen Shot, <code>SITE_DL_DONOR</code>.`])+
+    ex('What good looks like:',`your channels stand way up off the floor, like <b>−44 to −46 dBm</b> over a floor around <b>−100</b>.`)+
+    ex('A marker reading about −100:',`that's the floor. The channel hasn't keyed yet. Leave Max Hold on longer.`)+
+    ex("A big spike that isn't on your list:",`someone else's signal. Write down the frequency and level. If it's stronger than yours and close, tell your lead, it can overload the BDA.`)+
+    (big?ex('Control channel:','a solid spike that\'s there every sweep, even without Max Hold.'):'')+
+    table(S.ch,'ch',[{k:'f',h:'Channel (MHz)',ph:B.key==='VHF'?'155.475':B.key==='UHF'?'460.125':String(B.dlStart)+'.0125'},{k:'r',h:'Reading (dBm)',ph:'−45',neg:1},{k:'note',h:'Note',ph:'CC / voice',text:1}],'Add channel')+
+    `<div class="sumline" data-o="chsum"></div>`,'BDA OFF'));
+
+  H.push(card(3,'Isolation',
+    hook('Hook up',[`BDA RF off, both cables unhooked from the BDA.`,`<b>Read A:</b> ${P('Sig gen out')} → donor cable, ${P('RF In')} → DAS cable, DL test frequency.`,`<b>Read B:</b> swap the cables, UL test frequency.`])+
+    ol([`<b>Pick test frequencies</b> nobody's using. ${B.name}: ${ISOEX[B.key]}. Never an assigned channel.`,
+      `<b>Check it's empty first.</b> Tone off, look at the test frequency. Flat floor = good.`,
+      `<b>Tone:</b> CW at <b>0 dBm</b> (the S412E tops out there). If your unit can't run the generator and analyzer at once, use a separate signal generator.`,
+      `<b>Amplitude:</b> Ref Level <b>−30 dBm</b>, Input Atten <b>0 dB</b>, Detection Peak, no external loss.`,
+      `<b>Freq / Span:</b> Center = test frequency, Span <b>1 MHz</b>.`,
+      `<b>BW:</b> RBW <b>3 kHz</b>, VBW <b>1 kHz</b>. Floor drops to about −110.`,
+      `<b>Trace:</b> <b>Normal</b>, not Max Hold.`,
+      `<b>Marker:</b> type the test frequency in. Don't Peak Search, a bigger signal nearby can grab it.`,
+      `<b>Save:</b> <code>SITE_ISO_A</code> and <code>SITE_ISO_B</code>.`])+
+    ex('Tone buried in the floor:',`write the floor as your read. Isolation is at least that much.`)+
+    ex('A big spike next to your tone:',`someone else on the air, not leak. Read only your marker.`)+
+    ex('Reads jump around:',`nobody near the antennas, doors the same, connectors tight. Keep the worst of a few tries.`)+
+    `<div class="tw"><table class="grid"><tr><th>Injected (dBm)</th><th>Read A (dBm)</th><th>Read B (dBm)</th></tr><tr><td>${inp('iso.inj','0')}</td><td>${inp('iso.a','−88',{neg:1})}</td><td>${inp('iso.b','−85',{neg:1})}</td></tr></table></div><div class="tw"><table class="grid"><tr><th>Isolation (dB)</th><th>Max gain (dB)</th></tr><tr><td class="out" data-o="iso">—</td><td class="out" data-o="mg">—</td></tr></table></div>`+
+    `<p class="note">Isolation = injected − the <b>worse</b> read (the one closer to 0). Max gain = isolation − 20. Example: 0 in, worst read −72 → 72 dB isolation → 52 dB max gain.</p>`,'RF OFF'));
+
+  H.push(card(4,'Antenna verification (injection)',
+    hook('Hook up',[`At the head end: ${P('Sig gen out')} → the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`,`CW tone at <b>0 dBm</b> on an <b>unused test frequency</b> in ${B.dl}. Ask your lead which one.`])+
+    ol([`<b>Mode:</b> Shift → Mode (9) → <b>Signal Generator</b> (CW). Output <b>0.0 dBm</b>, frequency = your test frequency, RF output <b>On</b>.`,
+      `<b>PCTEL:</b> set it to scan the same test frequency.`,
+      `<b>Walk:</b> go to each service antenna. Hold the PCTEL antenna at the same spot every time, right at the antenna if you can reach it, or hip high straight under it.`,
+      `<b>Write it down</b> in the table. The sheet works out the rough DAS loss for each one.`,
+      `<b>Done:</b> generator off before you unhook anything.`])+
+    ex('What good looks like:',`right at the antenna, reading ≈ 0 − DAS loss − 30, so most land around <b>−55 to −75</b>. All the antennas close to each other (example: best −60, worst −80).`)+
+    ex('One antenna way lower, or nothing:',`bad connector, wrong tap, crushed cable or a dead antenna on that run. Fix it before you move on.`)+
+    table(S.ants,'ants',[{k:'id',h:'Antenna',ph:'A1',text:1},{k:'fl',h:'Floor / area',ph:'L1',text:1},{k:'r',h:'PCTEL read (dBm)',ph:'−65',neg:1},{k:'loss',h:'DAS loss ≈',out:1}],'Add antenna')+
+    `<div class="sumline" data-o="antsum"></div>`,'BDA OFF'));
+
+  H.push(card(5,'Output, gain step and noise (BDA on)',
+    ex('Protect the Anritsu:',`BDA output → <b>30 dB pad</b> → ${P('RF In')}, every time. Then Amplitude → <b>External Loss 30 dB</b>. The screen shows "30.0 dB Ext Loss" under Ref Lvl when it's on.`)+
+    `<p class="explain"><b>A. Output per channel</b> (BDA ${P('DAS / Server')} → pad → ${P('RF In')})</p>`+
+    ol([`Ref Level <b>+20 dBm</b> (+30 if spikes hit the top), Input Atten <b>10 dB</b> (20 at Ref +30), Peak.`,
+      big?`Start ${B.dlStart}, Stop ${B.dlStop} MHz.`:`Center on a channel, Span 1 MHz.`,
+      `RBW 3 kHz, VBW 1 kHz, Max Hold. A marker on each channel, plus one on an empty spot for the floor. Save <code>SITE_DL_OUT</code>.`])+
+    ex('Good:',`channels within a couple dB of each other (example: +8.5 to +9.7 dBm), floor 60+ dB below.`)+
+    `<p class="explain"><b>B. Gain step</b></p>`+
+    ol([`One channel, note the output. Raise BDA gain <b>10 dB</b>, bump Ref Level up 10.`,`Output should go up <b>about 10 dB</b> (example: +4.6 → +14.1). A lot less = the amp is squashing. Back it off, then set gain back to the plan.`])+
+    `<p class="explain"><b>C. UL noise</b> (BDA ${P('Donor')} → pad → ${P('RF In')}, no radios keyed)</p>`+
+    ol([`Ref Level −20, Atten 0, <b>External Loss 30 still on</b>.`,`Wide span, ${big?'about 40 MHz around the band':'50 MHz centered on the band'}. RBW 10 kHz, VBW 3 kHz, Average.`,`Screenshot BDA on, then RF off. <code>SITE_UL_NOISE_ON</code> / <code>_OFF</code>.`])+
+    ex('Good:',`a flat hump across the band when it's on, flat floor when it's off. Top of the hump under <b>−43 dBm</b> (FCC) with the pad entered. Spikes on the hump or past the band edges = stop and find out why.`)+
+    table(S.out,'out',[{k:'f',h:'Channel (MHz)',ph:'155.310'},{k:'p',h:'Output (dBm)',ph:'+9'},{k:'note',h:'Note',ph:'gain step +9.5',text:1}],'Add channel')+
+    `<div class="tw"><table class="grid"><tr><th>UL noise, top of hump (dBm)</th><th>Under −43?</th></tr><tr><td>${inp('noise','−60',{neg:1})}</td><td class="out" data-o="noiseok">—</td></tr></table></div>`,'BDA ON'));
+
+  $('app').innerHTML=H.join('');update();
+}
+function setO(k,t,cls){document.querySelectorAll(`[data-o="${k}"]`).forEach(e=>{e.textContent=t;e.className=e.className.replace(/ (ok|bad)/g,'')+(cls?' '+cls:'')})}
+const f1=n=>n==null?'—':(Math.round(n*10)/10).toFixed(1);
+function update(){
+  S.lines.forEach((l,i)=>{const r=num(l.rl);if(r==null)return setO(`lines.${i}.ok`,'—');const v=-Math.abs(r);setO(`lines.${i}.ok`,v<=-12?'Pass':'Fail',v<=-12?'ok':'bad')});
+  const rs=S.ch.map(c=>num(c.r)).filter(v=>v!=null);
+  setO('chsum',rs.length?`Strongest ${f1(Math.max(...rs))} dBm, weakest ${f1(Math.min(...rs))} dBm.${rs.some(v=>v<=-95)?' Something reads near the floor, let Max Hold run longer.':''}`:'');
+  const inj=num(S.iso.inj),a=num(S.iso.a),b=num(S.iso.b),w=[a,b].filter(v=>v!=null);
+  const iso=inj!=null&&w.length?inj-Math.max(...w):null;
+  setO('iso',iso==null?'—':f1(iso),iso==null?'':iso>=60?'ok':'bad');setO('mg',iso==null?'—':f1(iso-20));
+  const ls=[];S.ants.forEach((x,i)=>{const r=num(x.r);if(r==null)return setO(`ants.${i}.loss`,'—');const l=0-r-30;ls.push(r);setO(`ants.${i}.loss`,f1(l)+' dB')});
+  setO('antsum',ls.length>1?`Best ${f1(Math.max(...ls))}, worst ${f1(Math.min(...ls))} dBm, a ${f1(Math.max(...ls)-Math.min(...ls))} dB spread.${Math.min(...ls)<=-90?' One is down near −90 or lower, check that run.':''}`:'');
+  const n=num(S.noise);setO('noiseok',n==null?'—':n<-43?'Yes':'No, over the limit',n==null?'':n<-43?'ok':'bad');
+}
+document.addEventListener('input',e=>{const el=e.target;
+  if(el.dataset.neg&&/^[1-9.]/.test(el.value))el.value='-'+el.value;
+  if(el.dataset.k){setP(el.dataset.k,el.value);save();update()}
+  if(el.dataset.chk){S.chk[el.dataset.chk]=el.checked;save()}});
+document.addEventListener('click',e=>{const t=e.target;
+  if(t.dataset.add){S[t.dataset.add].push({});save();render()}
+  if(t.dataset.del){const [k,i]=t.dataset.del.split('.');S[k].splice(+i,1);save();render()}
+  if(t.dataset.b){S.band=t.dataset.b;save();render()}});
+$('print').onclick=()=>window.print();
+$('clear').onclick=()=>{if(confirm('Clear everything on this sheet?')){S=blank();save();render()}};
+render();
+
+
+const bg=$('burger'),mn=$('menu');bg.onclick=e=>{e.stopPropagation();const o=!mn.classList.contains('open');mn.classList.toggle('open',o);bg.setAttribute('aria-expanded',o)};
+
+</script>
+</body>
+</html>
