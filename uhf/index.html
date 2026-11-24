@@ -225,6 +225,7 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
 .explain{font-size:13.5px;margin:6px 0 0;color:var(--ink)}
 .explain b{color:var(--ink)}
 #m-src,[id^="m-src-"]{font-weight:600}
+.guide{border-color:var(--accent)}.guide summary{color:var(--accent)}.gl{padding-left:20px;margin:6px 0}.gl li{margin:5px 0}
 </style>
 </head>
 <body>
@@ -365,6 +366,24 @@ const WHY={'0A':"Bad coax or a loose connector makes every reading after this wr
 const MEXPL=`<p class="explain"><b>What this is:</b> the real loss between the BDA and the weakest spot, all in one number: DAS cable, splitters, the antenna and the walls.</p><p class="explain"><b>How:</b> pick a control channel (always on). Read its <b>Power OUT</b> in the BDA GUI. Walk to the weakest spot (the worst grid or the weak area on the heat map), hold the PCTEL at radio height, and read the same channel. Type both dBm readings.</p><p class="explain"><b>Why it helps:</b> the path is the same in both directions, since DL and UL are only 30–45 MHz apart. So the radio's uplink loses this same amount on the way back to the BDA. That gives you a real uplink number without keying up on the live system. Once both boxes are filled, "Radio inside" uses your reading and step 9 uses this path instead of the N, distance and DAS loss guesses.</p>`;
 const TPEXPL=`<p class="explain"><b>What this is:</b> proof that the BDA's GUI reads the tower signal right, since your DL gain is set off those GUI numbers. Do it on the <b>strongest</b> channel (first check) and the <b>weakest</b> (second check). Type the Anritsu's dBm reading and the GUI's Power IN for that same channel. Within 2 dB means you can trust the GUI. Weakest one is a voice channel? Use Max Hold for a few minutes, or use the weakest control channel.</p>`;
 const MEAS=()=>`<div class="measure"><b class="t">Measured on site (replaces the estimate)</b><div class="fields">${fld('pout','BDA Power OUT in the GUI (dBm)','25')}${fld('pwalk','PCTEL at the worst spot (dBm)','−72')}</div>`+eq('Building path loss = Power OUT − PCTEL reading',[['','Power OUT','calc','pout'],['−','PCTEL at worst spot','calc','pwalk']],'Path loss (dB)','mpath')+`<p class="note" id="m-src"></p>`+MEXPL+`</div>`;
+const DG=bands=>{const sp=B=>(B.key==='700'||B.key==='800')?`Start ${B.dlStart} MHz, Stop ${B.dlStop} MHz (the whole DL band fits)`:`Center = middle of your channels, Span 2–3 MHz (the full ${B.dl} band is too wide to see narrow channels)`;
+return `<details class="how guide"><summary>Step by step: reading the donor on the Anritsu</summary><div class="b">
+<p class="explain"><b>Hook up:</b> BDA off. Unhook the donor jumper at the BDA ${P('Donor')} port and connect it to Anritsu ${P('RF In')}. No pad needed, donor signal is weak (around −40 to −70).</p>
+<ol class="gl">
+<li><b>Mode:</b> Shift → Mode (9) → <b>Spectrum Analyzer</b>.</li>
+<li><b>Amplitude:</b> Ref Level <b>−20 dBm</b>, Input Atten <b>0 dB</b>, Detection <b>Peak</b>. Preamp off (turn it on only if your channels are down near −90).</li>
+<li><b>Freq / Span:</b> ${bands.map(B=>`<b>${B.name}:</b> ${sp(B)}`).join('<br>')}</li>
+<li><b>BW:</b> RBW <b>3 kHz</b>, VBW <b>1 kHz</b>. Narrow enough to see each channel as its own spike.</li>
+<li><b>Trace:</b> Shift → Trace (5) → Trace A → <b>Max Hold</b>. Leave it 5–15 min. Voice channels only key during calls, Max Hold keeps the highest level it saw.</li>
+<li><b>Markers:</b> Marker → pick Marker 1 → type the first channel's frequency. Turn on Markers 2–6 for the next ones. Marker → <b>Marker Table On</b> to see all of them at once. More than 6 channels? Read them, then move the markers to the next batch.</li>
+<li><b>Read:</b> each marker's dBm goes in the Power IN table below, "Anritsu" as the source.</li>
+<li><b>Save:</b> Shift → File (7) → Save → <b>Screen Shot</b>, name it <code>SITE_DL_DONOR</code>. Save another after Max Hold has run a while.</li>
+</ol>
+<p class="explain"><b>What good looks like:</b> your channels stand way up off the noise floor, for example spikes at <b>−44 to −46 dBm</b> over a floor around <b>−100</b>.</p>
+<p class="explain"><b>A marker reading about −100:</b> that's the floor, not your channel. It hasn't keyed yet. Leave Max Hold on longer. (Example: a voice channel read −102 at first, then −46 a minute later once someone talked.)</p>
+<p class="explain"><b>A big spike that isn't on your list</b> (example: one at −27 dBm next to your channels): someone else's signal. Write down its frequency and level. If it's stronger than your channels and close to them, tell your lead: it can overload the BDA and may need a filter.</p>
+<p class="explain"><b>Control channel</b> (trunked 700/800): a solid spike that's there every sweep, even without Max Hold.</p>
+</div></details>`};
 function render(){
   const B=BAND, H=[];
   H.push(card('','Site',`<div class="fields">
@@ -421,7 +440,7 @@ function render(){
     hook('Where to read it',[`<b>GUI (normal way):</b> open the Power IN / channel status screen.`,
       `<b>Anritsu on the cable:</b> unhook the donor cable at the BDA ${P('Donor')} port (after any pad / filter) → Anritsu ${P('RF In')}. That reading <b>is</b> the BDA input: donor gain and cable loss are already in it. No pad needed. Reconnect after.`,
       `<b>Read before a pad / filter instead?</b> Subtract only what sits between that point and the BDA.`])+
-    how('Anritsu settings (spectrum analyzer)',[['Mode','Spectrum Analyzer'],['Find the channels','Start '+B.dlStart+' MHz, Stop '+B.dlStop+' MHz. The steady one is the control channel.'],['One channel','Center = channel, span 25 kHz (or 10 MHz wide view with a marker on it)'],['RBW / VBW','10 kHz / 3 kHz'],['Level','Ref level about −20 dBm, input atten 0 dB. Preamp on if it is down in the noise.'],['Read','Marker → peak. Max hold for voice channels.']])+
+    DG([B])+
     `<div class="tw"><table class="grid"><tr><th>DL freq (MHz)</th><th>Control ch?</th><th>Power IN (dBm)</th><th>How you got it</th><th></th></tr>${chRows}</table></div><button class="add" data-add="chans">+ Add channel</button>`+
     `<div class="rule"><b class="t">Not a control channel? How to get its power</b><ol>
       <li><b>Same tower as a control channel</b> (trunked 700/800): voice channels come from the same site at about the same power. Use that control channel's reading and pick "Est".</li>
