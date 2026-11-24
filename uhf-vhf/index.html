@@ -312,6 +312,7 @@ function calc(s,chans,ants,band){
   o.dlsug=isN(o.need)?lowest([o.need,o.cap,o.mg]):null;
   o.dlset=isN(v('dlset'))?v('dlset'):o.dlsug;
   o.strongOut=(isN(o.strong)&&isN(o.dlset))?o.strong+o.dlset:null;
+  o.rtLo=isN(o.strong)?5-o.strong:null; o.rtHi=isN(o.strong)?10-o.strong:null;
   o.weakOut=(isN(o.weak)&&isN(o.dlset))?(isN(o.ceil)?Math.min(o.weak+o.dlset,o.ceil):o.weak+o.dlset):null;
   o.dasq=(isN(v('dft'))&&isN(v('dl')))?v('dft')/100*v('dl')+(v('taps')||0)+(v('th')||0)*1+(v('sp')||0)*3.3+(v('jmp')||0):null;
   o.das=isN(v('dasOv'))?v('dasOv'):o.dasq;
@@ -535,6 +536,7 @@ function render(){
     `<div class="fields">${fld('tgt','Target out per channel (dBm), both bands','10')}</div>`+
     duo(i=>eq('DL gain needed = Target − Strongest',[['','Target out','calc','tgt'],['−','Strongest','calc','strong']],'Needed (dB)','need',i)+
       eq('DL gain to set = lowest of these',[['','Needed','calc','need'],[',','AHJ cap','calc','cap'],[',','Max gain','calc','mg']],'Set DL (dB)','dlsug',i)+
+      eq('Output with that gain = Strongest + DL gain',[['','Strongest','calc','strong'],['+','DL gain','calc','dlset']],'Strongest out (dBm)','strongOut',i)+`<p class="note">Company rule of thumb: <b>+5 to +10 dBm</b> out per channel.</p>`+vbox('rt',i)+
       `<div class="fields">${fld('dlset','DL gain you actually set (optional)','blank = suggested',i)}</div>`+
       eq('Weakest out = Weakest + DL gain (capped at ceiling)',[['','Weakest','calc','weak'],['+','DL gain set','calc','dlset']],'Weakest out (dBm)','weakOut',i)+vbox('dl',i))+
     `<ul class="ins"><li>Set the DL gain for each band in the GUI, <b>then</b> turn RF on.</li></ul>`));
@@ -589,6 +591,10 @@ function render(){
   $('app').innerHTML=H.join('');
   update();
 }
+const rtMsg=o=>{if(!isN(o.strongOut))return['na','Needs Power IN readings in step 4.'];const out=o.strongOut,sg=x=>(x>=0?'+':'')+f1(x),lo=o.rtLo,hi=o.rtHi;const lim=lowest([o.cap,o.mg].filter(isN));
+ if(out>=4.95&&out<=10.05)return['ok',`${sg(out)} dBm out on the strongest channel. Inside the +5 to +10 rule of thumb.`];
+ if(out<5){let t=`${sg(out)} dBm out, ${f1(5-out)} dB under +5. To land at +5 to +10 you'd set ${f1(lo)} to ${f1(hi)} dB of DL gain.`;if(isN(lim)&&lim<lo)t+=` But max gain / AHJ cap stops you at ${f1(lim)} dB, so this site can't reach +5 without more isolation (or more signal at the donor).`;return['warn',t];}
+ return['warn',`${sg(out)} dBm out, ${f1(out-10)} dB over +10. Set ${f1(hi)} dB of DL gain or less to stay at +10 or under.`];};
 function setV(i,id,cls,txt){const e=$('v-'+i+'-'+id);if(!e)return;e.className='verdict '+cls;e.textContent=txt}
 function update(){
   const O=PAIR.bands.map((B,i)=>calc(Object.assign({},S.sh,S.b[i]),S.b[i].chans,S.sh.ants,B));
@@ -604,6 +610,7 @@ function update(){
      const u=$('ul-src-'+i);if(u)u.textContent=isN(o.mpath)?`UL input from your measured path (step 8): ${f1(o.radio)} − ${f1(o.mpath)} = ${f1(o.ulin)} dBm.`:'UL input is an estimate (indoor path loss + DAS loss). Fill in the measured boxes in step 8 to use real numbers.';}
     if(isN(o.ceil)) setV(i,'ceil',o.ceil>=o.tgt?'ok':'warn',o.ceil>=o.tgt?`+${f1(o.tgt)} fits under the ${f1(o.ceil)} ceiling.`:`Ceiling ${f1(o.ceil)} is under +${f1(o.tgt)}. Each channel tops out at the ceiling.`); else setV(i,'ceil','na','Needs max output and channels in step 4.');
     if(isN(o.dlset)){const bad=[];if(isN(o.mg)&&o.dlset>o.mg+0.05)bad.push(`over the ${f1(o.mg)} isolation limit (oscillation risk)`);if(isN(o.cap)&&o.dlset>o.cap+0.05)bad.push(`over the AHJ cap of ${f1(o.cap)}`);if(isN(o.ceil)&&isN(o.strongOut)&&o.strongOut>o.ceil+0.05)bad.push(`strongest channel would be ${f1(o.strongOut)} dBm, over the ${f1(o.ceil)} ceiling`);
+      {const m=rtMsg(o);setV(i,'rt',m[0],m[1]);}
       setV(i,'dl',bad.length?'bad':'ok',bad.length?'DL gain is '+bad.join('; ')+'.':`Set ${f1(o.dlset)} dB. Strongest channel out: ${f1(o.strongOut)} dBm.`)} else setV(i,'dl','na','Needs Power IN readings in step 4.');
     if(isN(o.rx)) setV(i,'rx',o.rx>=-95?'ok':'bad',o.rx>=-95?`${isN(o.pwalk)?'Your measured reading: ':'Estimate: '}PASS by ${f1(o.rx+95)} dB (need −95 or stronger).`:`${isN(o.pwalk)?'Your measured reading: ':'Estimate: '}FAIL by ${f1(-95-o.rx)} dB. Look at DAS loss, antenna spacing or output.`); else setV(i,'rx','na','Needs steps 4, 6, 7 and the boxes above.');
     if(isN(o.mn)&&isN(o.lim)) setV(i,'win',o.lim>=o.mn?'ok':'bad',o.lim>=o.mn?`UL window: ${f1(o.mn)} to ${f1(o.lim)} dB.`:`Window closed: need ${f1(o.mn)} but the limit is ${f1(o.lim)}, set by ${o.lim===o.mx?'the noise limit at the tower. Better isolation won\'t raise this one. Fill in the measured path in step 8 (the need is probably an over-estimate), or cut DAS loss / add antennas.':o.lim===o.mg?'isolation. Improve isolation (move or re-aim the donor) or cut DAS loss.':'the AHJ cap. Fill in the measured path in step 8, or cut DAS loss / add antennas.'}`); else setV(i,'win','na','Needs miles, donor gain, loss, noise figure and steps 7–8.');
