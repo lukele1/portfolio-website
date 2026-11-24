@@ -622,7 +622,7 @@ function update(){
   });
   const gg=num(S.sh.gridGen),gc=num(S.sh.gridCrit); if(isN(gg)||isN(gc)){const ok=(!isN(gg)||gg>=95)&&(!isN(gc)||gc>=99);setV('s','grid',ok?'ok':'bad',ok?'Grid walk passes.':'Grid walk short: general needs 95%, critical needs 99%.')} else setV('s','grid','na','Enter the grid results.');
   const bx=(k,val,pass)=>`<div class="${pass===true?'ok':pass===false?'bad':pass==='warn'?'warn':''}"><b>${isN(val)?f1(val):'—'}</b>${k}</div>`;
-  $('barin').innerHTML=O.map((o,i)=>`<div class="bn">${BN[i]}</div>`+bx('Max gain',o.mg)+bx('DL gain',o.dlset)+bx('Out<span class="rg"> (+5 to +10)</span>',o.strongOut,isN(o.strongOut)?((isN(o.ceil)&&o.strongOut>o.ceil+0.05)||(isN(o.mg)&&o.dlset>o.mg+0.05)?false:(o.strongOut>=4.95&&o.strongOut<=10.05?true:'warn')):null)+bx('UL gain',o.ulset)+bx('Inside',o.rx,isN(o.rx)?o.rx>=-95:null)+bx('Tower',o.tower,isN(o.tower)?o.tower>=-95:null)).join('');
+  $('barin').innerHTML=O.map((o,i)=>`<div class="bn">${BN[i]}</div>`+bx('Max gain',o.mg)+bx('DL gain',o.dlset,isN(o.dlset)&&(isN(o.mg)||isN(o.cap))?!((isN(o.mg)&&o.dlset>o.mg+0.05)||(isN(o.cap)&&o.dlset>o.cap+0.05)):null)+bx('Out<span class="rg"> (+5 to +10)</span>',o.strongOut,isN(o.strongOut)?((isN(o.ceil)&&o.strongOut>o.ceil+0.05)||(isN(o.mg)&&o.dlset>o.mg+0.05)?false:(o.strongOut>=4.95&&o.strongOut<=10.05?true:'warn')):null)+bx('UL gain',o.ulset,isN(o.ulset)&&(isN(o.mg)||isN(o.cap)||isN(o.mx))?!((isN(o.mg)&&o.ulset>o.mg+0.05)||(isN(o.cap)&&o.ulset>o.cap+0.05)||(isN(o.mx)&&o.ulset>o.mx+0.05)):null)+bx('Inside',o.rx,isN(o.rx)?o.rx>=-95:null)+bx('Tower',o.tower,isN(o.tower)?o.tower>=-95:null)).join('');
 }
 // ---------- events ----------
 function setPath(p,val){const a=p.split('.');let t=S;for(let i=0;i<a.length-1;i++)t=t[a[i]];t[a[a.length-1]]=val}
