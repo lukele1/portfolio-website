@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Commissioning Report Builder</title>
+<meta name="description" content="Turn a BDA worksheet into an ERRCS commissioning report.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f6; --card:#fff; --ink:#151b20; --muted:#5d6b75; --line:#d5dce0; --soft:#f6f8f9;
+  --in-bg:#fff8e6; --in-line:#d9a520; --calc-bg:#eaf1fa; --calc:#1f5fa8; --accent:#cf5d16;
+  --hook-bg:#eef2f6; --ok:#2e7a33; --ok-bg:#e9f5ea; --bad:#b3261e; --bad-bg:#fbecea; --warn:#8a6100; --warn-bg:#fdf3dc;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1418; --card:#171e24; --ink:#e6ecef; --muted:#9aa8b1; --line:#2a343b; --soft:#1b2329;
+  --in-bg:#2a2412; --in-line:#c99a1e; --calc-bg:#182838; --calc:#7fb6f2; --accent:#f08a46;
+  --hook-bg:#1c252c; --ok:#79c77d; --ok-bg:#16291a; --bad:#f08a80; --bad-bg:#33191a; --warn:#e2b552; --warn-bg:#2e2510; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+a{color:var(--calc)}
+.wrap{max-width:900px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 90px}
+/* top */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:900px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
+.top .home{font-weight:700;text-decoration:none;color:var(--ink);margin-right:auto;white-space:nowrap}
+.bands{display:flex;gap:4px}
+.bands a{font:600 13px var(--mono);text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 9px;background:var(--card)}
+.bands a[aria-current="page"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.burger{flex:none;width:40px;height:40px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center;position:relative}
+.burger i,.burger i::before,.burger i::after{display:block;width:17px;height:2px;background:currentColor;border-radius:2px;position:relative}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}.burger i::before{top:-6px}.burger i::after{top:6px}
+.menu{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:54px;width:min(300px,calc(100vw - 32px));background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none}
+.menu.open{display:block}
+.menu .lbl{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.menu a{display:block;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink)}
+.menu a:hover{background:var(--soft)} .menu a small{display:block;color:var(--muted);font-size:12.5px}
+@media (max-width:560px){.bands{display:none}}
+header h1{font-size:clamp(26px,5vw,34px);line-height:1.1;margin:14px 0 4px}
+header p{color:var(--muted);margin:0 0 12px;max-width:68ch}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.tools button{font:600 14px var(--sans);min-height:38px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tools button.danger{color:var(--bad)}.tools button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.legend .l1::before{background:var(--in-bg);border:1.5px solid var(--in-line)} .legend .l2::before{background:var(--calc-bg);border:1.5px solid var(--calc)}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:17px;margin:0 0 6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card h2 .n{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 6px;border-radius:6px;background:var(--ink);color:var(--card);font:600 13px var(--mono)}
+.tag{margin-left:auto;font:600 11px var(--mono);border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
+.tag.off{color:var(--bad);border-color:var(--bad)}
+.use{font-size:13.5px;color:var(--muted);margin:0 0 8px}.use b{color:var(--ink)}
+.ins{margin:4px 0 8px;padding-left:20px}.ins li{margin:3px 0}
+.hook{background:var(--hook-bg);border-left:4px solid var(--ink);border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}
+.hook .t{font:600 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.hook ol{margin:0;padding-left:20px}.hook li{margin:3px 0}
+details.how{border:1px solid var(--line);border-radius:8px;margin:8px 0;background:var(--soft)}
+details.how summary{cursor:pointer;padding:8px 12px;font-weight:600;font-size:14px}
+details.how .b{padding:0 12px 10px;font-size:13.5px}
+table.set{border-collapse:collapse;width:100%;font-size:13px}
+table.set td{border-top:1px solid var(--line);padding:5px 6px;vertical-align:top}
+table.set td:first-child{font-weight:600;width:34%}
+.port{display:inline-block;border:1.4px solid currentColor;border-radius:4px;padding:0 5px;font:600 12px var(--mono);white-space:nowrap}
+/* fields */
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 10px;margin:8px 0}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fld label{font-size:12.5px;color:var(--muted);line-height:1.25}
+.fld .row{display:flex;gap:6px}
+input,select{font:16px var(--mono);min-height:40px;width:100%;min-width:0;padding:6px 8px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink)}
+select{font-family:var(--sans);font-size:15px}
+.fld .row select{width:auto;flex:none;border-color:var(--line);background:var(--card)}
+input::placeholder{color:var(--muted);opacity:.75}
+/* equations */
+.eq{border:1.5px dashed var(--line);border-radius:10px;padding:9px 10px;margin:9px 0;background:var(--soft)}
+.eq .f{font-weight:600;font-size:14px;margin-bottom:6px}
+.eq .row{display:flex;align-items:flex-end;gap:6px}
+.eq .cell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:3px}
+.eq .cell .lb{font-size:11.5px;color:var(--muted);line-height:1.2;min-height:28px;display:flex;align-items:flex-end}
+.eq .cell .v{min-height:40px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 16px var(--mono);border:1.5px solid var(--line);background:var(--card);padding:0 4px;overflow:hidden;white-space:nowrap}
+.eq .cell .v.calc{background:var(--calc-bg);border-color:var(--calc);color:var(--calc)}
+.eq .cell .v.fixed{color:var(--muted)}
+.eq .cell input{text-align:center}
+.eq .cell.res .v{border-width:2.5px;border-color:var(--calc);background:var(--calc-bg);color:var(--calc);font-size:17px}
+.eq .cell.res .lb{font-weight:700;color:var(--ink)}
+.eq .op{flex:none;font:700 20px var(--mono);padding-bottom:7px;width:16px;text-align:center;color:var(--muted)}
+@media (max-width:640px){
+  .eq .row{flex-wrap:wrap}
+  .eq .cell{flex:1 1 calc(50% - 24px)}
+  .eq .op{width:12px}
+  .eq .cell.res{flex-basis:100%}
+  .eq .op.eqs{display:none}
+}
+.verdict{border-radius:8px;padding:7px 10px;font-weight:600;font-size:14px;margin:8px 0 2px}
+.verdict.ok{background:var(--ok-bg);color:var(--ok)} .verdict.bad{background:var(--bad-bg);color:var(--bad)} .verdict.warn{background:var(--warn-bg);color:var(--warn)} .verdict.na{background:var(--soft);color:var(--muted);font-weight:500}
+.note{font-size:13px;color:var(--muted);margin:6px 0 0}
+.rule{border:1.5px solid var(--in-line);background:var(--in-bg);border-radius:8px;padding:9px 12px;margin:10px 0;font-size:13.5px}
+.rule b.t{display:block;margin-bottom:3px}
+.rule ol{margin:0;padding-left:20px}.rule li{margin:3px 0}
+/* tables */
+.tw{overflow-x:auto;margin:8px 0}
+table.grid{border-collapse:collapse;width:100%;min-width:520px}
+table.grid th{font-size:12px;text-align:left;color:var(--muted);font-weight:600;padding:4px 5px;border-bottom:1px solid var(--line)}
+table.grid td{padding:3px 4px;border-bottom:1px solid var(--line)}
+table.grid td.out{font:600 14px var(--mono);white-space:nowrap}
+table.grid .x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;min-height:36px;min-width:36px}
+button.add{font:600 13.5px var(--sans);border:1px dashed var(--line);background:none;color:var(--calc);border-radius:8px;padding:7px 12px;cursor:pointer;min-height:38px}
+.chk{display:flex;gap:9px;align-items:flex-start;padding:6px 0;font-size:14.5px}
+.chk input{width:20px;height:20px;min-height:0;flex:none;margin-top:2px;accent-color:var(--ok)}
+/* result bar */
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.1)}
+#bar .in{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:7px max(12px,env(safe-area-inset-left,0px)) calc(7px + env(safe-area-inset-bottom,0px))}
+#bar div{text-align:center;font-size:11px;color:var(--muted);line-height:1.2}
+#bar b{display:block;font:600 15px var(--mono);color:var(--ink)}
+#bar .ok b{color:var(--ok)} #bar .bad b{color:var(--bad)}#bar .warn b{color:#B7791F}@media (max-width:640px){#bar .rg{display:none}}@media (max-width:420px){#bar b{font-size:13px}#bar div{font-size:10px}#bar .in{gap:2px;padding-left:6px;padding-right:6px}}
+footer{font-size:13px;color:var(--muted);margin-top:20px}
+:focus-visible{outline:2px solid var(--calc);outline-offset:2px}
+@media print{
+  .top,#bar,.tools,button.add,table.grid .x{display:none!important}
+  body{background:#fff;color:#000;font-size:11px}
+  .card{break-inside:avoid;border-color:#999}
+  details.how{display:none}
+  .wrap{padding:0}
+}
+</style>
+<style id="look-refresh">
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+/* ===== Look refresh: riser-drawing blueprint, fire-red callouts. Styling only, no content changes. ===== */
+:root{
+  --bg:#ECF0F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#13243A; --muted:#56677A; --line:#CBD5DC; --soft:#F3F6F8; --fixed-bg:#F1F4F6;
+  --accent:#C62828; --signal:#C62828; --link:#1B5E9E; --calc:#1B5E9E; --ans:#1B5E9E; --calc-bg:#E8F0F9; --ans-bg:#E8F0F9;
+  --in-bg:#FFF6D6; --in-line:#D4A000; --hook-bg:#EEF2F6;
+  --ok:#23733A; --ok-bg:#E5F3E8; --bad:#B42318; --bad-bg:#FBEAE8; --warn:#8A5A00; --warn-bg:#FDF2D8;
+  --gain:#23733A; --gain-bg:#EAF5EC; --loss:#B42318; --loss-bg:#FBEDEB;
+  --grid:rgba(19,36,58,.045); --panel:#0E1E30;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --body:var(--sans); --display:var(--sans); --font-ui:var(--sans);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --font-num:var(--mono);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B;
+  --grid:rgba(140,180,220,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
+  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
+  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
+  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
+  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B; --grid:rgba(140,180,220,.05); color-scheme:dark}
+body{background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+input,select,button{font-family:var(--sans)}
+a{text-underline-offset:3px}
+.burger{background:var(--card)}
+.menu{border-radius:10px;box-shadow:0 18px 40px -12px rgba(13,24,35,.35)}
+.menu .lbl{font:700 12px/1.3 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--accent)}
+.menu a{font-weight:600}
+.menu a small{font-weight:400}
+.menu a[aria-current="page"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
+@media print{body{background-image:none}}
+
+.top{background:color-mix(in srgb,var(--card) 90%,transparent)}
+.top .home{font-weight:800;font-stretch:85%;font-size:16px}
+.bands a{font:700 13px var(--sans);border-radius:6px;padding:6px 10px}
+.bands a[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:#fff}
+header h1{font-weight:800;font-stretch:72%;font-size:clamp(34px,6.5vw,52px);line-height:.95;letter-spacing:-.015em;margin:22px 0 10px}
+header p{font-size:15.5px;line-height:1.6}
+.tools button{font-weight:600;border-radius:8px}
+.legend{font-weight:500}
+.card{border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.card h2{font-size:19px;font-weight:700;font-stretch:90%;gap:10px;margin-bottom:10px}
+.card h2 .n{background:transparent;color:var(--accent);border:2px solid var(--accent);border-radius:999px;min-width:34px;height:34px;padding:0 7px;font:700 13px var(--mono)}
+.tag{font:700 11px var(--sans);letter-spacing:.02em;padding:3px 9px}
+.tag.off{background:var(--bad-bg)}
+.hook{border-left-color:var(--ink);border-radius:4px 8px 8px 4px;padding:10px 14px}
+.hook .t{font:700 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink)}
+.port{font:700 11.5px var(--mono);border-radius:4px;padding:1px 6px;background:var(--card)}
+details.how summary{font-weight:700}
+.eq{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--soft)}
+.eq .f{font-weight:700;font-size:14.5px}
+.eq .op{color:var(--accent)}
+.verdict{border-radius:8px;padding:9px 12px}
+.rule{border-radius:10px}
+table.grid th{font-weight:700}
+button.add{font-weight:700}
+#bar{background:var(--panel);border-top:2px solid var(--accent);box-shadow:none}
+#bar div{color:rgba(228,235,241,.62)}
+#bar b{color:#fff}
+#bar .ok b{color:#7BD88F} #bar .bad b{color:#FF8A80}#bar .warn b{color:#FFD166}
+footer{line-height:1.6}
+.jmsg{align-self:center;font-size:13.5px;font-weight:600;color:var(--ok)}
+table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
+
+@media (max-width:560px){
+  #step-4 .tw,#step-0B .tw{overflow:visible}
+  #step-4 table.grid,#step-0B table.grid,.duo #step-4 table.grid{min-width:0!important;table-layout:auto}
+  #step-4 table.grid tr:first-child,#step-0B table.grid tr:first-child{display:none}
+  #step-4 table.grid tr,#step-0B table.grid tr{display:grid;gap:6px 8px;padding:8px 0;border-bottom:1px solid var(--line);align-items:end}
+  #step-4 table.grid tr{grid-template-columns:1fr 76px 36px;grid-template-areas:"f c x" "p s s"}
+  #step-0B table.grid tr{grid-template-columns:1fr 1fr 36px;grid-template-areas:"a l x" "r o o"}
+  #step-4 table.grid td,#step-0B table.grid td{border:0;padding:0;display:flex;flex-direction:column;gap:3px;min-width:0}
+  #step-4 table.grid td::before,#step-0B table.grid td::before{font-size:12px;color:var(--muted)}
+  #step-4 td:nth-child(1){grid-area:f}#step-4 td:nth-child(1)::before{content:"DL freq (MHz)"}
+  #step-4 td:nth-child(2){grid-area:c}#step-4 td:nth-child(2)::before{content:"Control ch?"}
+  #step-4 td:nth-child(3){grid-area:p}#step-4 td:nth-child(3)::before{content:"Power IN (dBm)"}
+  #step-4 td:nth-child(4){grid-area:s}#step-4 td:nth-child(4)::before{content:"How you got it"}
+  #step-4 td:nth-child(5){grid-area:x;align-self:center}
+  #step-0B td:nth-child(1){grid-area:a}#step-0B td:nth-child(1)::before{content:"Antenna"}
+  #step-0B td:nth-child(2){grid-area:l}#step-0B td:nth-child(2)::before{content:"Floor / area"}
+  #step-0B td:nth-child(3){grid-area:r}#step-0B td:nth-child(3)::before{content:"PCTEL read (dBm)"}
+  #step-0B td:nth-child(4){grid-area:o;justify-content:flex-end}#step-0B td:nth-child(4)::before{content:"DAS loss"}
+  #step-0B td:nth-child(5){grid-area:x;align-self:center}
+}
+
+.why{font-size:13.5px;color:var(--muted);margin:-2px 0 10px;border-left:3px solid var(--accent);padding:2px 0 2px 10px}
+.why b{color:var(--ink)}
+.measure{border:1.5px solid var(--ok);background:var(--ok-bg);border-radius:10px;padding:10px 12px;margin:10px 0}
+.measure .t{display:block;color:var(--ok);margin-bottom:2px}
+.explain{font-size:13.5px;margin:6px 0 0;color:var(--ink)}
+.explain b{color:var(--ink)}
+#m-src,[id^="m-src-"]{font-weight:600}
+.guide{border-color:var(--accent)}.guide summary{color:var(--accent)}.gl{padding-left:20px;margin:6px 0}.gl li{margin:5px 0}
+.srcbox{border:1.5px solid var(--line);background:var(--soft);border-radius:12px;padding:12px 14px;margin:0 0 16px;font-size:15px}
+.why{font-size:14px;color:var(--muted);margin:-4px 0 10px}
+.ins{font-size:14px;color:var(--muted)}
+.card h3{font-size:15px;margin:16px 0 8px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 14px;margin:6px 0 10px}
+.fld.wide{grid-column:1/-1}
+.fld textarea,.fld input{width:100%;box-sizing:border-box;font:500 15px var(--sans);padding:8px 10px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);min-height:40px}
+.fld textarea{resize:vertical}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:8px 0}
+.slot{border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--card);display:flex;flex-direction:column;gap:6px}
+.drop{border:2px dashed var(--line);border-radius:9px;min-height:120px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:14px;cursor:pointer;overflow:hidden;background:var(--soft)}
+.drop small{font-size:12px}
+.drop.over{border-color:var(--accent);background:var(--warn-bg)}
+.slot.has .drop{border-style:solid;background:#000}
+.drop img{max-width:100%;max-height:180px;display:block}
+.capin{font:600 14px var(--sans);padding:7px 9px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);width:100%;box-sizing:border-box}
+.srow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.fname{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.lnk{border:0;background:none;color:var(--accent);font:600 13px var(--sans);cursor:pointer;padding:4px 0;min-height:32px}
+.sum{display:grid;gap:8px}
+.srow2{display:grid;grid-template-columns:minmax(180px,1.1fr) 96px 2fr;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:6px 0}
+.srow2 .st{font-weight:600;font-size:14px}.srow2 select,.srow2 input{font:500 14px var(--sans);min-height:38px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);padding:4px 8px;width:100%;box-sizing:border-box}
+.auto{font:700 10px var(--sans);background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok);border-radius:999px;padding:1px 6px;vertical-align:1px}
+#bulk{border:2px dashed var(--accent);border-radius:12px;padding:14px;text-align:center;margin:0 0 16px;background:var(--card)}
+#bulk.over{background:var(--warn-bg)}
+#bulk p{margin:4px 0;font-size:14px;color:var(--muted)}
+.bigbtn{font:700 16px var(--sans);background:var(--accent);color:#fff;border:0;border-radius:10px;min-height:46px;padding:10px 18px;cursor:pointer}
+.bigbtn[disabled]{opacity:.6}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:var(--card);padding:12px 16px;border-radius:10px;font-size:14px;max-width:min(560px,92vw);transition:transform .25s;z-index:50}
+#toast.on{transform:translateX(-50%) translateY(0)}
+.card td input,.card td select{width:100%;box-sizing:border-box;font:500 14px var(--sans);min-height:36px;border-radius:6px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);padding:4px 6px}
+@media (max-width:620px){.srow2{grid-template-columns:1fr 96px}.srow2 input{grid-column:1/-1}.slots{grid-template-columns:1fr 1fr}.drop{min-height:100px}}
+@media (max-width:380px){.slots{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="home" href="../">← lehongphuc.net</a>
+  <nav class="bands" aria-label="Bands"><a href="../700/">700</a><a href="../800/">800</a><a href="../uhf/">UHF</a><a href="../vhf/">VHF</a><a href="../700-800/">700/800</a><a href="../uhf-vhf/">UHF/VHF</a></nav>
+  <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i></button>
+  <nav class="menu" id="menu">
+    <div class="lbl">BDA Setting Gain</div>
+    <a href="../700/">700 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../800/">800 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../uhf/">UHF<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../vhf/">VHF<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../700-800/">700/800 together<small>Dual-band BDA: both bands side by side</small></a><a href="../uhf-vhf/">UHF/VHF together<small>Dual-band BDA: both bands side by side</small></a>
+    <div class="lbl">Practice and tools</div>
+    <a href="../anritsu/">Anritsu step by step<small>Sweep, donor, isolation, antenna check</small></a>
+    <a href="../report/" aria-current="page">Commissioning report<small>Turn a worksheet into the Word report</small></a>
+    <a href="../practice/">Practice sites<small>A random site every refresh</small></a>
+    <a href="../calc/">Link Budget Calculator<small>Just the math, with practice scenarios</small></a>
+    <a href="../">Home</a>
+  </nav>
+</div></div>
+<div class="wrap">
+<header>
+  <h1>Commissioning report</h1>
+  <p>Fill in what the worksheet doesn't know, add your screenshots, then download a Word report in the same layout as our commissioning reports. Open it in Word, check it, and save it as a PDF.</p>
+</header>
+<div class="tools">
+  <button type="button" class="bigbtn" id="make">Download Word report</button>
+  <button type="button" class="danger" id="newjob">Start a new report</button>
+</div>
+<div id="bulk"><b>Drop all your screenshots here at once</b><p>Files named like the Anritsu page (for example <code>ABC12_ISO_DL.jpg</code>, <code>ABC12_DL_DONOR.jpg</code>) go into the right box by themselves. Anything else lands in "Other screenshots" for you to rename.</p><button type="button" id="bulkbtn">Pick screenshots</button><input type="file" id="bulkin" accept="image/png,image/jpeg" multiple hidden></div>
+<div id="app"></div>
+<footer>Everything on this page, screenshots included, stays in this browser on this device. Nothing is uploaded.</footer>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="docx.js"></script>
+<script>
+// ===== Report builder =====
+const $=id=>document.getElementById(id);
+const isN=v=>typeof v==='number'&&isFinite(v);
+const num=v=>{if(v==null||v==='')return null;const n=parseFloat(String(v).replace('−','-'));return isFinite(n)?n:null};
+const L=x=>Math.log10(x);
+const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const f2=n=>isN(n)?(Math.round(n*100)/100).toFixed(2):'—';
+const f1=n=>isN(n)?(Math.round(n*10)/10).toFixed(1):'—';
+const sg=n=>isN(n)?(n>0?'+':'')+f1(n):'—';
+const fmtd=n=>isN(n)?String(Math.round(n*100)/100):'—';
+
+// ---------- data ----------
+let SRC=null; try{SRC=JSON.parse(localStorage.getItem('report-src')||'null')}catch(e){}
+const RKEY='report-job', CKEY='report-company';
+let J,C;
+try{J=JSON.parse(localStorage.getItem(RKEY)||'{}')}catch(e){J={}}
+try{C=JSON.parse(localStorage.getItem(CKEY)||'{}')}catch(e){C={}}
+J.cap=J.cap||{}; J.multi=J.multi||{}; J.sum=J.sum||{}; J.b=J.b||[{},{}]; J.alarms=J.alarms||null;
+const save=()=>{try{localStorage.setItem(RKEY,JSON.stringify(J));localStorage.setItem(CKEY,JSON.stringify(C))}catch(e){}};
+const BANDS=()=>SRC&&SRC.bands?SRC.bands:[];
+// prefill from worksheet
+if(SRC&&SRC.site){const s=SRC.site;if(!J.site&&s.name)J.site=s.name;if(!J.date&&s.date)J.date=s.date;if(!C.tester&&s.tech)C.tester=s.tech;if(!J.bdaModel&&s.model)J.bdaModel=s.model;}
+if(!J.alarms)J.alarms=[['AC Fail','ERRCS LOSS OF POWER'],['Low Battery','ERRCS LOW BATTERY'],['Charger Fail','ERRCS CHARGER FAIL'],['BDA Fail','ERRCS BDA TROUBLE'],['Donor Antenna','ERRCS ANTENNA TROUBLE']].map(([a,l])=>({a,l,an:'',fa:''}));
+
+// ---------- images (IndexedDB) ----------
+let DB=null;
+const dbOpen=()=>new Promise(res=>{try{const r=indexedDB.open('report-imgs',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>{DB=r.result;res()};r.onerror=()=>res()}catch(e){res()}});
+const dbPut=(k,v)=>new Promise(res=>{if(!DB)return res();const t=DB.transaction('img','readwrite');t.objectStore('img').put(v,k);t.oncomplete=res;t.onerror=res});
+const dbGet=k=>new Promise(res=>{if(!DB)return res(null);const r=DB.transaction('img').objectStore('img').get(k);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null)});
+const dbDel=k=>new Promise(res=>{if(!DB)return res();const t=DB.transaction('img','readwrite');t.objectStore('img').delete(k);t.oncomplete=res;t.onerror=res});
+const dbClear=()=>new Promise(res=>{if(!DB)return res();const t=DB.transaction('img','readwrite');t.objectStore('img').clear();t.oncomplete=res;t.onerror=res});
+const IMG={}; // slot -> {url,w,h,name}
+function readImg(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const im=new Image();im.onload=()=>res({blob:file,w:im.naturalWidth,h:im.naturalHeight,name:file.name,type:file.type});im.onerror=()=>rej(new Error('Not a picture'));im.src=url})}
+async function setImg(slot,file){
+  if(!/^image\/(png|jpe?g)$/i.test(file.type)&&!/\.(png|jpe?g)$/i.test(file.name)){toast(`${file.name}: use JPG or PNG`);return false}
+  const d=await readImg(file);await dbPut(slot,d);IMG[slot]={url:URL.createObjectURL(d.blob),w:d.w,h:d.h,name:d.name};
+  if(!J.cap[slot]||J.cap[slot]===''){} save();return true;
+}
+
+// ---------- slot definitions ----------
+const BS=i=>{const b=BANDS()[i];return b?b.name:''};
+function slotsFor(sec){
+  const nb=Math.max(1,BANDS().length),out=[];
+  const per=(arr)=>{for(let i=0;i<nb;i++)arr.forEach(([k,c])=>out.push([`b${i}_${k}`,(nb>1?BS(i)+' ':'')+c]))};
+  switch(sec){
+    case 'loc':return[['loc','ERRCS Equipment Location'],['overview','ERRCS Headend Overview']];
+    case 'freq':return[['freqimg','Assigned Frequencies']];
+    case 'tower':return[['towermap','Donor Tower Map']];
+    case 'meas':per([['donor','Donor Signal'],['donorwide','Donor Signal Wide – Multiple Channels'],['dlout','Downlink Output'],['dloutwide','Downlink Output Wide – Multiple Channels'],['isodl','System Isolation - Downlink'],['isoul','System Isolation - Uplink'],['ulmax','Max Uplink Output'],['spur','Uplink Spurious Emissions'],['noiseon','Uplink Quiescent Noise – RF On'],['noiseoff','Uplink Quiescent Noise – RF Off']]);return out;
+    case 'sweep':per([['rldonor','Donor Antenna Return Loss'],['dtfdonor','Donor Antenna Distance to Fault']]);out.push(['rldas','DAS / Service Return Loss'],['dtfdas','DAS / Service Distance to Fault']);return out;
+    case 'mon':return[['alarmgui','GUI Alarm Settings']];
+    case 'batt':return[['battery','Battery Backup Calculations']];
+    case 'photos':return['ERRCS Equipment Overview','BDA','BDA Internal','BDA Model','BDA Donor Connections','BDA Service Connections','Battery Backup Unit','BBU Internal','BBU Connections','Electrical Breaker','AC Disconnect','EPO Switch','Annunciator','ERRCS Headend Splitters','ERRCS Headend Grounding','Service Antenna','Donor Antenna Overview','Lightning Protection & Donor Grounding'].map((c,i)=>['ph'+i,c]);
+    case 'fcc':return[['fcc','FCC License'],['cert','BDA Certification']];
+  }
+  return[];
+}
+const MULTI={cov:'Coverage report page',gui:'BDA GUI Settings',extra:'Screenshot'};
+const multiSlots=sec=>(J.multi[sec]||[]).map(id=>[id,MULTI[sec]]);
+const cap=(id,def)=>(J.cap[id]??'')!==''?J.cap[id]:def;
+
+// ---------- filename auto-match ----------
+const MATCH=[[/DL_DONOR_MAXHOLD|DONOR_WIDE/,'donorwide'],[/DL_DONOR/,'donor'],[/DL_OUT_WIDE/,'dloutwide'],[/DL_OUT/,'dlout'],[/ISO_DL/,'isodl'],[/ISO_UL/,'isoul'],[/UL_MAX|UL_OUT/,'ulmax'],[/SPUR/,'spur'],[/UL_NOISE_ON|NOISE_ON/,'noiseon'],[/UL_NOISE_OFF|NOISE_OFF/,'noiseoff'],[/RL_DONOR/,'rldonor'],[/DTF_DONOR/,'dtfdonor'],[/RL_DAS/,'rldas'],[/DTF_DAS/,'dtfdas']];
+function matchSlot(fname){
+  const n=fname.toUpperCase().replace(/\.[A-Z]+$/,'').replace(/[\s-]+/g,'_');
+  for(const [re,k] of MATCH){if(re.test(n)){
+    if(k==='rldas'||k==='dtfdas')return k;
+    let bi=0;BANDS().forEach((b,i)=>{if(i>0&&new RegExp('_'+b.key.toUpperCase()+'(_|$)').test(n))bi=i});
+    return `b${bi}_${k}`;}}
+  return null;
+}
+
+// ---------- calculations for the report ----------
+const fsplF=(mhz,mi)=>(isN(mhz)&&isN(mi)&&mi>0)?20*L(mhz)+20*L(mi)+36.6:null;
+function bandCalc(i){
+  const B=BANDS()[i]; if(!B) return null; const o=B.o||{}, s=B.s||{}, jb=J.b[i]||{};
+  const r={name:B.name,key:B.key,o};
+  r.mi=o.mi; r.gd=o.gd; r.loss=o.loss; r.netGain=(isN(o.gd)&&isN(o.loss))?o.gd-o.loss:null;
+  r.erp=num(jb.erp);
+  r.chans=(B.chans||[]).map(c=>({f:num(c.f),p:num(c.p),cc:c.cc})).filter(c=>isN(c.f));
+  r.rows=r.chans.map(c=>{const fs=fsplF(c.f,o.mi);const cpl=(isN(fs)&&isN(o.gd)&&isN(o.loss))?fs-o.gd+o.loss:null;
+    return {f:c.f,p:c.p,fspl:fs,cpl,pred:(isN(r.erp)&&isN(cpl))?r.erp-cpl:null,mpl:(isN(r.erp)&&isN(c.p))?r.erp-c.p:null}});
+  r.cplUL=(isN(o.fspl)&&isN(o.gd)&&isN(o.loss))?o.fspl-o.gd+o.loss:null;
+  r.inj=num(s.inj); r.readA=num(s.readA); r.readB=num(s.readB);
+  r.isoA=(isN(r.inj)&&isN(r.readA))?r.inj-r.readA:null; r.isoB=(isN(r.inj)&&isN(r.readB))?r.inj-r.readB:null;
+  r.gainMax=[o.dlset,o.ulset].filter(isN).length?Math.max(...[o.dlset,o.ulset].filter(isN)):null;
+  r.ulMaxMeas=num(jb.ulmaxm); r.ulMaxTower=(isN(r.ulMaxMeas)&&isN(r.cplUL))?r.ulMaxMeas-r.cplUL:null;
+  const nz=k=>{const m=num(jb[k]);return {m,tower:(isN(m)&&isN(r.cplUL))?m-r.cplUL:null,erp:(isN(m)&&isN(r.netGain))?m+r.netGain:null}};
+  r.non=nz('non'); r.noff=nz('noff');
+  r.outs=(B.chans||[]).map(c=>({f:num(c.f),p:num(c.p)})).filter(c=>isN(c.f)&&isN(c.p)&&isN(o.dlset)).map(c=>({f:c.f,out:isN(o.ceil)?Math.min(c.p+o.dlset,o.ceil):c.p+o.dlset}));
+  return r;
+}
+const allBands=()=>BANDS().map((b,i)=>bandCalc(i));
+function autoSummary(){
+  const bs=allBands(), a={};
+  const isoOK=bs.length&&bs.every(b=>[b.isoA,b.isoB].filter(isN).length===2&&isN(b.gainMax)&&Math.min(b.isoA,b.isoB)-b.gainMax>=20);
+  const anyIso=bs.some(b=>isN(b.isoA)||isN(b.isoB));
+  if(anyIso){a.iso=[isoOK?'PASS':'FAIL',bs.map(b=>`${bs.length>1?b.name+': ':''}isolation DL ${fmtd(b.isoA)} / UL ${fmtd(b.isoB)} dB, gain ${fmtd(b.gainMax)} dB`).join('; ')+(isoOK?'. Over 20 dB of margin for downlink and uplink.':'. Needs isolation at least 20 dB over gain.')];}
+  const nzs=bs.filter(b=>isN(b.non.erp));
+  if(nzs.length){const ok=nzs.every(b=>b.non.erp<=-43);a.noise=[ok?'PASS':'FAIL',nzs.map(b=>`${bs.length>1?b.name+': ':''}donor ERP ${f2(b.non.erp)} dBm (limit -43), ${f2(b.non.tower)} dBm at tower`).join('; ')];}
+  if(J.tower)a.az=['PASS',`Donor antenna points to ${J.tower} tower${J.az?' ('+J.az+'°)':''}`];
+  const ap=num(J.areaPct),cp=num(J.critPct);
+  if(isN(ap)||isN(cp)){const ok=(!isN(ap)||ap>=num(J.areaReq||95))&&(!isN(cp)||cp>=num(J.critReq||99));a.int=[ok?'PASS':'FAIL',`Area points ${isN(ap)?ap+'%':'—'}, critical points ${isN(cp)?cp+'%':'—'} at ${J.sigReq||'-95'} dBm`];}
+  return a;
+}
+const SUMROWS=[['int','Interior Signal Strength (Downlink)',()=>`Meets ${J.sigReq||'-95'} dBm coverage requirement for all areas`],
+ ['filt','Correct Frequency Filtering',()=>`All assigned ${J.cell||''} frequencies are programmed`],
+ ['mute','BDA Uplink Mute/Squelch',()=>`UL power amp muting enabled${J.squelch?', '+J.squelch+' dBm threshold':''}`],
+ ['noise','Quiescent Noise Floor Measurement',()=>'Within FCC limit at the donor and tower'],
+ ['iso','Isolation Tests',()=>'System has over 20 dB of isolation for downlink and uplink'],
+ ['az','Donor Antenna Azimuth',()=>'Donor antenna points to the donor tower'],
+ ['run','Backup Power Supply Calculated Runtime',()=>'Meets 24-hour, all ERRCS equipment on battery backup'],
+ ['drop','Backup Power Load Test (Drop Test)',()=>'BBU passed the 1-hour drop test'],
+ ['ac','AC Power Connection',()=>`ERRCS is on a dedicated breaker, hardwired with breaker lock${J.panel?'. ELEC Panel: '+J.panel:''}`],
+ ['gnd','Grounding and Lightning Protection',()=>'Grounded, lightning protection at the donor entry'],
+ ['ann','Annunciator Test',()=>`Annunciator located in ${J.annLoc||'the headend room'}`],
+ ['facp','FACP Alarm Test',()=>`${J.alarms.length} labeled alarms for ERRCS, all monitored as supervisory alarms`],
+ ['sign','Equipment Signage and Labeling',()=>'Signs installed and equipment has been labeled']];
+function sumRow(k,defTxt){const a=autoSummary()[k];const m=J.sum[k]||{};return {res:m.res||(a?a[0]:''),txt:(m.txt??'')!==''?m.txt:(a?a[1]:defTxt()),auto:!!a}}
+
+// ---------- UI helpers ----------
+const F=(scope,k,label,ph='',o={})=>{const src=scope==='C'?C:J;const v=src[k]??'';const id=`f-${scope}-${k}`;
+  return `<div class="fld${o.wide?' wide':''}"><label for="${id}">${label}</label>${o.area?`<textarea id="${id}" data-r="${scope}.${k}" rows="2" placeholder="${esc(ph)}">${esc(v)}</textarea>`:`<input id="${id}" data-r="${scope}.${k}" value="${esc(v)}" placeholder="${esc(ph)}"${o.num?' inputmode="decimal"':''}>`}</div>`};
+const FB=(i,k,label,ph='')=>{const v=(J.b[i]||{})[k]??'';return `<div class="fld"><label for="fb-${i}-${k}">${label}</label><input id="fb-${i}-${k}" data-b="${i}.${k}" value="${esc(v)}" placeholder="${ph}" inputmode="decimal" data-neg="${/meas|non|noff/.test(k)?1:''}"></div>`};
+function slotHTML(id,def,removable){
+  const im=IMG[id];
+  return `<div class="slot${im?' has':''}" data-slot="${id}"><div class="drop" tabindex="0" role="button" aria-label="Add picture for ${esc(cap(id,def))}">${im?`<img src="${im.url}" alt="">`:`<span>Drop a screenshot here<br><small>or tap to pick one</small></span>`}</div>
+  <input class="capin" data-cap="${id}" value="${esc(J.cap[id]??'')}" placeholder="${esc(def)}" aria-label="Screenshot name">
+  <div class="srow">${im?`<small class="fname">${esc(im.name)}</small><button class="lnk" data-rm="${id}">Remove picture</button>`:'<small class="fname">No picture yet</small>'}${removable?`<button class="lnk" data-del="${id}">Delete box</button>`:''}</div></div>`;
+}
+const slotGrid=sec=>`<div class="slots">${slotsFor(sec).map(([id,c])=>slotHTML(id,c)).join('')}${(J.multi[sec]||[]).map(id=>slotHTML(id,MULTI[sec],true)).join('')}</div>`;
+const addBtn=sec=>`<button class="add" data-addslot="${sec}">+ Add a screenshot</button>`;
+const card=(n,t,body,why='')=>`<section class="card" id="r-${n}"><h2><span class="n">${n}</span>${t}</h2>${why?`<p class="why"><b>Goes in the report as:</b> ${why}</p>`:''}${body}</section>`;
+const tbl=(head,rows)=>`<div class="tw"><table class="grid"><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;
+
+function render(){
+  const bs=allBands(), H=[];
+  H.push(`<div class="srcbox">${SRC?`<b>Numbers from:</b> ${esc(BANDS().map(b=>b.name).join(' + '))} worksheet${SRC.site&&SRC.site.name?', site '+esc(SRC.site.name):''}. Taken ${new Date(SRC.when).toLocaleString()}. Changed something on the worksheet? Hit <b>Make report</b> there again and the numbers update here. Everything you type on this page stays.`:'<b>No worksheet numbers yet.</b> Open your band worksheet, fill it in, and hit <b>Make report</b> at the top. You can still fill this page in and add screenshots.'}</div>`);
+  H.push(card(1,'Cover page',`<p class="ins">Company and tester info is remembered for every report. Site info is just for this job.</p>
+    <h3>This site</h3><div class="fields">${F('J','site','Site name','Main Street Office')}${F('J','date','Date of inspection','January 15th, 2027')}${F('J','addr','Site address','123 Main St, City, ST 00000',{area:1,wide:1})}${F('J','coords','Site coordinates','00°00\'00.0"N, 000°00\'00.0"W')}${F('J','cell','Assigned cell / system','County VHF')}${F('J','erLoc','ERRCS location','1st Floor')}</div>
+    <h3>Your company (remembered)</h3><div class="fields">${F('C','co','Company name','')}${F('C','coAddr','Company address','',{area:1,wide:1})}${F('C','coPhone','Company phone','')}${F('C','coEmail','Company email','')}</div>
+    <h3>Tester (remembered)</h3><div class="fields">${F('C','tester','Tester name','')}${F('C','tPhone','Tester phone','')}${F('C','tEmail','Tester email','')}${F('C','fcc','FCC license #','PG00000000')}</div>`,'the cover page and the Site Info page.'));
+  H.push(card(2,'Site equipment',`<div class="fields">${F('J','bdaModel','Signal booster: maker and model','Maker and model')}${F('J','bdaSN','BDA serial #','')}${F('J','bdaFcc','BDA FCC ID','')}${F('J','bdaNote','BDA notes','Class A, 12.5 kHz bandwidth, -80 UL squelch',{wide:1})}${F('J','bbu','Battery backup: model','')}${F('J','bbuNote','BBU notes','100AH, 24VDC')}${F('J','panel','Electrical panel / breaker','Panel A #12')}${F('J','ann','Annunciator: model','Model')}${F('J','annLoc','Annunciator location','headend room')}${F('J','donorAnt','Donor antenna(s)','VHF: maker, model',{area:1})}${F('J','svcAnt','Service antennas','Omni low profile, 130-1000 MHz',{area:1})}</div>
+    <h3>Pictures</h3>${slotGrid('loc')}`,'the Site Equipment table and "Equipment Location & Overview".'));
+  H.push(card(3,'Assigned frequencies',(bs.length?bs.map(b=>`<h3>${esc(b.name)}</h3>`+tbl(['DL freq (MHz)','Control ch','Power IN at donor (dBm)'],b.chans.map(c=>[c.f,c.cc==='Y'?'Yes':'',isN(c.p)?c.p:'—']))).join(''):'<p class="ins">Comes from the channel list on your worksheet.</p>')+`<h3>Picture (optional)</h3>${slotGrid('freq')}`,'a table of your channels. Add a screenshot of the channel plan if you want it too.'));
+  H.push(card(4,'Donor tower',`<div class="fields">${F('J','tower','Tower name','Tower name')}${F('J','towerLoc','Tower coordinates','00°00\'00.0"N, 000°00\'00.0"W')}${F('J','az','Direction from site (° true north)','67',{num:1})}</div>
+    ${bs.map((b,i)=>`<h3>${esc(b.name)}</h3><div class="fields">${FB(i,'erp','Tower output / ERP (dBm)','50')}</div>
+    <p class="ins">Distance <b>${fmtd(b.mi)} mi</b>, donor gain <b>${fmtd(b.gd)} dBd</b>, cable and filter loss <b>${f2(b.loss)} dB</b>, all from the worksheet. Tower ERP comes from the licensee or the donor site sheet.</p>`+
+    tbl(['Freq (MHz)','FSPL (dB)','Calc. path loss (dB)','Predicted donor (dBm)','Measured donor (dBm)','Measured path loss (dB)'],b.rows.map(r=>[r.f,f2(r.fspl),f2(r.cpl),f2(r.pred),isN(r.p)?r.p:'—',f2(r.mpl)]))).join('')}
+    <h3>Picture (optional)</h3>${slotGrid('tower')}`,'the Donor Tower Information page with Calculated and Measured Path Loss tables, one row per channel. Calculated path loss = FSPL − donor gain + cable loss. Measured path loss = tower ERP − what you measured at the donor.'));
+  H.push(card(5,'Test equipment and settings',`<div class="fields">${F('C','pctel','Spectrum analyzer','PCTEL SeeGull IBFlex')}${F('C','pctelSN','Device S/N','')}${F('C','pctelCal','Factory calibration date','')}${F('C','pctelAnt','Omni antenna','Omni antenna model')}${F('J','floors','Floors tested','4',{num:1})}${F('J','sigReq','Signal requirement (dBm)','-95')}${F('J','areaReq','General coverage requirement (%)','95')}${F('J','critReq','Critical coverage requirement (%)','99')}</div>`,'the Test Procedures & Settings page. The paragraph is written for you from the site name, band and floors.'));
+  H.push(card(6,'Commissioning inspection summary',`<p class="ins">Pick PASS / FAIL / N/A for each row. Rows marked <b>auto</b> are filled in from your numbers, but you can still change them. Leave the text blank to use the gray suggestion.</p>
+    <div class="fields">${F('J','squelch','UL squelch threshold (dBm)','-80')}${F('J','areaPct','Area points passed (%)','100',{num:1})}${F('J','critPct','Critical points passed (%)','100',{num:1})}</div>
+    <div class="sum">${SUMROWS.map(([k,t,d])=>{const r=sumRow(k,d);const m=J.sum[k]||{};return `<div class="srow2"><div class="st">${t}${r.auto?' <span class="auto">auto</span>':''}</div><select data-sres="${k}" aria-label="Result for ${t}"><option value="">—</option>${['PASS','FAIL','N/A'].map(x=>`<option${r.res===x?' selected':''}>${x}</option>`).join('')}</select><input data-stxt="${k}" value="${esc(m.txt??'')}" placeholder="${esc(r.txt)}" aria-label="Summary for ${t}"></div>`}).join('')}</div>
+    <p class="note" id="sumwarn"></p>`,'the Commissioning Inspection Summary table.'));
+  H.push(card(7,'Signal coverage readings (PCTEL)',`<p class="ins">Add each page of the PCTEL / SeeHawk report as a picture (screenshot or export each page as JPG/PNG). They go in, in order.</p>${slotGrid('cov')}${addBtn('cov')}`,'the Signal Coverage Readings pages.'));
+  H.push(card(8,'BDA GUI settings',`<p class="ins">Screenshots of the BDA settings pages, one per box.</p>${slotGrid('gui')}${addBtn('gui')}`,'the BDA GUI Settings page.'));
+  H.push(card(9,'BDA measurements',`${bs.map((b,i)=>`<h3>${esc(b.name)}</h3><div class="fields">${FB(i,'ulmaxm','Max UL output measured (dBm)','14.14')}${FB(i,'non','UL noise, RF on (dBm)','-71')}${FB(i,'noff','UL noise, RF off (dBm)','-102')}</div>
+    <p class="ins">Isolation, gain, path loss and donor numbers come from the worksheet: isolation DL <b>${fmtd(b.isoA)}</b> / UL <b>${fmtd(b.isoB)}</b> dB, max allowed gain <b>${fmtd(isN(b.isoA)&&isN(b.isoB)?Math.min(b.isoA,b.isoB)-20:null)}</b> dB, gain set <b>${fmtd(b.gainMax)}</b> dB, UL path loss <b>${f2(b.cplUL)}</b> dB.</p>`).join('')}
+    ${slotGrid('meas')}`,'one box per screenshot with the math written out on the right, like the isolation page in your sample report.'));
+  H.push(card(10,'Sweep tests',`${slotGrid('sweep')}${addBtn('extra')}`,'the Sweep Test Measurements pages.'));
+  H.push(card(11,'System monitoring',tbl(['ERRCS alarm','FACP supervisory label','Annunciator','FACP'],J.alarms.map((a,i)=>[`<input data-al="${i}.a" value="${esc(a.a)}">`,`<input data-al="${i}.l" value="${esc(a.l)}">`,`<select data-al="${i}.an"><option value="">—</option>${['PASS','FAIL','N/A'].map(x=>`<option${a.an===x?' selected':''}>${x}</option>`).join('')}</select>`,`<select data-al="${i}.fa"><option value="">—</option>${['PASS','FAIL','N/A'].map(x=>`<option${a.fa===x?' selected':''}>${x}</option>`).join('')}</select>`]))+`<button class="add" data-addalarm="1">+ Add alarm</button> <button class="add" data-allpass="1">Mark all PASS</button><h3>Picture</h3>${slotGrid('mon')}`,'the System Monitoring table and GUI alarm screenshot.'));
+  H.push(card(12,'Battery backup',`${slotGrid('batt')}`,'the Battery Backup Calculations page.'));
+  H.push(card(13,'Equipment photos',`<p class="ins">Rename any box to match what you shot. Empty boxes are left out of the report.</p>${slotGrid('photos')}${addBtn('extra')}`,'the ERRCS Equipment Photos pages, four to a page.'));
+  H.push(card(14,'FCC license and BDA certification',`${slotGrid('fcc')}`,'the last two pages.'));
+  if((J.multi.extra||[]).length) H.push(card(15,'Other screenshots',slotGrid('extra'),'an "Additional Screenshots" section at the end.'));
+  $('app').innerHTML=H.join('');
+  sumWarn();
+}
+function sumWarn(){const n=SUMROWS.filter(([k,t,d])=>!sumRow(k,d).res).length;const e=$('sumwarn');if(e)e.textContent=n?`${n} row${n>1?'s':''} not marked yet. They'll show "—" in the report.`:'All rows marked.'}
+
+// ---------- events ----------
+let fileTarget=null;
+const picker=document.createElement('input');picker.type='file';picker.accept='image/png,image/jpeg';picker.style.display='none';document.body.appendChild(picker);
+picker.onchange=async()=>{if(picker.files[0]&&fileTarget){await setImg(fileTarget,picker.files[0]);render()}picker.value=''};
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.dataset.neg==='1'&&/^[1-9.]/.test(t.value))t.value='-'+t.value;
+  if(t.dataset.r){const [sc,k]=t.dataset.r.split('.');(sc==='C'?C:J)[k]=t.value;save();if(/^(tower|az|areaPct|critPct|sigReq|squelch|cell|panel|annLoc|areaReq|critReq)$/.test(k))refreshSum()}
+  if(t.dataset.b){const [i,k]=t.dataset.b.split('.');J.b[i]=J.b[i]||{};J.b[i][k]=t.value;save();refreshSum()}
+  if(t.dataset.cap){J.cap[t.dataset.cap]=t.value;save()}
+  if(t.dataset.stxt){const k=t.dataset.stxt;J.sum[k]=J.sum[k]||{};J.sum[k].txt=t.value;save()}
+  if(t.dataset.al&&t.tagName==='INPUT'){const [i,k]=t.dataset.al.split('.');J.alarms[i][k]=t.value;save()}});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.sres){const k=t.dataset.sres;J.sum[k]=J.sum[k]||{};J.sum[k].res=t.value;save();sumWarn()}
+  if(t.dataset.al&&t.tagName==='SELECT'){const [i,k]=t.dataset.al.split('.');J.alarms[i][k]=t.value;save()}});
+function refreshSum(){const box=document.querySelector('.sum');if(!box)return;SUMROWS.forEach(([k,t,d])=>{const r=sumRow(k,d);const s=box.querySelector(`[data-sres="${k}"]`),i=box.querySelector(`[data-stxt="${k}"]`);if(s&&!(J.sum[k]||{}).res)s.value=r.res;if(i)i.placeholder=r.txt});sumWarn()}
+document.addEventListener('click',async e=>{const t=e.target;
+  const d=t.closest('.drop');if(d){fileTarget=d.closest('.slot').dataset.slot;picker.click();return}
+  if(t.dataset.rm){await dbDel(t.dataset.rm);delete IMG[t.dataset.rm];render();return}
+  if(t.dataset.del){const id=t.dataset.del;for(const s in J.multi)J.multi[s]=J.multi[s].filter(x=>x!==id);delete J.cap[id];await dbDel(id);delete IMG[id];save();render();return}
+  if(t.dataset.addslot){const s=t.dataset.addslot;J.multi[s]=J.multi[s]||[];const id=s+'_'+Date.now().toString(36);J.multi[s].push(id);save();render();return}
+  if(t.dataset.addalarm){J.alarms.push({a:'',l:'',an:'',fa:''});save();render();return}
+  if(t.dataset.allpass){J.alarms.forEach(a=>{a.an='PASS';a.fa='PASS'});save();render();return}
+});
+document.addEventListener('keydown',e=>{const d=e.target.closest&&e.target.closest('.drop');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();d.click()}});
+document.addEventListener('dragover',e=>{if(e.target.closest('.drop')||e.target.closest('#bulk')){e.preventDefault();(e.target.closest('.drop')||e.target.closest('#bulk')).classList.add('over')}});
+document.addEventListener('dragleave',e=>{const x=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(x)x.classList.remove('over')});
+document.addEventListener('drop',async e=>{const d=e.target.closest('.drop');const bulk=e.target.closest('#bulk');if(!d&&!bulk)return;e.preventDefault();
+  const files=[...e.dataTransfer.files];if(!files.length)return;
+  if(d&&files.length===1){await setImg(d.closest('.slot').dataset.slot,files[0]);render();return}
+  await bulkAdd(files)});
+async function bulkAdd(files){
+  let m=0,x=0;
+  for(const f of files){if(!/\.(png|jpe?g)$/i.test(f.name))continue;let slot=matchSlot(f.name);
+    if(!slot||IMG[slot]){J.multi.extra=J.multi.extra||[];slot='extra_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);J.multi.extra.push(slot);J.cap[slot]=f.name.replace(/\.[^.]+$/,'');x++}else m++;
+    await setImg(slot,f)}
+  save();render();toast(`${m} matched by name${x?`, ${x} added to "Other screenshots" (rename or delete them there)`:''}.`);
+}
+$('bulkbtn').onclick=()=>$('bulkin').click();
+$('bulkin').onchange=async()=>{await bulkAdd([...$('bulkin').files]);$('bulkin').value=''};
+$('newjob').onclick=async()=>{if(!confirm('Start a new report? This clears the site info, summary and every screenshot on this page. Your company and tester info stays.'))return;J={cap:{},multi:{},sum:{},b:[{},{}]};J.alarms=null;await dbClear();for(const k in IMG)delete IMG[k];location.reload()};
+let tt;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),5000)}
+
+// ---------- Word document ----------
+async function buildDocx(){
+  const D=window.docx;const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,HeadingLevel,BorderStyle,ShadingType,PageBreak,Footer,PageNumber,TableOfContents,VerticalAlign}=D;
+  const BLUE='2E74B5', bs=allBands();
+  const T=(t,o={})=>new TextRun({text:String(t??''),font:'Calibri',size:o.size||22,bold:o.bold,italics:o.it,color:o.color});
+  const P=(runs,o={})=>new Paragraph({children:Array.isArray(runs)?runs:[typeof runs==='string'?T(runs,o):runs],alignment:o.center?AlignmentType.CENTER:undefined,spacing:{after:o.after??120,before:o.before??0},keepNext:o.keepNext});
+  const H1=t=>new Paragraph({heading:HeadingLevel.HEADING_1,children:[new TextRun({text:t.toUpperCase(),font:'Calibri',bold:true,size:36,color:BLUE})],spacing:{before:120,after:160},border:{bottom:{style:BorderStyle.SINGLE,size:18,color:BLUE,space:4}}});
+  const brk=()=>new Paragraph({children:[new PageBreak()]});
+  const cell=(c,o={})=>new TableCell({children:(Array.isArray(c)?c:[P(typeof c==='string'||typeof c==='number'?[T(c,{bold:o.bold,size:o.size||20})]:[c],{center:o.center!==false,after:40,keepNext:o.keepNext})]),shading:o.head?{type:ShadingType.CLEAR,fill:'F2F2F2',color:'auto'}:undefined,columnSpan:o.span,verticalAlign:VerticalAlign.CENTER,width:o.w?{size:o.w,type:WidthType.PERCENTAGE}:undefined,margins:{top:60,bottom:60,left:80,right:80}});
+  const table=(head,rows,o={})=>new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[...(head?[new TableRow({tableHeader:true,children:head.map(h=>cell(h,{head:1,bold:1}))})]:[]),...rows.map(r=>new TableRow({children:r.map((c,ci)=>cell(c,{bold:o.boldFirst&&ci===0,head:o.boldFirst&&ci===0,center:o.left?false:true}))}))]});
+  const imgRun=async(id,maxW,maxH)=>{const d=await dbGet(id);if(!d)return null;const buf=await d.blob.arrayBuffer();let w=d.w,h=d.h;const s=Math.min(maxW/w,maxH/h,1.6);w=Math.round(w*s);h=Math.round(h*s);
+    return new ImageRun({type:/png/i.test(d.type||d.name)?'png':'jpg',data:buf,transformation:{width:w,height:h}})};
+  const has=id=>!!IMG[id];
+  // box: title header, image (left) + text (right) or full-width image
+  const box=async(id,title,lines)=>{const run=await imgRun(id,lines?400:620,lines?420:560);
+    const imgP=run?P([run],{center:1,after:0}):P([T('[ Add screenshot ]',{it:1,color:'999999'})],{center:1});
+    const rows=[new TableRow({cantSplit:true,children:[cell(title,{head:1,bold:1,span:lines?2:1,size:24,keepNext:true})]})];
+    if(lines)rows.push(new TableRow({cantSplit:true,children:[cell([imgP],{w:62}),cell(lines.map(l=>typeof l==='string'?P([T(l,{size:21})],{after:60}):l),{w:38})]}));
+    else rows.push(new TableRow({cantSplit:true,children:[cell([imgP])]}));
+    return [new Table({width:{size:100,type:WidthType.PERCENTAGE},rows}),P('',{after:200})]};
+  const kv=(k,v)=>P([T(k+': ',{size:21}),T(v,{bold:1,size:21})],{after:60});
+  const itl=t=>P([T(t,{it:1,size:21})],{before:120});
+  const ch=[];
+  // cover
+  const co=C.co||'';
+  ch.push(P('',{after:600}),P([T('Emergency Responder Communications Enhancement System (ERRCS) Commissioning Report',{bold:1,size:40,color:BLUE})],{center:1,after:600}));
+  const cv=(lab,val,big)=>{if(!val)return;ch.push(P([T(lab,{bold:1,size:22})],{center:1,after:20}));String(val).split('\n').forEach(l=>ch.push(P([T(l,{size:big?32:22,bold:big})],{center:1,after:20})));ch.push(P('',{after:120}))};
+  cv('',J.site,1);cv('Site Address:',J.addr);cv('Site Coordinates:',J.coords);cv('Date of Inspection:',J.date);cv('Assigned Cell:',J.cell);
+  cv('Conducted By: '+co,[C.coAddr,C.coPhone?'P: '+C.coPhone:'',C.coEmail?'Email: '+C.coEmail:''].filter(Boolean).join('\n')||' ');
+  cv('Tester Information:',[C.tester,C.tPhone?'P: '+C.tPhone:'',C.tEmail?'Email: '+C.tEmail:''].filter(Boolean).join('\n'));cv('FCC License:',C.fcc);
+  ch.push(brk(),P([T('TABLE OF CONTENTS',{bold:1,size:32,color:BLUE})],{after:200}),new TableOfContents('Contents',{hyperlink:true,headingStyleRange:'1-1'}),P([T('If the table above is empty, right-click it in Word and pick "Update Field".',{it:1,size:18,color:'888888'})]),brk());
+  // site info
+  ch.push(H1('Site Info'),kv('Test Date',J.date||'—'),P([T('Test Site:',{size:21})],{after:20}),...[J.site,...(J.addr||'').split('\n'),J.coords].filter(Boolean).map(l=>P([T(l,{bold:1,size:21})],{after:20})),P(''),kv('ERRCS Location',J.erLoc||'—'),P(''));
+  const eqRows=[['Signal Boosters',[J.bdaModel,J.bdaSN?'SN: '+J.bdaSN:'',J.bdaFcc?'FCC ID: '+J.bdaFcc:''].filter(Boolean).join('  ')+(J.bdaNote?'\n'+J.bdaNote:'')],['Battery Backup Unit',[J.bbu,J.bbuNote,J.panel?'Electrical Panel: '+J.panel:''].filter(Boolean).join('\n')],['System Monitoring',J.ann?'Annunciator: '+J.ann:''],['Donor Antenna',J.donorAnt||''],['Service Antennas',J.svcAnt||'']].filter(r=>r[1]);
+  ch.push(P([T('Site Equipment Information',{bold:1})],{center:1}),table(null,eqRows.map(([k,v])=>[k,String(v).split('\n').map(l=>P([T(l,{size:20})],{after:20}))]),{boldFirst:1,left:1}),brk());
+  // location + freqs
+  ch.push(H1('Equipment Location & Overview'));
+  const two=async(a,b)=>{const ra=await imgRun(a[0],300,300),rb=await imgRun(b[0],300,300);return new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({cantSplit:true,children:[cell(cap(a[0],a[1]),{head:1,bold:1,keepNext:true}),cell(cap(b[0],b[1]),{head:1,bold:1,keepNext:true})]}),new TableRow({cantSplit:true,children:[cell([ra?P([ra],{center:1}):P([T('[ Add photo ]',{it:1,color:'999999'})],{center:1})]),cell([rb?P([rb],{center:1}):P([T('[ Add photo ]',{it:1,color:'999999'})],{center:1})])]})]})};
+  ch.push(await two(...slotsFor('loc')),P(''));
+  ch.push(H1('Assigned Frequencies'));
+  bs.forEach(b=>{if(!b.chans.length)return;ch.push(P([T(b.name,{bold:1})],{after:60}),table(['Downlink Frequency (MHz)','Control Channel'],b.chans.map(c=>[String(c.f),c.cc==='Y'?'Yes':''])),P(''))});
+  if(has('freqimg'))ch.push(...await box('freqimg',cap('freqimg','Assigned Frequencies')));
+  ch.push(brk());
+  // donor tower
+  ch.push(H1('Donor Tower Information'));
+  bs.forEach(b=>{ch.push(table(['Tower Name','Tower Location','Distance to Site','Direction (True North)'],[[J.tower||'—',J.towerLoc||'—',isN(b.mi)?fmtd(b.mi)+' Miles':'—',J.az?J.az+'°':'—']]),P(''));
+    ch.push(P([T(`Calculated Path Loss${bs.length>1?' – '+b.name:''}`,{bold:1})],{center:1}),table(['Frequency (MHz)','Free Space Path Loss (dB)','Donor Antenna Gain (dBd)','Cable & Filter Loss (dB)','Calculated Path Loss (dB)'],b.rows.map(r=>[String(r.f),f2(r.fspl),fmtd(b.gd),f2(b.loss),f2(r.cpl)])),P(''));
+    ch.push(P([T(`Measured Path Loss${bs.length>1?' – '+b.name:''}`,{bold:1})],{center:1}),table(['Frequency (MHz)','Tower Output (dBm)','Calculated Path Loss (dB)','Predicted Donor Signal (dBm)','Measured Donor Signal (dBm)','Measured Path Loss (dB)'],b.rows.map(r=>[String(r.f),isN(b.erp)?fmtd(b.erp):'—',f2(r.cpl),f2(r.pred),isN(r.p)?String(r.p):'—',f2(r.mpl)])),P(''))});
+  if(has('towermap'))ch.push(...await box('towermap',cap('towermap','Donor Tower Map')));
+  ch.push(brk());
+  // procedures + summary
+  const band=J.cell||bs.map(b=>b.name).join(' / ');
+  ch.push(H1('Test Procedures & Settings'),P([T(`${J.site||'The site'} was commissioned and tested for ${bs.map(b=>b.name).join(' and ')||''} signal coverage using ${band} assigned frequencies. Each floor of the building${J.floors?' ('+J.floors+' floors)':''} was divided into 20 grids of equal size with additional measurements taken at critical areas. The center of each grid was tested for signal strength using a calibrated ${C.pctel||'spectrum analyzer'} on the Max Hold mode setting. Coverage was tested for both the downlink and uplink service antennas.`,{size:21})]));
+  ch.push(table(null,[['Spectrum Analyzer:',C.pctel||'—','Tested Frequencies:',band||'—'],['Device S/N:',C.pctelSN||'—','Mode Setting:','Max Hold'],['Factory Calibration Date:',C.pctelCal||'—','Signal Requirement:',`Downlink: ${J.sigReq||'-95'} dBm`],['Omni-directional Antenna:',C.pctelAnt||'—','Coverage Requirement:',`General: ${J.areaReq||95}%, Critical: ${J.critReq||99}%`]],{left:1}),P(''));
+  ch.push(H1('Commissioning Inspection Summary'),table(['Commissioning Test Requirements','Result','Result Summary'],SUMROWS.map(([k,t,d])=>{const r=sumRow(k,d);return [t,new TextRun({text:r.res||'—',bold:true,size:20,color:r.res==='PASS'?'2E7D32':r.res==='FAIL'?'C62828':undefined}),r.txt]})),brk());
+  // coverage
+  const cov=multiSlots('cov').filter(([id])=>has(id));
+  ch.push(H1('Signal Coverage Readings'));
+  if(cov.length){for(const [id,d] of cov){const r=await imgRun(id,620,820);ch.push(P([r],{center:1}),brk())}}else ch.push(P([T('[ Add the PCTEL coverage report pages ]',{it:1,color:'999999'})]),brk());
+  // GUI
+  ch.push(H1('BDA GUI Settings'));
+  const gui=multiSlots('gui').filter(([id])=>has(id));
+  if(gui.length){for(const [id,d] of gui)ch.push(...await box(id,cap(id,d)))}else ch.push(P([T('[ Add BDA GUI screenshots ]',{it:1,color:'999999'})]));
+  ch.push(brk());
+  // measurements
+  ch.push(H1('BDA Measurements'));
+  for(let i=0;i<Math.max(1,bs.length);i++){const b=bs[i]||{};const pre=bs.length>1?b.name+' ':'';const id=k=>`b${i}_${k}`;const c=(k,dft)=>cap(id(k),pre+dft);
+    const donorLines=b.rows&&b.rows.some(r=>isN(r.p))?b.rows.filter(r=>isN(r.p)).map(r=>`${r.f} MHz: ${r.p} dBm`):null;
+    ch.push(...await box(id('donor'),c('donor','Donor Signal'),donorLines));
+    if(has(id('donorwide')))ch.push(...await box(id('donorwide'),c('donorwide','Donor Signal Wide – Multiple Channels')));
+    const outLines=b.outs&&b.outs.length?[...b.outs.map(x=>`${x.f} MHz: ${sg(x.out)} dBm (predicted)`),`DL gain set: ${fmtd(b.o.dlset)} dB`]:null;
+    ch.push(...await box(id('dlout'),c('dlout','Downlink Output'),outLines));
+    if(has(id('dloutwide')))ch.push(...await box(id('dloutwide'),c('dloutwide','Downlink Output Wide – Multiple Channels')));
+    const isoL=(read,iso)=>isN(iso)?[kv('Injected Signal',sg(b.inj)+' dBm'),kv('Measured Signal',fmtd(read)+' dBm'),kv('Measured Isolation',`${fmtd(iso)} dB (${fmtd(b.inj)} - (${fmtd(read)}))`),kv('Max Allowed Gain',`${fmtd(iso-20)} dB (${fmtd(iso)} - 20)`),kv('Max Measured Gain',fmtd(b.gainMax)+' dB'),itl(isN(b.gainMax)&&b.gainMax<=iso-20?'The isolation is within the acceptable parameters and is FCC compliant with the current BDA settings.':'Gain is too close to the isolation. Lower the gain or improve isolation.')]:null;
+    ch.push(...await box(id('isodl'),c('isodl','System Isolation - Downlink'),isoL(b.readA,b.isoA)));
+    ch.push(...await box(id('isoul'),c('isoul','System Isolation - Uplink'),isoL(b.readB,b.isoB)));
+    ch.push(...await box(id('ulmax'),c('ulmax','Max Uplink Output'),isN(b.ulMaxMeas)?[kv('Max Uplink Output',fmtd(b.ulMaxMeas)+' dBm'),kv('Calc. Path Loss',f2(b.cplUL)+' dB'),kv('Max Signal at Tower',f2(b.ulMaxTower)+' dBm')]:null));
+    if(has(id('spur')))ch.push(...await box(id('spur'),c('spur','Uplink Spurious Emissions')));
+    const nzL=n=>isN(n.m)?[kv('Measured Signal',fmtd(n.m)+' dBm'),kv('Calc. Path Loss',f2(b.cplUL)+' dB'),kv('Signal at Tower',f2(n.tower)+' dBm'),P(''),kv('Donor Gain – Cable Loss',f2(b.netGain)+' dB'),kv('Donor Antenna ERP',f2(n.erp)+' dBm'),itl(n.erp<=-43?'The uplink quiescent noise is within the acceptable parameters and is FCC compliant.':'Donor ERP is over the -43 dBm limit. Check UL gain and noise.')]:null;
+    ch.push(...await box(id('noiseon'),c('noiseon','Uplink Quiescent Noise – RF On'),nzL(b.non||{})));
+    ch.push(...await box(id('noiseoff'),c('noiseoff','Uplink Quiescent Noise – RF Off'),nzL(b.noff||{})));
+  }
+  ch.push(brk());
+  // sweeps
+  ch.push(H1('Sweep Test Measurements'));
+  for(const [id,d] of slotsFor('sweep'))if(has(id))ch.push(...await box(id,cap(id,d)));
+  if(!slotsFor('sweep').some(([id])=>has(id)))ch.push(P([T('[ Add Return Loss and DTF screenshots ]',{it:1,color:'999999'})]));
+  ch.push(brk());
+  // monitoring + battery
+  ch.push(H1('System Monitoring'),table(['ERRCS Alarm','FACP Supervisory Alarm Label','Annunciator','FACP'],J.alarms.filter(a=>a.a||a.l).map(a=>[a.a,a.l,a.an||'—',a.fa||'—'])),P(''));
+  if(has('alarmgui'))ch.push(...await box('alarmgui',cap('alarmgui','GUI Alarm Settings')));
+  ch.push(H1('Battery Backup Calculations'));
+  ch.push(...(has('battery')?await box('battery',cap('battery','Battery Backup Calculations')):[P([T('[ Add battery calculation ]',{it:1,color:'999999'})])]));
+  ch.push(brk());
+  // photos 4 per page
+  const ph=slotsFor('photos').filter(([id])=>has(id));
+  ch.push(H1('ERRCS Equipment Photos'));
+  if(!ph.length)ch.push(P([T('[ Add equipment photos ]',{it:1,color:'999999'})]));
+  for(let k=0;k<ph.length;k+=2){const a=ph[k],b=ph[k+1]||null;
+    if(b)ch.push(await two(a,b),P(''));else{const r=await imgRun(a[0],300,300);ch.push(new Table({width:{size:50,type:WidthType.PERCENTAGE},rows:[new TableRow({children:[cell(cap(a[0],a[1]),{head:1,bold:1})]}),new TableRow({children:[cell([P([r],{center:1})])]})]}),P(''))}}
+  ch.push(brk());
+  const extra=multiSlots('extra').filter(([id])=>has(id));
+  if(extra.length){ch.push(H1('Additional Screenshots'));for(const [id,d] of extra)ch.push(...await box(id,cap(id,d)));ch.push(brk())}
+  ch.push(H1('FCC License'));ch.push(...(has('fcc')?[P([await imgRun('fcc',620,820)],{center:1})]:[P([T('[ Add FCC license ]',{it:1,color:'999999'})])]));ch.push(brk());
+  ch.push(H1('BDA Certification'));ch.push(...(has('cert')?[P([await imgRun('cert',620,820)],{center:1})]:[P([T('[ Add BDA certification ]',{it:1,color:'999999'})])]));
+  const doc=new Document({features:{updateFields:true},creator:C.tester||'',title:`${J.site||'Site'} ERRCS Commissioning Report`,
+    styles:{default:{document:{run:{font:'Calibri',size:22}}},paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{font:'Calibri',size:36,bold:true,color:BLUE}}]},
+    sections:[{properties:{page:{margin:{top:900,bottom:900,left:900,right:900}}},footers:{default:new Footer({children:[new Paragraph({alignment:AlignmentType.LEFT,children:[new TextRun({children:['Page ',PageNumber.CURRENT,' of ',PageNumber.TOTAL_PAGES],size:18,font:'Calibri'})]})]})},children:ch}]});
+  return Packer.toBlob(doc);
+}
+$('make').onclick=async()=>{const b=$('make');b.disabled=true;b.textContent='Building the report…';
+  try{const blob=await buildDocx();const name=`${(J.site||'Site').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')}_ERRCS_Commissioning_Report.docx`;
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Report downloaded. Open it in Word, check it, and save as PDF when you\'re happy.')}
+  catch(err){console.error(err);toast('Something went wrong building the report: '+err.message)}
+  b.disabled=false;b.textContent='Download Word report'};
+
+(async()=>{await dbOpen();
+  const ids=new Set();['loc','freq','tower','meas','sweep','mon','batt','photos','fcc'].forEach(s=>slotsFor(s).forEach(([id])=>ids.add(id)));Object.values(J.multi).flat().forEach(id=>ids.add(id));
+  for(const id of ids){const d=await dbGet(id);if(d)IMG[id]={url:URL.createObjectURL(d.blob),w:d.w,h:d.h,name:d.name}}
+  render()})();
+
+
+const bg=$('burger'),mn=$('menu');bg.onclick=e=>{e.stopPropagation();const o=!mn.classList.contains('open');mn.classList.toggle('open',o);bg.setAttribute('aria-expanded',o)};
+
+</script>
+</body>
+</html>

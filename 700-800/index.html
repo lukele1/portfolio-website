@@ -43,7 +43,7 @@ header h1{font-size:clamp(26px,5vw,34px);line-height:1.1;margin:14px 0 4px}
 header p{color:var(--muted);margin:0 0 12px;max-width:68ch}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
 .tools button{font:600 14px var(--sans);min-height:38px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
-.tools button.danger{color:var(--bad)}
+.tools button.danger{color:var(--bad)}.tools button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:12px}
 .legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
 .legend .l1::before{background:var(--in-bg);border:1.5px solid var(--in-line)} .legend .l2::before{background:var(--calc-bg);border:1.5px solid var(--calc)}
@@ -253,6 +253,7 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
     <a href="../700/">700 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../800/">800 MHz<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../uhf/">UHF<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../vhf/">VHF<small>Step by step: Anritsu hookups, readings, math</small></a><a href="../700-800/" aria-current="page">700/800 together<small>Dual-band BDA: both bands side by side</small></a><a href="../uhf-vhf/">UHF/VHF together<small>Dual-band BDA: both bands side by side</small></a>
     <div class="lbl">Practice and tools</div>
     <a href="../anritsu/">Anritsu step by step<small>Sweep, donor, isolation, antenna check</small></a>
+    <a href="../report/">Commissioning report<small>Turn a worksheet into the Word report</small></a>
     <a href="../practice/">Practice sites<small>A random site every refresh</small></a>
     <a href="../calc/">Link Budget Calculator<small>Just the math, with practice scenarios</small></a>
     <a href="../">Home</a>
@@ -265,6 +266,7 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
   <p>For dual-band BDAs. Go top to bottom. Physical stuff (site, cable lengths, splitters, building) is typed once. Anything that changes with frequency is worked per band, side by side. Type readings in the <b>yellow</b> boxes, the <b>blue</b> boxes fill in. This is just the paper math, the grid walk and talk test are what actually pass the system.</p>
 </header>
 <div class="tools">
+  <button type="button" id="mkreport" class="primary">Make report</button>
   <button type="button" id="print">Print / save PDF</button>
   <button type="button" class="danger" id="clear">Clear this sheet</button>
 </div>
@@ -689,6 +691,8 @@ render();
   document.addEventListener('input',e=>{const el=e.target;if(isNeg(el)&&/^[1-9.]/.test(el.value))el.value='-'+el.value;},true);
   document.addEventListener('focusin',e=>{const el=e.target;if(el.tagName==='INPUT'&&el.dataset.k&&/\.(gs|inj|pout|gOut)$/.test(el.dataset.k))el.setAttribute('inputmode','text');},true);
 })();
+
+$('mkreport').onclick=()=>{try{localStorage.setItem('report-src',JSON.stringify({page:PAIR.key,when:Date.now(),site:S.sh.site,bands:PAIR.bands.map((B,i)=>{const s=Object.assign({},S.sh,S.b[i]);return {name:B.name,key:B.key,s,chans:S.b[i].chans,o:calc(s,S.b[i].chans,S.sh.ants,B)}})}))}catch(e){}location.href='../report/'};
 </script>
 </body>
 </html>

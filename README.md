@@ -6,6 +6,7 @@ Luke Le, RF Technician. Homepage plus field tools for public safety BDA commissi
 - `practice/`: practice sites
 - `calc/`: link budget calculator
 - `functions/_middleware.js`: redirects the pages.dev address to lehongphuc.net so the email login can't be skipped
+- `report/`: commissioning report builder (Word file made in the browser, screenshots stay on the device)
 - `anritsu/`: Anritsu S412E step by step (sweep, donor, isolation, antenna check, output and noise)
 - `bda/`: the older all-in-one worksheet
 
