@@ -5,6 +5,7 @@ Luke Le, RF Technician. Homepage plus field tools for public safety BDA commissi
 - `700/`, `800/`, `uhf/`, `vhf/`: BDA Setting Gain, step by step per band
 - `practice/`: practice sites
 - `calc/`: link budget calculator
+- `functions/_middleware.js`: redirects the pages.dev address to lehongphuc.net so the email login can't be skipped
 - `anritsu/`: Anritsu S412E step by step (sweep, donor, isolation, antenna check, output and noise)
 - `bda/`: the older all-in-one worksheet
 
