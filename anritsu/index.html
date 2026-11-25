@@ -226,7 +226,7 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
 .explain b{color:var(--ink)}
 #m-src,[id^="m-src-"]{font-weight:600}
 .guide{border-color:var(--accent)}.guide summary{color:var(--accent)}.gl{padding-left:20px;margin:6px 0}.gl li{margin:5px 0}
-.gl{list-style:none;padding:0;margin:10px 0;counter-reset:st;display:grid;gap:10px}
+section.card{counter-reset:st}.gl{list-style:none;padding:0;margin:10px 0;display:grid;gap:10px}
 .gl li{counter-increment:st;position:relative;margin:0;padding:12px 14px 12px 54px;background:var(--soft);border:1px solid var(--line);border-radius:14px;line-height:1.5;cursor:pointer;transition:opacity .15s,border-color .15s}
 .gl li::before{content:counter(st);position:absolute;left:12px;top:11px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font:700 14px/30px var(--sans);text-align:center}
 .gl li:hover{border-color:var(--accent)}
@@ -236,6 +236,9 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
 .taphint{font-size:13px;color:var(--muted);margin:-6px 0 12px}
 @media (max-width:480px){.gl li{padding:11px 12px 11px 48px;border-radius:12px}.gl li::before{left:10px;width:28px;height:28px;line-height:28px}}
 @media print{.gl li{break-inside:avoid;opacity:1!important;background:none}}
+.pad{display:inline-block;font:700 11px var(--sans);letter-spacing:.02em;padding:2px 8px;border-radius:999px;margin-right:4px;vertical-align:1px}
+.pad.on{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn)}.pad.off{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok)}
+.padbox{border:1.5px solid var(--warn);border-radius:12px;padding:12px 14px;margin:12px 0;background:var(--warn-bg)}.padbox .t{font-weight:700;margin-bottom:6px}.padbox .tw{background:var(--card);border-radius:8px}
 .bandpick{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card);margin:4px 0 14px}
 .bandpick button{font:700 14px var(--sans);border:0;background:none;color:var(--muted);min-height:40px;padding:6px 16px;cursor:pointer}
 .bandpick button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
@@ -317,6 +320,9 @@ function render(){
   H.push(card(0,'Before you start',
     ex('Ports on the S412E:',`${P('VNA Port 1')} for sweeps. ${P('RF In')} for the spectrum analyzer. ${P('Sig gen out')} for the test tone (on some units it shares Port 1, check your front panel).`)+
     ex('Two rules that save the Anritsu:',`RF In gets damaged at <b>+33 dBm</b>, so anything coming out of the BDA goes through a <b>30 dB pad</b> first. And never put the generator into a cable that's still hooked to a powered BDA.`)+
+    `<div class="padbox"><div class="t">The 30 dB pad, step by step</div><div class="tw"><table class="grid stack"><tr><th>Step</th><th>Pad on RF In</th><th>External Loss</th></tr>`+
+    [['1 Sweep','No (sweep goes on VNA Port 1)','—'],['2 Donor reading','OFF','0 dB'],['3 Isolation','OFF','0 dB'],['4 Antenna check','No (Anritsu is the generator)','—'],['5 Output, gain step, noise','ON','30 dB']].map(r=>`<tr><td data-l="Step">${r[0]}</td><td data-l="Pad on RF In">${/ON/.test(r[1])&&!/OFF/.test(r[1])?'<span class="pad on">ON</span>':/OFF/.test(r[1])?'<span class="pad off">OFF</span>':r[1]}</td><td data-l="External Loss">${r[2]}</td></tr>`).join('')+
+    `</table></div><p class="note"><b>The rule:</b> pad on = External Loss 30. Pad off = External Loss 0. Change both together, every time. Why not leave the pad on for everything? Donor and isolation signals are weak (−40 to −100). The pad lifts your floor from about −110 to about −80, and a −90 isolation leak just disappears.</p></div>`+
     ex('Bring:',`cal kit (open / short / load) or the auto-cal module, a good test jumper, a 30 dB pad, DC block if you have one, charged battery, and a USB stick for the files.`)+
     ex('File names:',`${fn('TEST_LOCATION')}, for example ${fn('DTF_DONOR')}. Same pattern every job makes the closeout package easy.`)+
     `<div class="sitecode"><label for="site">Site code for file names</label>${inp('site','ABC12',{text:1}).replace('<input','<input id="site" autocapitalize="characters" maxlength="12"')}<small>Short, no spaces. Every file name on this page fills in with it.</small></div>`+
@@ -354,8 +360,8 @@ function render(){
     table(S.lines,'lines',[{k:'n',h:'Line',ph:'Donor',text:1},{k:'rl',h:'Worst RL (dB)',ph:'−18'},{k:'dtf',h:'Worst DTF peak (dB)',ph:'−25'},{k:'ft',h:'At (ft)',ph:'120'},{k:'ok',h:'Pass?',out:1}],'Add line'),'BDA OFF'));
 
   H.push(card(2,'Donor reading',
-    hook('Hook up',[`BDA off. Unhook the donor jumper at the BDA ${P('Donor')} port and connect it to ${P('RF In')}. No pad needed, the donor signal is weak (around −40 to −70).`])+
-    ol([`<b>Mode:</b> Shift → Mode (9) → <b>Spectrum Analyzer</b>.`,
+    hook('Hook up',[`BDA off. Unhook the donor jumper at the BDA ${P('Donor')} port and connect it to ${P('RF In')}. The donor signal is weak (around −40 to −70), so no pad.`])+
+    ol([`<span class="pad off">PAD OFF</span> <b>Take the 30 dB pad off RF In.</b> Amplitude → External Loss → <b>0 dB</b>. Look at the left side of the screen: it should <b>not</b> say "Ext Loss". If it still says 30, your reading comes out 30 dB too high.`,`<b>Mode:</b> Shift → Mode (9) → <b>Spectrum Analyzer</b>.`,
       `<b>Amplitude:</b> Ref Level <b>−20 dBm</b>, Input Atten <b>0 dB</b>, Detection <b>Peak</b>. Preamp off (on only if your channels are down near −90).`,
       `<b>Freq / Span:</b> ${big?`Start ${B.dlStart} MHz, Stop ${B.dlStop} MHz (the whole DL band fits).`:`Center = middle of your channels, Span 2–3 MHz (the full ${B.dl} band is too wide to see narrow channels).`}`,
       `<b>BW:</b> RBW <b>3 kHz</b>, VBW <b>1 kHz</b>.`,
@@ -367,14 +373,14 @@ function render(){
     ex("A big spike that isn't on your list:",`someone else's signal. Write down the frequency and level. If it's stronger than yours and close, tell your lead, it can overload the BDA.`)+
     (big?ex('Control channel:','a solid spike that\'s there every sweep, even without Max Hold.'):'')+
     table(S.ch,'ch',[{k:'f',h:'Channel (MHz)',ph:B.key==='VHF'?'155.475':B.key==='UHF'?'460.125':String(B.dlStart)+'.0125'},{k:'r',h:'Reading (dBm)',ph:'−45',neg:1},{k:'note',h:'Note',ph:'CC / voice',text:1}],'Add channel')+
-    `<div class="sumline" data-o="chsum"></div>`,'BDA OFF'));
+    `<div class="sumline" data-o="chsum"></div>`,'BDA OFF · PAD OFF'));
 
   H.push(card(3,'Isolation',
     hook('Hook up',[`BDA RF off, both cables unhooked from the BDA.`,`<b>DL (Read A):</b> ${P('Sig gen out')} → <b>donor</b> cable, ${P('RF In')} → <b>DAS</b> cable, DL test frequency.`,`<b>UL (Read B):</b> swap them. ${P('Sig gen out')} → <b>DAS</b> cable, ${P('RF In')} → <b>donor</b> cable, UL test frequency.`,`Both directions, every site. They're often a few dB different, and the worse one sets your gain.`])+
-    ol([`<b>Pick test frequencies</b> nobody's using. ${B.name}: ${ISOEX[B.key]}. Never an assigned channel.`,
+    ol([`<span class="pad off">PAD OFF</span> <b>Take the 30 dB pad off RF In.</b> Amplitude → External Loss → <b>0 dB</b>. Look at the left side of the screen: it should <b>not</b> say "Ext Loss". If it still says 30, your reading comes out 30 dB too high.`,`<b>Pick test frequencies</b> nobody's using. ${B.name}: ${ISOEX[B.key]}. Never an assigned channel.`,
       `<b>Check it's empty first.</b> Tone off, look at the test frequency. Flat floor = good.`,
       `<b>Tone:</b> CW at <b>0 dBm</b> (the S412E tops out there). If your unit can't run the generator and analyzer at once, use a separate signal generator.`,
-      `<b>Amplitude:</b> Ref Level <b>−30 dBm</b>, Input Atten <b>0 dB</b>, Detection Peak, no external loss.`,
+      `<b>Amplitude:</b> Ref Level <b>−30 dBm</b>, Input Atten <b>0 dB</b>, Detection Peak.`,
       `<b>Freq / Span:</b> Center = test frequency, Span <b>1 MHz</b>.`,
       `<b>BW:</b> RBW <b>3 kHz</b>, VBW <b>1 kHz</b>. Floor drops to about −110.`,
       `<b>Trace:</b> <b>Normal</b>, not Max Hold.`,
@@ -387,7 +393,7 @@ function render(){
     `<tr><td><b>DL</b> (Read A)<br><small>tone → donor cable, read the DAS cable</small></td><td data-l="Test freq (MHz)">${inp('iso.dlf',B.key==='700'?'772':B.key==='800'?'855':'test freq')}</td><td data-l="Injected (dBm)">${inp('iso.dlinj','0')}</td><td data-l="Read (dBm)">${inp('iso.a','−88',{neg:1})}</td><td class="out" data-l="Isolation (dB)" data-o="isoDL">—</td></tr>`+
     `<tr><td><b>UL</b> (Read B)<br><small>tone → DAS cable, read the donor cable</small></td><td data-l="Test freq (MHz)">${inp('iso.ulf',B.key==='700'?'802':B.key==='800'?'810':'test freq')}</td><td data-l="Injected (dBm)">${inp('iso.ulinj','0')}</td><td data-l="Read (dBm)">${inp('iso.b','−85',{neg:1})}</td><td class="out" data-l="Isolation (dB)" data-o="isoUL">—</td></tr></table></div>`+
     `<div class="tw"><table class="grid stack"><tr><th>Worse direction</th><th>Isolation to use (dB)</th><th>Max gain (dB)</th></tr><tr><td class="out" data-l="Worse direction" data-o="isoW">—</td><td class="out" data-l="Isolation to use" data-o="iso">—</td><td class="out" data-l="Max gain" data-o="mg">—</td></tr></table></div>`+
-    `<p class="note">Do <b>both</b> directions every time. Isolation = injected − read, for each one. Use the <b>lower</b> isolation of the two (that's the read closer to 0). Max gain = that − 20. Example: DL 88 dB, UL 72 dB → use 72 → 52 dB max gain for both DL and UL.</p>`,'RF OFF'));
+    `<p class="note">Do <b>both</b> directions every time. Isolation = injected − read, for each one. Use the <b>lower</b> isolation of the two (that's the read closer to 0). Max gain = that − 20. Example: DL 88 dB, UL 72 dB → use 72 → 52 dB max gain for both DL and UL.</p>`,'RF OFF · PAD OFF'));
 
   H.push(card(4,'Antenna verification (injection)',
     hook('Hook up',[`At the head end: ${P('Sig gen out')} → the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`,`CW tone at <b>0 dBm</b> on an <b>unused test frequency</b> in ${B.dl}. Ask your lead which one.`])+
@@ -402,7 +408,7 @@ function render(){
     `<div class="sumline" data-o="antsum"></div>`,'BDA OFF'));
 
   H.push(card(5,'Output, gain step and noise (BDA on)',
-    ex('Protect the Anritsu:',`BDA output → <b>30 dB pad</b> → ${P('RF In')}, every time. Then Amplitude → <b>External Loss 30 dB</b>. The screen shows "30.0 dB Ext Loss" under Ref Lvl when it's on.`)+
+    ol([`<span class="pad on">PAD ON</span> <b>30 dB pad on RF In</b> before anything touches the BDA output. Then Amplitude → External Loss → <b>30 dB</b>. Check the screen says <b>"30.0 dB Ext Loss"</b> under Ref Lvl. Now the marker shows the real BDA level, <b>don't add or subtract anything</b>.`])+
     `<p class="explain"><b>A. Output per channel</b> (BDA ${P('DAS / Server')} → pad → ${P('RF In')})</p>`+
     ol([`Ref Level <b>+20 dBm</b> (+30 if spikes hit the top), Input Atten <b>10 dB</b> (20 at Ref +30), Peak.`,
       big?`Start ${B.dlStart}, Stop ${B.dlStop} MHz.`:`Center on a channel, Span 1 MHz.`,
@@ -411,10 +417,10 @@ function render(){
     `<p class="explain"><b>B. Gain step</b></p>`+
     ol([`One channel, note the output, save ${fn('GAIN_STEP_1')}. Raise BDA gain <b>10 dB</b>, bump Ref Level up 10, save ${fn('GAIN_STEP_2')}.`,`Output should go up <b>about 10 dB</b> (example: +4.6 → +14.1). A lot less = the amp is squashing. Back it off, then set gain back to the plan.`])+
     `<p class="explain"><b>C. UL noise</b> (BDA ${P('Donor')} → pad → ${P('RF In')}, no radios keyed)</p>`+
-    ol([`Ref Level −20, Atten 0, <b>External Loss 30 still on</b>.`,`Wide span, ${big?'about 40 MHz around the band':'50 MHz centered on the band'}. RBW 10 kHz, VBW 3 kHz, Average.`,`Screenshot BDA on, then RF off. ${fn('UL_NOISE_ON')} / ${fn('UL_NOISE_OFF')}.`])+
+    ol([`Pad still on, <b>External Loss still 30</b>. Ref Level −20, Atten 0.`,`Wide span, ${big?'about 40 MHz around the band':'50 MHz centered on the band'}. RBW 10 kHz, VBW 3 kHz, Average.`,`Screenshot BDA on, then RF off. ${fn('UL_NOISE_ON')} / ${fn('UL_NOISE_OFF')}.`])+
     ex('Good:',`a flat hump across the band when it's on, flat floor when it's off. Top of the hump under <b>−43 dBm</b> (FCC) with the pad entered. Spikes on the hump or past the band edges = stop and find out why.`)+
     table(S.out,'out',[{k:'f',h:'Channel (MHz)',ph:'155.310'},{k:'p',h:'Output (dBm)',ph:'+9'},{k:'note',h:'Note',ph:'gain step +9.5',text:1}],'Add channel')+
-    `<div class="tw"><table class="grid stack"><tr><th>UL noise, top of hump (dBm)</th><th>Under −43?</th></tr><tr><td data-l="UL noise, top of hump (dBm)">${inp('noise','−60',{neg:1})}</td><td class="out" data-l="Under −43?" data-o="noiseok">—</td></tr></table></div>`,'BDA ON'));
+    `<div class="tw"><table class="grid stack"><tr><th>UL noise, top of hump (dBm)</th><th>Under −43?</th></tr><tr><td data-l="UL noise, top of hump (dBm)">${inp('noise','−60',{neg:1})}</td><td class="out" data-l="Under −43?" data-o="noiseok">—</td></tr></table></div>`,'BDA ON · PAD ON'));
 
   $('app').innerHTML=H.join('');update();
 }
