@@ -112,10 +112,10 @@ button.add{font:600 13.5px var(--sans);border:1px dashed var(--line);background:
 .chk input{width:20px;height:20px;min-height:0;flex:none;margin-top:2px;accent-color:var(--ok)}
 /* result bar */
 #bar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.1)}
-#bar .in{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:7px max(12px,env(safe-area-inset-left,0px)) calc(7px + env(safe-area-inset-bottom,0px))}
+#bar .in{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:7px max(12px,env(safe-area-inset-left,0px)) calc(7px + env(safe-area-inset-bottom,0px))}
 #bar div{text-align:center;font-size:11px;color:var(--muted);line-height:1.2}
 #bar b{display:block;font:600 15px var(--mono);color:var(--ink)}
-#bar .ok b{color:var(--ok)} #bar .bad b{color:var(--bad)}
+#bar .ok b{color:var(--ok)} #bar .bad b{color:var(--bad)}#bar .warn b{color:#B7791F}@media (max-width:640px){#bar .rg{display:none}}@media (max-width:420px){#bar b{font-size:13px}#bar div{font-size:10px}#bar .in{gap:2px;padding-left:6px;padding-right:6px}}
 footer{font-size:13px;color:var(--muted);margin-top:20px}
 :focus-visible{outline:2px solid var(--calc);outline-offset:2px}
 @media print{
@@ -192,7 +192,7 @@ button.add{font-weight:700}
 #bar{background:var(--panel);border-top:2px solid var(--accent);box-shadow:none}
 #bar div{color:rgba(228,235,241,.62)}
 #bar b{color:#fff}
-#bar .ok b{color:#7BD88F} #bar .bad b{color:#FF8A80}
+#bar .ok b{color:#7BD88F} #bar .bad b{color:#FF8A80}#bar .warn b{color:#FFD166}
 footer{line-height:1.6}
 .jmsg{align-self:center;font-size:13.5px;font-weight:600;color:var(--ok)}
 table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
@@ -226,6 +226,16 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
 .explain b{color:var(--ink)}
 #m-src,[id^="m-src-"]{font-weight:600}
 .guide{border-color:var(--accent)}.guide summary{color:var(--accent)}.gl{padding-left:20px;margin:6px 0}.gl li{margin:5px 0}
+.gl{list-style:none;padding:0;margin:10px 0;counter-reset:st;display:grid;gap:10px}
+.gl li{counter-increment:st;position:relative;margin:0;padding:12px 14px 12px 54px;background:var(--soft);border:1px solid var(--line);border-radius:14px;line-height:1.5;cursor:pointer;transition:opacity .15s,border-color .15s}
+.gl li::before{content:counter(st);position:absolute;left:12px;top:11px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font:700 14px/30px var(--sans);text-align:center}
+.gl li:hover{border-color:var(--accent)}
+.gl li:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gl li.done{opacity:.55}.gl li.done::before{content:"✓";background:var(--ok)}
+.gl li b:first-child{display:inline}
+.taphint{font-size:13px;color:var(--muted);margin:-6px 0 12px}
+@media (max-width:480px){.gl li{padding:11px 12px 11px 48px;border-radius:12px}.gl li::before{left:10px;width:28px;height:28px;line-height:28px}}
+@media print{.gl li{break-inside:avoid;opacity:1!important;background:none}}
 .bandpick{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card);margin:4px 0 14px}
 .bandpick button{font:700 14px var(--sans);border:0;background:none;color:var(--muted);min-height:40px;padding:6px 16px;cursor:pointer}
 .bandpick button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
@@ -266,6 +276,7 @@ code.fn{white-space:nowrap}table.names td:nth-child(2){white-space:nowrap}
   <button type="button" class="danger" id="clear">Clear this sheet</button>
 </div>
 <div class="bandpick" id="bandpick" role="group" aria-label="Band"><button data-b="700">700</button><button data-b="800">800</button><button data-b="UHF">UHF</button><button data-b="VHF">VHF</button></div>
+<p class="taphint">Each bubble is one step. Tap it when it's done and it turns into a check.</p>
 <nav class="jump" aria-label="Steps"><a href="#a-step-1">1 Sweep</a><a href="#a-step-2">2 Donor</a><a href="#a-step-3">3 Isolation</a><a href="#a-step-4">4 Antenna check</a><a href="#a-step-5">5 Output and noise</a></nav>
 <div id="app"></div>
 <footer>Menus can be named a little differently by firmware version. Check against your AHJ rules, the design and your BDA manual.</footer>
@@ -281,7 +292,7 @@ const KEY='anritsu-sheet';
 const $=id=>document.getElementById(id);
 const P=t=>`<span class="port">${t}</span>`;
 const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-const blank=()=>({band:'700',lines:[{n:'Donor'},{n:'DAS'}],ch:[{},{},{}],iso:{inj:'0'},ants:[{},{},{}],out:[{},{}],chk:{}});
+const blank=()=>({done:{},band:'700',lines:[{n:'Donor'},{n:'DAS'}],ch:[{},{},{}],iso:{inj:'0'},ants:[{},{},{}],out:[{},{}],chk:{}});
 let S;try{S=Object.assign(blank(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=blank()}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const get=p=>p.split('.').reduce((o,k)=>o==null?o:o[k],S);
@@ -293,11 +304,13 @@ const SC=()=>(String(S.site||'').trim().toUpperCase().replace(/[^A-Z0-9-]+/g,'')
 const fn=x=>`<code class="fn" data-fn="${x}">${SC()}_${x}</code>`;
 const card=(n,title,body,tag='')=>`<section class="card" id="a-step-${n}"><h2><span class="n">${n}</span>${title}${tag?`<span class="tag${/OFF/.test(tag)?' off':''}">${tag}</span>`:''}</h2>${body}</section>`;
 const hook=(t,items)=>`<div class="hook"><div class="t">${t}</div><ol>${items.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;
-const ol=items=>`<ol class="gl">${items.map(x=>`<li>${x}</li>`).join('')}</ol>`;
+let GI=0;
+const ol=items=>`<ol class="gl">${items.map(x=>{const d='d'+(GI++);return `<li data-d="${d}" class="${S.done&&S.done[d]?'done':''}" tabindex="0">${x}</li>`}).join('')}</ol>`;
 const ex=(b,t)=>`<p class="explain"><b>${b}</b> ${t}</p>`;
 const table=(arr,key,cols,addLbl)=>`<div class="tw"><table class="grid stack"><tr>${cols.map(c=>`<th>${c.h}</th>`).join('')}<th></th></tr>${arr.map((r,i)=>`<tr>${cols.map(c=>c.out?`<td class="out" data-l="${c.h}" data-o="${key}.${i}.${c.k}">—</td>`:`<td data-l="${c.h}">${inp(`${key}.${i}.${c.k}`,c.ph==='A1'?'A'+(i+1):c.ph,c)}</td>`).join('')}<td class="delc"><button class="del" data-del="${key}.${i}" aria-label="Remove row">×</button></td></tr>`).join('')}</table></div><button class="add" data-add="${key}">+ ${addLbl}</button>`;
 
 function render(){
+  GI=0;
   const B=BANDS[S.band], big=B.key==='700'||B.key==='800';
   document.querySelectorAll('#bandpick button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.b===S.band));
   const H=[];
@@ -425,7 +438,9 @@ document.addEventListener('input',e=>{const el=e.target;
   if(el.dataset.neg&&/^[1-9.]/.test(el.value))el.value='-'+el.value;
   if(el.dataset.k){setP(el.dataset.k,el.value);save();update();if(el.dataset.k==='site')document.querySelectorAll('.fn').forEach(c=>c.textContent=c.dataset.fn?SC()+'_'+c.dataset.fn:SC())}
   if(el.dataset.chk){S.chk[el.dataset.chk]=el.checked;save()}});
-document.addEventListener('click',e=>{const t=e.target;
+const tick=li=>{S.done=S.done||{};const d=li.dataset.d;S.done[d]=!S.done[d];li.classList.toggle('done',!!S.done[d]);save()};
+document.addEventListener('keydown',e=>{const li=e.target.closest&&e.target.closest('ol.gl li');if(li&&e.target===li&&(e.key==='Enter'||e.key===' ')){e.preventDefault();tick(li)}});
+document.addEventListener('click',e=>{const t=e.target;{const li=t.closest&&t.closest('ol.gl li');if(li&&!t.closest('a,input,button,code.fn'))tick(li)}
   if(t.dataset.add){S[t.dataset.add].push({});save();render()}
   if(t.dataset.del){const [k,i]=t.dataset.del.split('.');S[k].splice(+i,1);save();render()}
   if(t.dataset.b){S.band=t.dataset.b;save();render()}});
