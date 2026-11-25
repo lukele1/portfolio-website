@@ -376,7 +376,7 @@ function render(){
     `<div class="sumline" data-o="chsum"></div>`,'BDA OFF · PAD OFF'));
 
   H.push(card(3,'Isolation',
-    hook('Hook up',[`BDA RF off, both cables unhooked from the BDA.`,`<b>DL (Read A):</b> ${P('Sig gen out')} → <b>donor</b> cable, ${P('RF In')} → <b>DAS</b> cable, DL test frequency.`,`<b>UL (Read B):</b> swap them. ${P('Sig gen out')} → <b>DAS</b> cable, ${P('RF In')} → <b>donor</b> cable, UL test frequency.`,`Both directions, every site. They're often a few dB different, and the worse one sets your gain.`,`<b>Tape the donor cable red and the DAS cable blue</b> before you start. DL = tone on red, read blue. UL = tone on blue, read red. No mix-ups when you swap.`])+
+    hook('Hook up',[`BDA RF off, both cables unhooked from the BDA.`,`<b>DL (Read A):</b> ${P('Sig gen out')} → <b>donor</b> cable, ${P('RF In')} → <b>DAS</b> cable, DL test frequency.`,`<b>UL (Read B):</b> swap them. ${P('Sig gen out')} → <b>DAS</b> cable, ${P('RF In')} → <b>donor</b> cable, UL test frequency.`,`Both directions, every site. They're often a few dB different, and the worse one sets your gain.`])+
     ol([`<span class="pad off">PAD OFF</span> <b>Take the 30 dB pad off RF In.</b> Amplitude → External Loss → <b>0 dB</b>. Look at the left side of the screen: it should <b>not</b> say "Ext Loss". If it still says 30, your reading comes out 30 dB too high.`,`<b>Pick test frequencies</b> nobody's using. ${B.name}: ${ISOEX[B.key]}. Never an assigned channel.`,
       `<b>Check it's empty first.</b> Tone off, look at the test frequency. Flat floor = good.`,
       `<b>Tone:</b> CW at <b>0 dBm</b> (the S412E tops out there). If your unit can't run the generator and analyzer at once, use a separate signal generator.`,

@@ -475,7 +475,7 @@ function render(){
       `<b>Read A:</b> Anritsu ${P('Sig gen out')} → <b>donor</b> cable. Anritsu ${P('RF In')} → <b>DAS</b> cable. DL test frequency.`,
       `<b>Read B:</b> swap the two cables. UL test frequency.`,
       `Use unused test frequencies, not assigned channels. The <b>stronger read (closer to 0)</b> is the worse one. Or use the BDA's built-in isolation test.`])+
-    IG([B])+`<p class="note"><b>Tip:</b> tape the donor cable <b style="color:#c0392b">red</b> and the DAS / service cable <b style="color:#2f6fb5">blue</b> before you start. Then Read A is always tone on red, read blue. Read B is tone on blue, read red. No mix-ups when you swap.</p>`+
+    IG([B])+
     `<div class="fields">${fld('readA','Read A: downlink direction (dBm)','−92')}${fld('readB','Read B: uplink direction (dBm)','−90')}</div><p class="note">${isoNote(BAND)}</p>`+
     eq('Isolation = Injected − Read (worse one)',[['','Injected (dBm)','in','inj'],['−','Read (worse)','calc','readW']],'Isolation (dB)','iso')+
     eq('Max gain = Isolation − 20',[['','Isolation','calc','iso'],['−','Safety margin','fixed','20']],'Max gain (dB)','mg')+verdictBox('iso'),'RF OFF'));
