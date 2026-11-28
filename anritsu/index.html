@@ -291,7 +291,8 @@ const BANDS={
 "800":{"key":"800","name":"800 MHz","dl":"851–861 MHz","sweep":"about 800–870 MHz","dlStart":851,"dlStop":861},
 "UHF":{"key":"UHF","name":"UHF","dl":"450–470 MHz","sweep":"about 440–480 MHz","dlStart":450,"dlStop":470},
 "VHF":{"key":"VHF","name":"VHF","dl":"150–174 MHz","sweep":"about 140–180 MHz","dlStart":150,"dlStop":174}};
-const ISOEX={'700':'772 MHz for A, 802 MHz for B','800':'855 MHz for A, 810 MHz for B','UHF':'an unused DL frequency for A, and its UL pair off the RX column for B','VHF':'an unused DL frequency for A, and its UL pair off the RX column for B'};
+const ISOEX={'700':'772 MHz for A, 802 MHz for B','800':'855 MHz for A, 810 MHz for B','UHF':'460.000 MHz for A, 465.000 MHz for B (check both are empty first)','VHF':'154.000 MHz for A and B (check it\'s empty first)'};
+const TESTF={'700':{dl:'772.000',ul:'802.000'},'800':{dl:'855.000',ul:'810.000'},'UHF':{dl:'460.000',ul:'465.000'},'VHF':{dl:'154.000',ul:'154.000'}};
 const KEY='anritsu-sheet';
 const $=id=>document.getElementById(id);
 const P=t=>`<span class="port">${t}</span>`;
@@ -397,7 +398,7 @@ function render(){
     `<p class="note">Do <b>both</b> directions every time. Isolation = injected − read, for each one. Use the <b>lower</b> isolation of the two (that's the read closer to 0). Max gain = that − 20. Example: DL 88 dB, UL 72 dB → use 72 → 52 dB max gain for both DL and UL.</p>`,'RF OFF · PAD OFF'));
 
   H.push(card(4,'Antenna verification (injection)',
-    hook('Hook up',[`At the head end: ${P('Sig gen out')} → the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`,`CW tone at <b>0 dBm</b> from the Anritsu, or <b>+10 dBm</b> from a signal generator if you have one that goes that high. Use an <b>unused test frequency</b> in ${B.dl}. Ask your lead which one.`])+
+    hook('Hook up',[`At the head end: ${P('Sig gen out')} → the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`,`CW tone at <b>0 dBm</b> from the Anritsu, or <b>+10 dBm</b> from a signal generator if you have one that goes that high. Use an <b>unused test frequency</b> in ${B.dl}, like <b>${TESTF[B.key].dl} MHz</b> (our standard: 700 → 772.000, 800 → 855.000, UHF → 460.000, VHF → 154.000). Ask your lead which one.`])+
     ol([`<b>Mode:</b> Shift → Mode (9) → <b>Signal Generator</b> (CW). Output <b>0.0 dBm</b> (the Anritsu tops out here), frequency = your test frequency, RF output <b>On</b>. Using a signal generator at +10 instead? Set it to +10 and put <b>10</b> in the Injected box below.`,
       `<b>PCTEL:</b> set it to scan the same test frequency.`,
       `<b>Walk:</b> go to each service antenna. Hold the PCTEL antenna at the same spot every time, right at the antenna if you can reach it, or hip high straight under it.`,
@@ -422,7 +423,7 @@ function render(){
     ol([`Pad still on, <b>External Loss still 30</b>. Ref Level −20, Atten 0.`,`Wide span, ${big?'about 40 MHz around the band':'50 MHz centered on the band'}. RBW 10 kHz, VBW 3 kHz, Average.`,`Screenshot BDA on, then RF off. ${fn('UL_NOISE_ON')} / ${fn('UL_NOISE_OFF')}.`])+
     ex('Good:',`a flat hump across the band when it's on, flat floor when it's off. Top of the hump under <b>−43 dBm</b> (FCC) with the pad entered. Spikes on the hump or past the band edges = stop and find out why.`)+
     `<p class="explain"><b>D. Max uplink output</b> (signal generator → BDA ${P('DAS / Server')} port, BDA ${P('Donor')} → pad → ${P('RF In')})</p>`+
-    ol([`<b>Tone in:</b> signal generator into the BDA DAS / server port on an <b>unused UL test frequency</b>${big?` (${B.key==='700'?'about 802 MHz':'about 810 MHz'})`:''}. Start around −50 dBm.`,
+    ol([`<b>Tone in:</b> signal generator into the BDA DAS / server port on an <b>unused UL test frequency</b>, like <b>${TESTF[B.key].ul} MHz</b> on ${B.name} (our standard: 700 → 802.000, 800 → 810.000, UHF → 465.000, VHF → 154.000). Check it's empty first. Start around −50 dBm.`,
       `<b>Anritsu:</b> pad on, External Loss 30. Ref Level <b>+30 dBm</b>, Input Atten <b>20 dB</b>, Center = the UL test frequency, Span 1 MHz, RBW 3 kHz, VBW 1 kHz, Max Hold, Marker 1 on the tone.`,
       `<b>Turn the tone up</b> a few dB at a time. The output climbs with it, then stops. Where it stops is the <b>max uplink output</b> (the BDA's UL limit). Don't keep pushing past that.`,
       `<b>Save:</b> ${fn('UL_MAX')}. Write the marker reading below.`])+
