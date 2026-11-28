@@ -141,16 +141,18 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
 .band{height:.62in;background:linear-gradient(100deg,var(--blue) 0 55%,#cfe2f5 100%);display:flex;align-items:center;justify-content:flex-end;padding:0 .4in;color:#0b3d6e;font:800 18px Carlito,Calibri,Arial;letter-spacing:.04em}
 .pt{font:800 15px Carlito,Calibri,Arial;color:var(--blue);letter-spacing:.06em;margin:.12in 0 .14in;padding-bottom:4px;border-bottom:3px solid var(--blue)}
 .pb{flex:1;text-align:center;font-size:12.5px;line-height:1.35}
-.pf{font-size:10.5px;color:#333;margin-top:.15in}
+.pf{font-size:10.5px;color:#333;margin-top:.15in;text-align:center}
 .pb h4{font-size:13px;margin:14px 0 6px}
 .t{width:100%;border-collapse:collapse;margin:8px auto 12px;table-layout:fixed}
 .t th,.t td{border:1px solid #000;padding:4px 6px;text-align:center;vertical-align:middle;word-wrap:break-word}
 .t th{background:#f2f2f2;font-weight:700}
 .t td.k{font-weight:700}
 .t.si td.l{width:50%;text-align:center}.t.si td.l p{margin:6px 0}.t.si td.r{width:50%}
-.t.al td.pf{font-weight:700}.t.al td.pass{background:#e8f5e9}.t.al td.fail{background:#fdecea}
+.t.al td.pfc{font-weight:700}.t.al td.pass{background:#e8f5e9}.t.al td.fail{background:#fdecea}
 .cyc{border:0;background:none;font:700 12px Carlito,Calibri,Arial;cursor:pointer;min-width:60px;min-height:24px;color:inherit}
 .t.gn td.calc{font-weight:600}
+.t.uc th{font-size:10.5px}.t.uc td{font-size:11.5px}.t.uc sup{font-size:8px;margin-left:1px}
+.fn{font-size:11px;margin:2px auto 14px}
 .frh{font-weight:700;white-space:pre-line;margin:6px 0}.frl{white-space:pre-line}
 .para{text-align:center;max-width:6.6in;margin:4px auto 10px}
 .ed{outline:none;border-radius:3px;min-width:1.5em;display:inline-block;white-space:pre-line}
@@ -279,7 +281,8 @@ function band(i){
   const ch=(B.chans||[]).map(c=>({f:num(c.f),p:num(c.p),cc:c.cc})).filter(c=>isN(c.f));
   const meas=ch.filter(c=>isN(c.p));const ref=meas.find(c=>c.cc==='Y')||meas.slice().sort((a,b)=>b.p-a.p)[0]||ch[0]||null;
   const fs=ref?fspl(ref.f,o.mi):null;const cpl=(isN(fs)&&isN(o.gd)&&isN(o.loss))?fs-o.gd+o.loss:null;
-  return {i,name:B.name,key:B.key,o,s,ch,ref,fs,cpl,mi:o.mi,gd:o.gd,loss:o.loss,dlgui:o.dlgui,ulgui:o.ulgui,short:B.key==='VHF'?'150':B.key==='UHF'?'450':B.key};
+  const cplUL=(isN(o.fspl)&&isN(o.gd)&&isN(o.loss))?o.fspl-o.gd+o.loss:null;const dlout=isN(o.pout)?o.pout:o.strongOut;
+  return {i,name:B.name,key:B.key,o,s,ch,ref,fs,cpl,cplUL,dlout,tx:o.radio,ulgain:o.ulset,ulmax:o.ulmax,mi:o.mi,gd:o.gd,loss:o.loss,dlgui:o.dlgui,ulgui:o.ulgui,short:B.key==='VHF'?'150':B.key==='UHF'?'450':B.key};
 }
 const bandsAll=()=>BANDS().map((b,i)=>band(i));
 const bandList=()=>{const n=bandsAll().map(b=>b.name);return n.length?n.join(' and '):''};
@@ -293,6 +296,7 @@ function E(key,auto='',o={}){
   return `<span class="ed${o.block?' blk':''}${empty?' empty':''}" contenteditable="true" spellcheck="false" data-e="${o.C?'C':o.ov?'O':'J'}:${key}" data-ph="${esc(ph)}"${o.ov?` data-auto="${esc(auto)}"`:''}>${esc(v)}</span>`;
 }
 const A=(key,auto,o={})=>E(key,auto,Object.assign({ov:1},o)); // auto-filled, editable
+const A_=A;
 
 // ---------- picture boxes ----------
 function slot(id,defCap,o={}){
@@ -354,8 +358,20 @@ function pages(){
   // coverage pages
   const cov=listIds('cov');const covT=`${bs.map(b=>b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz').join(' & ')||'SIGNAL'} – SIGNAL COVERAGE READINGS`.toUpperCase();
   if(cov.length||!PRINT){(cov.length?cov:[null]).forEach((id,k)=>{pg(k===0?covT:'',(id?slot(id,'',{nocap:1,page:1,list:'J|cov'}):'<p class="tip noprint">Add each page of the PCTEL / SeeHawk coverage report as a picture (export or screenshot each page). One picture per page.</p>')+(k===(cov.length||1)-1?addBtn('cov','Add coverage report page'):''),{title:k===0?covT:''})})}
+  // uplink calculations
+  pg('Uplink Calculations',(bs.length?bs:[{i:0,name:'',short:''}]).map(b=>{
+    const g=k=>num(J.ov[k+b.i])??null;
+    const dlo=g('udl')??b.dlout,tx=g('utx')??b.tx,ug=g('ug')??b.ulgain,cpl=g('ucpl')??b.cplUL,mx=g('umx')??b.ulmax;
+    const A=num(J['ulcA'+b.i]),Bv=num(J['ulcB'+b.i]),Cv=num(J['ulcC'+b.i]);
+    const lerp=(x,y,f)=>isN(x)&&isN(y)?x+(y-x)*f:null;
+    const dl=[A,lerp(A,Bv,1/3),lerp(A,Bv,2/3),Bv,lerp(Bv,Cv,1/3),lerp(Bv,Cv,2/3),Cv];
+    const lab=['A','','','B','','','C'];const key=['ulcA','','','ulcB','','','ulcC'];
+    const rows=dl.map((d,r)=>{const uin=isN(d)&&isN(dlo)&&isN(tx)?d-dlo+tx:null;const raw=isN(uin)&&isN(ug)?uin+ug:null;const uo=isN(raw)?(isN(mx)?Math.min(raw,mx):raw):null;const cu=isN(uo)&&isN(cpl)?uo-cpl:null;
+      return `<tr><td><b>${key[r]?E(key[r]+b.i,'',{ph:lab[r]==='A'?'max':lab[r]==='B'?'avg':'min'}):fd(isN(d)?Math.round(d*100)/100:null)}${lab[r]?`<sup>${lab[r]}</sup>`:''}</b></td><td>${r===0?A_('udl'+b.i,fd(dlo)):fd(dlo)}</td><td>${r===0?A_('utx'+b.i,fd(tx)):fd(tx)}</td><td>${f2(uin)}</td><td>${r===0?A_('ug'+b.i,fd(ug)):fd(ug)}</td><td>${f2(uo)}</td><td>${r===0?A_('ucpl'+b.i,f2(cpl)):f2(cpl)}</td><td><b>${f2(cu)}</b></td></tr>`}).join('');
+    return `<h4>${esc(b.short==='150'?'150MHz':b.short==='450'?'450MHz':b.short?b.short+'MHz':'')}</h4><table class="t uc"><tr><th>Measured Downlink (dBm)</th><th>BDA DL Output (dBm)</th><th>Mobile Radio Tx Power (dBm)</th><th>BDA UL Input (dBm)</th><th>BDA UL Gain (dB)</th><th>BDA UL Output (dBm)</th><th>Calculated Path Loss (dB)</th><th>Calculated Uplink (dBm)</th></tr>${rows}</table>
+    <p class="fn">BDA UL max output: ${A_('umx'+b.i,fd(mx))} dBm (UL output stops here)<br><i>A: Maximum Measured Downlink during the Commissioning Test &nbsp; B: Average Measured Downlink &nbsp; C: Minimum Measured Downlink</i></p>`}).join('')+(PRINT?'':'<p class="tip noprint">Type the max (A), average (B) and min (C) downlink from your 20-grid walk. The rows between are filled in evenly. DL output, Tx power, UL gain, path loss and UL max come from the worksheet; click one to change it.</p>'),{title:'UPLINK CALCULATIONS'});
   // monitoring
-  pg('System Monitoring',bs.length?bs.map(b=>{const al=alarms(b.i,b.short);return `<h4>${esc(b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz')} Alarms</h4><table class="t al"><tr><th>ERRCS Alarm</th><th>ERRCS Supervisory Description</th><th>Annunciator</th><th>FACP</th></tr>${al.map((a,r)=>`<tr><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.a">${esc(a.a)}</span></td><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.l">${esc(a.l)}</span></td>${['an','fa'].map(k=>`<td class="pf ${a[k]==='PASS'?'pass':a[k]==='FAIL'?'fail':''}"><button class="cyc" data-cyc="${b.i}.${r}.${k}">${a[k]||'—'}</button></td>`).join('')}</tr>`).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-allpass="${b.i}">Mark all PASS</button>`}`}).join(''):'<p class="tip">Make the report from a worksheet to fill in the alarm tables.</p>',{title:'SYSTEM MONITORING'});
+  pg('System Monitoring',bs.length?bs.map(b=>{const al=alarms(b.i,b.short);return `<h4>${esc(b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz')} Alarms</h4><table class="t al"><tr><th>ERRCS Alarm</th><th>ERRCS Supervisory Description</th><th>Annunciator</th><th>FACP</th></tr>${al.map((a,r)=>`<tr><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.a">${esc(a.a)}</span></td><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.l">${esc(a.l)}</span></td>${['an','fa'].map(k=>`<td class="pfc ${a[k]==='PASS'?'pass':a[k]==='FAIL'?'fail':''}"><button class="cyc" data-cyc="${b.i}.${r}.${k}">${a[k]||'—'}</button></td>`).join('')}</tr>`).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-allpass="${b.i}">Mark all PASS</button>`}`}).join(''):'<p class="tip">Make the report from a worksheet to fill in the alarm tables.</p>',{title:'SYSTEM MONITORING'});
   // measured gain
   pg('Measured System Gain',bs.length?bs.map(b=>{const g=gain(b.i,b);const tb=(dir,rows,gui)=>`<table class="t gn"><tr><th colspan="5">${bs.length>1?esc(b.name)+' ':''}${dir}</th></tr><tr><th>Freq (MHz)</th><th>Input (dBm)</th><th>Measured</th><th>Gain</th><th>GUI</th></tr>${rows.map((r,k)=>{const gn=(isN(num(r.out))&&isN(num(r.in)))?num(r.out)-num(r.in):null;return `<tr><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.f" data-ph="MHz">${esc(r.f)}</span></td><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.in">${esc(r.in)}</span></td><td><span class="ed${r.out===''?' empty':''}" contenteditable="true" data-gn="${b.i}.${dir}.${k}.out" data-ph="type">${esc(r.out)}</span></td><td class="calc" data-gcalc="${b.i}.${dir}.${k}">${fd(gn)}</td><td>${fd(gui)}</td></tr>`}).join('')}</table>`;return tb('Downlink',g.dl,b.dlgui)+tb('Uplink',g.ul,b.ulgui)}).join('')+(PRINT?'':'<p class="tip noprint">Type what you measured at the output for each frequency. Gain = measured − input. GUI is the gain setting from the worksheet.</p>'):'<p class="tip">Make the report from a worksheet to fill this in.</p>',{title:'MEASURED SYSTEM GAIN'});
   // GUI screenshots 2/page
@@ -379,12 +395,14 @@ function gain(i,b){
 }
 
 function render(){
-  const P=pages();const total=P.length;
+  const ae=document.activeElement;let fk=null;if(ae&&ae.dataset){for(const k of ['e','gn','cap','eq','al']){if(ae.dataset[k]){fk=`[data-${k}="${ae.dataset[k]}"]`;break}}}
+  RENDERING=true;const P=pages();const total=P.length;
   $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}" id="pg-${k+1}"><header class="ph"><img class="banner" src="${IMG.keep_banner?IMG.keep_banner.url:'banner.png'}" alt=""></header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${k+1} of ${total}</footer></section>`).join('');
   // TOC
   const secs=[];P.forEach((p,k)=>{if(p.sec&&k>1)secs.push([p.sec,k+1])});
   $('toc').innerHTML=secs.map(([s,n])=>`<a class="tl" href="#pg-${n}"><span>${esc(s.toUpperCase())}</span><i></i><span>${n}</span></a>`).join('');
-  status();
+  status();RENDERING=false;
+  if(fk){const el=document.querySelector(fk);if(el){el.focus();const r=document.createRange();r.selectNodeContents(el);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r)}}
 }
 function status(){
   $('srcbox').innerHTML=SRC?`<b>Numbers from:</b> ${esc(BANDS().map(b=>b.name).join(' + '))} worksheet${SRC.site&&SRC.site.name?', '+esc(SRC.site.name):''}, taken ${new Date(SRC.when).toLocaleString()}. Changed the worksheet? Hit <b>Make report</b> there again. What you typed here stays.`:'<b>No worksheet numbers yet.</b> Open your band worksheet and hit <b>Make report</b> at the top. You can still fill this in by hand.';
@@ -395,10 +413,11 @@ function status(){
 const picker=document.createElement('input');picker.type='file';picker.accept='image/png,image/jpeg';picker.hidden=true;document.body.appendChild(picker);let target=null;
 picker.onchange=async()=>{if(picker.files[0]&&target){await setImg(target,picker.files[0]);if(target==='keep_banner')C.bannerOn=true;save();render()}picker.value=''};
 document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.classList.contains('ed'))t.classList.remove('empty')});
-document.addEventListener('focusout',e=>{const t=e.target;if(!t.classList||!t.classList.contains('ed'))return;
+let RENDERING=false;
+document.addEventListener('focusout',e=>{const t=e.target;if(RENDERING||!t.isConnected||!t.classList||!t.classList.contains('ed'))return;
   if(t.dataset.e&&t.dataset.e.startsWith('O:')&&!t.textContent.trim()){t.textContent=t.dataset.auto||''}
   if(!t.textContent.trim())t.classList.add('empty');
-  if(t.dataset.gn||t.dataset.e==='J:erp0'||/^J:erp/.test(t.dataset.e||'')||/^O:ccpl/.test(t.dataset.e||''))render()});
+  if(t.dataset.gn||/^(J:erp|J:ulc|O:)/.test(t.dataset.e||''))setTimeout(render,0)});
 document.addEventListener('input',e=>{const t=e.target;const v=t.innerText.replace(/ /g,' ').replace(/\n$/,'');
   if(t.dataset.e){const [sc,k]=t.dataset.e.split(/:(.+)/);if(sc==='C')C[k]=v;else if(sc==='J')J[k]=v;else{J.ov[k]=(v===t.dataset.auto)?'':v}save()}
   if(t.dataset.cap){(isKeep(t.dataset.cap)?C.cap:J.cap)[t.dataset.cap]=v;save()}
