@@ -320,7 +320,7 @@ const table=(arr,key,cols,addLbl)=>`<div class="tw"><table class="grid stack"><t
 
 
 // ---------- send readings to a band worksheet (and the report) ----------
-const TARGETS={'':'Nothing (just this page)','700':'700 MHz worksheet','800':'800 MHz worksheet','UHF':'UHF worksheet','VHF':'VHF worksheet','700-800|0':'700/800 worksheet – 700 side','700-800|1':'700/800 worksheet – 800 side','UHF-VHF|0':'UHF/VHF worksheet – UHF side','UHF-VHF|1':'UHF/VHF worksheet – VHF side'};
+const TARGETS={'':'Nothing (just this page)','700':'700 MHz worksheet','800':'800 MHz worksheet','UHF':'UHF worksheet','VHF':'VHF worksheet','700-800|0':'700/800 worksheet: the 700 MHz readings','700-800|1':'700/800 worksheet: the 800 MHz readings','UHF-VHF|0':'UHF/VHF worksheet: the UHF readings','UHF-VHF|1':'UHF/VHF worksheet: the VHF readings'};
 let syncT=null;
 function syncNow(){
   const tg=S.target||'';if(!tg)return;const [key,sideS]=tg.split('|');const pair=sideS!=null;const side=+sideS||0;const LK='bda-gain-'+key;
