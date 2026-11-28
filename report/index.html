@@ -225,7 +225,7 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
   <header style="text-align:left"><h1>Commissioning report</h1><p>Every number from your worksheet is already in. Click any text to change it, click a box to add a picture, then hit <b>Print / Save PDF</b> and pick "Save as PDF". Everything stays in this browser on this device.</p></header>
   <div class="rp-row"><button type="button" class="bigbtn" id="print">Print / Save PDF</button><button type="button" class="rbtn danger" id="newjob">Start a new report</button></div>
   <div class="box" id="srcbox"></div>
-  <div class="box"><span id="bannerst"></span> <button type="button" class="rbtn" id="bannerbtn">Load header banner</button></div>
+  <div class="box"><span id="bannerst"></span> <button type="button" class="rbtn" id="bannerbtn">Use a different banner</button> <button type="button" class="rbtn" id="bannerreset">Back to AWS banner</button></div>
   <div class="box" id="bulk"><b>Drop all your Anritsu screenshots here at once</b><p>Files named like <code>ABC12_ISO_DL.jpg</code> or <code>ABC12_DL_DONOR.jpg</code> go in the right box. Anything else is added at the end of BDA Measurements for you to name.</p><button type="button" class="rbtn" id="bulkbtn">Pick screenshots</button><input type="file" id="bulkin" accept="image/png,image/jpeg" multiple hidden></div>
 </div>
 <div id="pages"></div>
@@ -378,7 +378,7 @@ function gain(i,b){
 
 function render(){
   const P=pages();const total=P.length;
-  $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}"><header class="ph">${C.bannerOn&&IMG.keep_banner?`<img class="banner" src="${IMG.keep_banner.url}" alt="">`:`<div class="band"><span>${esc(C.co||'')}</span></div>`}</header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${k+1} of ${total}</footer></section>`).join('');
+  $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}"><header class="ph"><img class="banner" src="${IMG.keep_banner?IMG.keep_banner.url:'banner.png'}" alt=""></header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${k+1} of ${total}</footer></section>`).join('');
   // TOC
   const secs=[];P.forEach((p,k)=>{if(p.sec&&k>1)secs.push([p.sec,k+1])});
   $('toc').innerHTML=secs.map(([s,n])=>`<div class="tl"><span>${esc(s.toUpperCase())}</span><i></i><span>${n}</span></div>`).join('');
@@ -386,7 +386,7 @@ function render(){
 }
 function status(){
   $('srcbox').innerHTML=SRC?`<b>Numbers from:</b> ${esc(BANDS().map(b=>b.name).join(' + '))} worksheet${SRC.site&&SRC.site.name?', '+esc(SRC.site.name):''}, taken ${new Date(SRC.when).toLocaleString()}. Changed the worksheet? Hit <b>Make report</b> there again. What you typed here stays.`:'<b>No worksheet numbers yet.</b> Open your band worksheet and hit <b>Make report</b> at the top. You can still fill this in by hand.';
-  $('bannerst').textContent=IMG.keep_banner?'Header banner loaded.':'No header banner yet. Load your company banner image once (it stays on this device).';
+  $('bannerst').textContent=IMG.keep_banner?'Using your own header banner.':'Using the AWS header banner.';
 }
 
 // ---------- events ----------
@@ -428,6 +428,7 @@ async function bulkAdd(files){let m=0,x=0;
   save();render();toast(`${m} screenshot${m===1?'':'s'} matched by name${x?`, ${x} added at the end of BDA Measurements (rename them there)`:''}.`)}
 $('bulkbtn').onclick=()=>$('bulkin').click();$('bulkin').onchange=async()=>{await bulkAdd([...$('bulkin').files]);$('bulkin').value=''};
 $('bannerbtn').onclick=()=>{target='keep_banner';picker.click()};
+$('bannerreset').onclick=async()=>{await dbDel('keep_banner');delete IMG.keep_banner;render()};
 $('print').onclick=()=>window.print();
 $('newjob').onclick=async()=>{if(!confirm('Start a new report? This clears the site info and every site picture. Your company info, banner, license and certificates stay.'))return;
   for(const [k] of await dbAll())if(!isKeep(k))await dbDel(k);J={};localStorage.setItem('report2-job','{}');location.reload()};
