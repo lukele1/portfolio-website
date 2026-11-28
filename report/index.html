@@ -157,6 +157,15 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
 .t.gn td.calc{font-weight:600}
 .t.uc th{font-size:10.5px}.t.uc td{font-size:11.5px}.t.uc sup{font-size:8px;margin-left:1px}
 .fn{font-size:11px;margin:2px auto 14px}
+.cvh{margin:6px 0 8px}.cvh .h1{font:700 19px Carlito,Calibri,Arial}.cvh .h2{font:700 17px Carlito,Calibri,Arial}.cvh .h3{font:700 15px Carlito,Calibri,Arial}
+.okc{color:#00a14b;font-weight:700}.badc{color:#c62828;font-weight:700}
+.cvs{font-weight:700;margin:10px 0}
+.t.kv{width:70%}.t.kv td.k,.t.kv4 td.k{text-align:right;width:28%}
+.t td.ml{white-space:pre-line}
+.t.cv th,.t.cv td{font-size:10.5px}.t.th8 th,.t.th8 td{font-size:10.5px}
+.t.pts{table-layout:auto}.t.pts th,.t.pts td{font-size:9.5px;padding:1px 2px}.t.pts .ed{min-width:1.2em}
+.page.ctl{min-height:0;box-shadow:none;background:transparent}.page.ctl .ph,.page.ctl .pf{display:none}
+
 .frh{font-weight:700;white-space:pre-line;margin:6px 0}.frl{white-space:pre-line}
 .para{text-align:center;max-width:6.6in;margin:4px auto 10px}
 .ed{outline:none;border-radius:3px;min-width:1.5em;display:inline-block;white-space:pre-line}
@@ -359,9 +368,45 @@ function pages(){
     <tr><td class="k">Omni-directional Antenna:</td><td>${E('pctelAnt','',{C:1,ph:'Model'})}</td><td class="k">DL Signal Requirement:</td><td>${A('dlreq','≥ -95 dBm Measured')}</td></tr>
     <tr><td class="k">Signal Generator:</td><td>${E('siggen','',{C:1,ph:'Model'})}</td><td class="k">UL Signal Requirement:</td><td>${A('ulreq','≥ -95 dBm Measured')}</td></tr>
     <tr><td class="k"></td><td></td><td class="k">Coverage Requirement:</td><td>${A('covreq','General: 95%, Critical: 99%')}</td></tr></table>`,{title:'TEST PROCEDURES & SETTING'});
-  // coverage pages
-  const cov=listIds('cov');const covT=`${bs.map(b=>b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz').join(' & ')||'SIGNAL'} – SIGNAL COVERAGE READINGS`.toUpperCase();
-  if(cov.length||!PRINT){(cov.length?cov:[null]).forEach((id,k)=>{pg(k===0?covT:'',(id?slot(id,'',{nocap:1,page:1,list:'J|cov'}):'<p class="tip noprint">Add each page of the PCTEL / SeeHawk coverage report as a picture (export or screenshot each page). One picture per page.</p>')+(k===(cov.length||1)-1?addBtn('cov','Add coverage report page'):''),{title:k===0?covT:''})})}
+  // coverage pages (SeeHawk-style)
+  const covT=`${bs.map(b=>b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz').join(' & ')||'SIGNAL'} – SIGNAL COVERAGE READINGS`.toUpperCase();
+  const cv=covData();const R=covResults(cv);const allCh=bs.flatMap(b=>b.ch.map(c=>c.f.toFixed(5)));
+  const rs=x=>x?`<span class="${x==='Pass'?'okc':'badc'}">${x}</span>`:'';
+  const pct=(p,t)=>t?`${p}/${t} (${Math.round(p/t*100)}%)`:'';
+  const PHONLY=new Set(['band','group','device','calexp','anti','app','floors']);const cell=(path,ph='')=>{let v=getP(path);if((v==null||v==='')&&ph&&!PHONLY.has(path)&&!/^floors\./.test(path))v=ph;return `<span class="ed" contenteditable="true" spellcheck="false" data-cv="${path}" data-ph="${esc(ph)}">${esc(v??'')}</span>`};
+  const chTable=(fl)=>`<table class="t cv"><tr><th>Freq (MHz)</th><th>Tech</th><th>Band</th><th>Ant Gain</th><th>Cable Loss</th><th>Ph.</th><th>Type</th><th>Mod</th><th>NAC</th><th>Area Points passed (%)</th><th>Critical Points passed (%)</th></tr>
+    <tr><td class="ml">${esc((allCh.length?allCh:['']).join('\n'))}</td><td>${cell('tech','P25')}</td><td>${cell('band','Channels')}</td><td>${cell('antg','0.00')}</td><td>${cell('cabl','0.00')}</td><td class="ml">${allCh.map(()=>'1').join('\n')}</td><td class="ml">${allCh.map(()=>'TC').join('\n')}</td><td class="ml">${allCh.map(()=>esc(cv.mod||'CQPSK')).join('\n')}</td><td class="ml">${allCh.map(()=>esc(cv.nac||'')).join('\n')}</td><td>${fl?pct(fl.ap,fl.at):pct(R.ap,R.at)}</td><td>${fl?pct(fl.cp,fl.ct):pct(R.cp,R.ct)}</td></tr></table>`;
+  // summary page
+  pg(covT,`<div class="cvh"><div class="h1">Emergency Responder Radio System</div><div class="h1">Coverage Report Test Results</div></div>
+    <table class="t kv"><tr><td class="k">Date Prepared:</td><td>${cell('prepared',J.date||'Date')}</td></tr><tr><td class="k">Test File:</td><td>${cell('file',J.site||'Test file')}</td></tr><tr><td class="k">Test Location:</td><td>${cell('loc','Building')}</td></tr><tr><td class="k">Technician:</td><td>${cell('techn',C.tester||'Name')}</td></tr><tr><td class="k">FCC#:</td><td>${cell('fcc',C.fcc||'PG00000000')}</td></tr></table>
+    <p class="cvs">The test results set forth in this report reflect conditions at the time of testing</p>
+    <div class="cvh"><div class="h2">Building: ${cell('bldg',J.site||'Building')}</div><div class="h2">Result: ${rs(R.result)}</div></div>
+    <h4>Test Report Summary</h4><table class="t"><tr><th>Channel/ Ch Group</th><th>Freq (MHz)</th><th>Technology</th><th>Band</th><th>Result</th><th>Area Points passed (%)</th><th>Critical Points passed (%)</th></tr>
+    <tr><td>${cell('group','Control Channels: 1, 2, 3')}</td><td class="ml">${esc(allCh.join('\n'))}</td><td>${esc(cv.tech||'P25')}</td><td>${esc(cv.band||'')}</td><td>${rs(R.result)}</td><td>${pct(R.ap,R.at)}</td><td>${pct(R.cp,R.ct)}</td></tr></table>
+    <table class="t kv4"><tr><th colspan="4">Test Details</th></tr><tr><td class="k">Number of Floors Tested:</td><td>${cv.floors.length}</td><td class="k">Result Calculation:</td><td>${cell('calc','By area per floor')}</td></tr>
+    <tr><td class="k">Number of Area Tested:</td><td>${R.at}</td><td class="k">Area Pass Criteria:</td><td>${cell('apc','95')}%</td></tr><tr><td class="k">Number of Critical Points Tested:</td><td>${R.ct}</td><td class="k">Critical points Pass Criteria:</td><td>${cell('cpc','99')}%</td></tr><tr><td></td><td></td><td class="k">Apply Adjacent Area Rule:</td><td>${cell('adj','No')}</td></tr></table>
+    <table class="t"><tr><th colspan="5">Equipment Report</th></tr><tr><th>Vendor</th><th>Application</th><th>Device</th><th>Calibration Expires</th><th>Antenna info</th></tr><tr><td>${cell('vendor','PCTEL')}</td><td>${cell('app','SeeHawk Touch rel 5.5.0.0')}</td><td>${cell('device','SeeGull IBflex Device rel 4.2.2.0  SN: 000000000')}</td><td>${cell('calexp','MM-DD-YYYY')}</td><td>${cell('anti','')}</td></tr></table>`,{title:covT});
+  // thresholds + floors result
+  pg('',`<h4>Threshold Settings</h4><table class="t th8"><tr><th>Measurement</th><th>DL Area Point</th><th>DL Critical Point</th><th>DL Use for grading</th><th>UL Area Point</th><th>UL Critical Point</th><th>UL Use for grading</th></tr>
+    ${[['P25 Power (RSSI)','pw','-95.00 dBm','-95.00 dBm'],['P25 S/N (SINR)','sn','20.00 dB','22.00 dB'],['P25 FBER','fb','2.00 %','1.50 %'],['DAQ','dq','3.00','']].map(([m,k,a,c])=>`<tr><td>${m}</td><td>${cell('th.'+k+'.da',a)}</td><td>${cell('th.'+k+'.dc',c)}</td><td>${cell('th.'+k+'.du','Yes')}</td><td>${cell('th.'+k+'.ua',a)}</td><td>${cell('th.'+k+'.uc',c)}</td><td>${cell('th.'+k+'.uu','Yes')}</td></tr>`).join('')}</table>
+    <h4>Sample collection method</h4><table class="t"><tr><th>Measurement</th><th>Sample Collection Method</th></tr>${['P25 Traffic Channels Power','P25 Control Channels Power','P25 Traffic Channels SINR'].map((m,k)=>`<tr><td>${m}</td><td>${cell('sm.'+k,'Average')}</td></tr>`).join('')}</table>
+    <h4>Floors Result</h4><table class="t"><tr><th>Floor Plan</th><th>${esc(cv.groupShort||'Control Channels')}</th></tr>${R.floors.map((f,k)=>`<tr><td>${esc(cv.floors[k].name||'Floor '+(k+1))}</td><td>${rs(f.result)}</td></tr>`).join('')}</table>`,{title:''});
+  // per floor
+  cv.floors.forEach((f,fi)=>{const fr=R.floors[fi];const head=`<div class="cvh"><div class="h2">Floor: <span class="ed" contenteditable="true" data-cv="floors.${fi}.name" data-ph="Floor name">${esc(f.name||'')}</span></div><div class="h3">Group: ${esc(cv.group||'Control Channels')}</div>`;
+    pg('',`${head}<div class="h2">Result: ${rs(fr.result)}</div></div>${chTable(fr)}${slot('cvplan'+fi,'',{nocap:1,big:1})}
+      <table class="t"><tr><th>Grid</th><th># of Areas</th><th>Area Size (sq. ft)</th><th>Area Width (ft)</th><th>Area Height (ft)</th><th>Ignore Area Color</th><th>Comments</th></tr>${f.grids.map((g,gi)=>`<tr>${['g','n','sz','w','h','col','cm'].map(k=>`<td>${cell(`floors.${fi}.grids.${gi}.${k}`,'')}</td>`).join('')}</tr>`).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-cvadd="floors.${fi}.grids">+ Add grid row</button>`}`,{title:''});
+    const COLS=['dl','sn','fb','dq','ulp','uls','ulf','uld','ulr','ulq','ult'];
+    const tbl=(kind,rows,first)=>`<table class="t pts"><tr><th colspan="${kind==='crit'?14:15}">${kind==='crit'?'Critical Points':'Area Points'}</th></tr><tr>${kind==='crit'?'<th>Critical Point</th>':'<th>Grid</th><th>Area</th>'}<th>DL Power (dBm)</th><th>DL S/N (dB)</th><th>DL FBER (%)</th><th>DL DAQ</th><th>UL Power (dBm)</th><th>UL S/N (dB)</th><th>UL FBER (%)</th><th>UL DAQ</th><th>UL Radio ID</th><th>UL Frequency</th><th>UL Tested</th><th>Result</th>${kind==='crit'?'':'<th>DL Loss (dB)</th>'}</tr>
+      ${rows.map(([p,ri])=>`<tr>${kind==='crit'?`<td>${ri+1}</td>`:`<td>${cell(`floors.${fi}.area.${ri}.g`,'1')}</td><td>${ri+1}</td>`}${COLS.map(k=>`<td>${cell(`floors.${fi}.${kind}.${ri}.${k}`,'')}</td>`).join('')}<td>${rs(p)}</td>${kind==='crit'?'':`<td>${cell(`floors.${fi}.area.${ri}.loss`,'')}</td>`}</tr>`).join('')}</table>`;
+    const areaRows=f.area.map((a,ri)=>[fr.areaRes[ri],ri]);const critRows=f.crit.map((a,ri)=>[fr.critRes[ri],ri]);
+    const first=areaRows.slice(0,22),rest=[];for(let k=22;k<areaRows.length;k+=34)rest.push(areaRows.slice(k,k+34));
+    pg('',`${head}</div>${tbl('crit',critRows)}${PRINT?'':`<button class="addslot noprint" data-cvadd="floors.${fi}.crit">+ Add critical point</button>`}${tbl('area',first)}${!rest.length&&!PRINT?`<button class="addslot noprint" data-cvadd="floors.${fi}.area">+ Add area point</button>`:''}${PRINT?'':'<p class="tip noprint">Paste straight from Excel or the SeeHawk export: click the first DL Power cell and paste. Columns fill left to right (DL Power, DL S/N, DL FBER…), rows fill down. Result turns Pass/Fail from the threshold settings.</p>'}`,{title:''});
+    rest.forEach((r,k)=>pg('',`${head}</div>${tbl('area',r)}${k===rest.length-1&&!PRINT?`<button class="addslot noprint" data-cvadd="floors.${fi}.area">+ Add area point</button>`:''}`,{title:''}));
+  });
+  if(!PRINT)pg('',`<div class="cvctl noprint"><button class="addslot" data-cvfloor="add">+ Add a floor</button>${cv.floors.length>1?'<button class="addslot" data-cvfloor="del">Remove last floor</button>':''}<p class="tip">Each floor gets its own two pages, like the SeeHawk report. Floors: ${cv.floors.length}.</p></div>`,{title:'',cls:'ctl'});
+  const cov=listIds('cov');
+  cov.forEach(id=>pg('',slot(id,'',{nocap:1,page:1,list:'J|cov'}),{title:''}));
+  if(!PRINT)P[P.length-1].body+=addBtn('cov','Add an extra coverage page (picture)');
   // uplink calculations
   pg('Uplink Calculations',(bs.length?bs:[{i:0,name:'',short:''}]).map(b=>{
     const g=k=>num(J.ov[k+b.i])??null;
@@ -389,6 +434,27 @@ function pages(){
   const certs=listIds('certs',1);(certs.length?certs:(PRINT?[]:[null])).forEach((id,k,arr)=>pg(k===0?'Manufacturer Certifications':'',(id?slot(id,'',{nocap:1,page:1,list:'C|certs'}):'<p class="tip noprint">Your manufacturer training certificates (Fiplex, Comba, ADRF…). Add them once, they stay for every report.</p>')+(k===arr.length-1?addBtn('certs','Add certificate',1):''),{title:k===0?'MANUFACTURER CERTIFICATIONS':''}));
   return P;
 }
+
+function covData(){
+  if(!J.cv)J.cv={};const cv=J.cv;cv.th=cv.th||{};cv.sm=cv.sm||{};
+  if(!cv.floors||!cv.floors.length){const n=Math.max(1,parseInt(J.floorsN)||1);cv.floors=[];for(let k=0;k<n;k++)cv.floors.push(newFloor(k))}
+  return cv;
+}
+function newFloor(k){return {name:`${J.site||'Site'} Floor ${k+1}`,grids:[{g:'1',n:'20',sz:'',w:'',h:'',col:'Black',cm:''}],crit:[{},{}],area:Array.from({length:20},()=>({g:'1'}))}}
+function covResults(cv){
+  const th=(k,d)=>num(getP('th.'+k))??d;
+  const pw={a:th('pw.da',-95),c:th('pw.dc',-95)},sn={a:th('sn.da',20),c:th('sn.dc',22)},fb={a:th('fb.da',2),c:th('fb.dc',1.5)};
+  const judge=(r,crit)=>{const dl=num(r.dl);if(!isN(dl))return '';const S=num(r.sn),F=num(r.fb);
+    if(dl<(crit?pw.c:pw.a))return 'Fail';if(isN(S)&&S<(crit?sn.c:sn.a))return 'Fail';if(isN(F)&&F>(crit?fb.c:fb.a))return 'Fail';return 'Pass'};
+  const apc=num(getP('apc'))??95,cpc=num(getP('cpc'))??99;let AP=0,AT=0,CP=0,CT=0;
+  const floors=cv.floors.map(f=>{const areaRes=f.area.map(r=>judge(r,false)),critRes=f.crit.map(r=>judge(r,true));
+    const at=areaRes.filter(Boolean).length,ap=areaRes.filter(x=>x==='Pass').length,ct=critRes.filter(Boolean).length,cp=critRes.filter(x=>x==='Pass').length;
+    AP+=ap;AT+=at;CP+=cp;CT+=ct;const result=at?((ap/at*100>=apc&&(!ct||cp/ct*100>=cpc))?'Pass':'Fail'):'';return {areaRes,critRes,ap,at,cp,ct,result}});
+  const result=floors.some(f=>f.result==='Fail')?'Fail':floors.every(f=>f.result==='Pass')&&floors.length?'Pass':'';
+  return {floors,ap:AP,at:AT,cp:CP,ct:CT,result};
+}
+function getP(path){let o=J.cv||{};for(const k of path.split('.')){if(o==null)return undefined;o=o[k]}return o}
+function setP(path,v){const ks=path.split('.');let o=J.cv;ks.slice(0,-1).forEach((k,i)=>{if(o[k]==null)o[k]=/^\d+$/.test(ks[i+1])?[]:{};o=o[k]});o[ks.at(-1)]=v}
 function chunk(ids,n,keepOne){const out=[];for(let i=0;i<ids.length;i+=n)out.push(ids.slice(i,i+n));if(!out.length&&keepOne)out.push([]);return out}
 function alarms(i,short){
   if(!J.alarms[i]){const d=short;J.alarms[i]=[['Loss of Normal AC Power','AC LOSS PWR'],['System Battery Charger Failure','CHRG FAIL'],['Low-Battery Capacity','LOW BATT'],['Active RF-Emitting Device Malfunction','RF MALF'],['Donor Antenna Malfunction','DONOR MALF'],['Failure of Critical System Components','SYS COMP'],['Communication Link Failure','COM FAIL'],['Oscillation of Active RF-Emitting Device','OSC ALARM']].map(([a,l])=>({a,l:d?`DAS/${d} ${l}`:`DAS ${l}`,an:'',fa:''}))}
@@ -402,10 +468,10 @@ function gain(i,b){
 
 function render(){
   const ae=document.activeElement;let fk=null;if(ae&&ae.dataset){for(const k of ['e','gn','cap','eq','al']){if(ae.dataset[k]){fk=`[data-${k}="${ae.dataset[k]}"]`;break}}}
-  RENDERING=true;const P=pages();const total=P.length;
-  $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}" id="pg-${k+1}"><header class="ph"><img class="banner" src="${IMG.keep_banner?IMG.keep_banner.url:'banner.png'}" alt=""></header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${k+1} of ${total}</footer></section>`).join('');
+  RENDERING=true;const P=pages();let nn=0;P.forEach(p=>{p.no=p.cls.includes('ctl')?0:++nn});const total=nn;
+  $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}" id="pg-${p.no}"><header class="ph"><img class="banner" src="${IMG.keep_banner?IMG.keep_banner.url:'banner.png'}" alt=""></header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${p.no} of ${total}</footer></section>`).join('');
   // TOC
-  const secs=[];P.forEach((p,k)=>{if(p.sec&&k>1)secs.push([p.sec,k+1])});
+  const secs=[];P.forEach((p,k)=>{if(p.sec&&k>1)secs.push([p.sec,p.no])});
   $('toc').innerHTML=secs.map(([s,n])=>`<a class="tl" href="#pg-${n}"><span>${esc(s.toUpperCase())}</span><i></i><span>${n}</span></a>`).join('');
   status();RENDERING=false;
   if(fk){const el=document.querySelector(fk);if(el){el.focus();const r=document.createRange();r.selectNodeContents(el);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r)}}
@@ -423,10 +489,11 @@ let RENDERING=false;
 document.addEventListener('focusout',e=>{const t=e.target;if(RENDERING||!t.isConnected||!t.classList||!t.classList.contains('ed'))return;
   if(t.dataset.e&&t.dataset.e.startsWith('O:')&&!t.textContent.trim()){t.textContent=t.dataset.auto||''}
   if(!t.textContent.trim())t.classList.add('empty');
-  if(t.dataset.gn||/^(J:erp|J:ulc|O:)/.test(t.dataset.e||''))setTimeout(render,0)});
+  if(t.dataset.gn||t.dataset.cv||/^(J:erp|J:ulc|O:)/.test(t.dataset.e||''))setTimeout(render,0)});
 document.addEventListener('input',e=>{const t=e.target;const v=t.innerText.replace(/ /g,' ').replace(/\n$/,'');
   if(t.dataset.e){const [sc,k]=t.dataset.e.split(/:(.+)/);if(sc==='C')C[k]=v;else if(sc==='J')J[k]=v;else{J.ov[k]=(v===t.dataset.auto)?'':v}save()}
   if(t.dataset.cap){(isKeep(t.dataset.cap)?C.cap:J.cap)[t.dataset.cap]=v;save()}
+  if(t.dataset.cv){setP(t.dataset.cv,v);save()}
   if(t.dataset.eq){const [r,c]=t.dataset.eq.split('.');J.eq[r][c]=v;save()}
   if(t.dataset.al){const [b,r,k]=t.dataset.al.split('.');J.alarms[b][r][k]=v;save()}
   if(t.dataset.gn){const [b,d,r,k]=t.dataset.gn.split('.');J.gain[b][d==='Downlink'?'dl':'ul'][r][k]=v;save();const row=J.gain[b][d==='Downlink'?'dl':'ul'][r];const g=(isN(num(row.out))&&isN(num(row.in)))?num(row.out)-num(row.in):null;const c=document.querySelector(`[data-gcalc="${b}.${d}.${r}"]`);if(c)c.textContent=fd(g)}});
@@ -440,9 +507,18 @@ document.addEventListener('click',async e=>{const t=e.target;
   if(t.dataset.add){const [sc,name]=t.dataset.add.split('|');const id=(sc==='C'?'keep_':'')+name+'_'+Date.now().toString(36);const L2=(sc==='C'?C.lists:J.lists);(L2[name]=L2[name]||[]).push(id);save();render();return}
   if(t.dataset.cyc){const [b,r,k]=t.dataset.cyc.split('.');const cur=J.alarms[b][r][k];J.alarms[b][r][k]=cur===''?'PASS':cur==='PASS'?'FAIL':cur==='FAIL'?'N/A':'';save();render();return}
   if(t.dataset.allpass){J.alarms[t.dataset.allpass].forEach(a=>{a.an='PASS';a.fa='PASS'});save();render();return}
+  if(t.dataset.cvadd){const a=getP(t.dataset.cvadd);a.push(t.dataset.cvadd.endsWith('area')||t.dataset.cvadd.endsWith('grids')?{g:'1'}:{});save();render();return}
+  if(t.dataset.cvfloor){const cv=covData();if(t.dataset.cvfloor==='add')cv.floors.push(newFloor(cv.floors.length));else cv.floors.pop();save();render();return}
   if(t.dataset.eqadd){J.eq.push(['','']);save();render();return}
   if(t.dataset.eqdel){J.eq.splice(+t.dataset.eqdel,1);save();render();return}
 });
+
+document.addEventListener('paste',e=>{const t=e.target.closest&&e.target.closest('[data-cv]');if(!t)return;const txt=(e.clipboardData||window.clipboardData).getData('text');
+  if(!/[\t\n]/.test(txt.trim())){e.preventDefault();document.execCommand('insertText',false,txt.trim());return}
+  e.preventDefault();const m=t.dataset.cv.match(/^(floors\.\d+\.(?:area|crit))\.(\d+)\.(\w+)$/);if(!m)return;
+  const COLS=['dl','sn','fb','dq','ulp','uls','ulf','uld','ulr','ulq','ult'];const base=m[1],r0=+m[2];let c0=COLS.indexOf(m[3]);if(c0<0)c0=0;
+  const arr=getP(base);txt.replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='').forEach((line,ri)=>{const r=r0+ri;if(!arr[r])arr[r]=base.endsWith('area')?{g:'1'}:{};line.split('\t').forEach((v,ci)=>{const k=COLS[c0+ci];if(k)arr[r][k]=v.trim()})});
+  save();render();toast('Pasted into the table.')});
 document.addEventListener('dragover',e=>{const z=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(z){e.preventDefault();z.classList.add('over')}});
 document.addEventListener('dragleave',e=>{const z=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(z)z.classList.remove('over')});
 document.addEventListener('drop',async e=>{const d=e.target.closest('.drop'),bulk=e.target.closest('#bulk');if(!d&&!bulk)return;e.preventDefault();const f=[...e.dataTransfer.files];if(!f.length)return;
