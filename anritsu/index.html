@@ -342,7 +342,7 @@ function render(){
      ['2 Donor','DL_DONOR','Donor channels, markers + Marker Table'],['2 Donor','DL_DONOR_MAXHOLD','Same, after Max Hold ran 5–15 min'],
      ['3 Isolation','ISO_DL','Tone on the DL test frequency, marker on it'],['3 Isolation','ISO_UL','Tone on the UL test frequency, marker on it'],
      ['5 Output','DL_OUT','BDA output, every channel marked, 30 dB Ext Loss showing'],['5 Gain step','GAIN_STEP_1','One channel before the +10 dB'],['5 Gain step','GAIN_STEP_2','Same channel after'],
-     ['5 Noise','UL_NOISE_ON','Wide span, BDA on, 30 dB Ext Loss showing'],['5 Noise','UL_NOISE_OFF','Same, BDA RF off']].map(r=>`<tr><td>${r[0]}</td><td>${fn(r[1])}</td><td>${r[2]}</td></tr>`).join('')+
+     ['5 Noise','UL_NOISE_ON','Wide span, BDA on, 30 dB Ext Loss showing'],['5 Noise','UL_NOISE_OFF','Same, BDA RF off'],['5 Max UL','UL_MAX','UL test tone at the BDA\'s limit, marker on it, 30 dB Ext Loss showing'],['5 Spurious','UL_SPUR','Wide span past both band edges, markers on the edges']].map(r=>`<tr><td>${r[0]}</td><td>${fn(r[1])}</td><td>${r[2]}</td></tr>`).join('')+
     `</table></div><p class="note">More than one donor or DAS line? Add a number: ${fn('DTF_DAS2')}. Second band on the same site? Add it: ${fn('ISO_DL_800')}.</p></div></details>`+
     chk('c0','Gear checked, battery charged, band and site code set')));
 
@@ -421,6 +421,20 @@ function render(){
     `<p class="explain"><b>C. UL noise</b> (BDA ${P('Donor')} → pad → ${P('RF In')}, no radios keyed)</p>`+
     ol([`Pad still on, <b>External Loss still 30</b>. Ref Level −20, Atten 0.`,`Wide span, ${big?'about 40 MHz around the band':'50 MHz centered on the band'}. RBW 10 kHz, VBW 3 kHz, Average.`,`Screenshot BDA on, then RF off. ${fn('UL_NOISE_ON')} / ${fn('UL_NOISE_OFF')}.`])+
     ex('Good:',`a flat hump across the band when it's on, flat floor when it's off. Top of the hump under <b>−43 dBm</b> (FCC) with the pad entered. Spikes on the hump or past the band edges = stop and find out why.`)+
+    `<p class="explain"><b>D. Max uplink output</b> (signal generator → BDA ${P('DAS / Server')} port, BDA ${P('Donor')} → pad → ${P('RF In')})</p>`+
+    ol([`<b>Tone in:</b> signal generator into the BDA DAS / server port on an <b>unused UL test frequency</b>${big?` (${B.key==='700'?'about 802 MHz':'about 810 MHz'})`:''}. Start around −50 dBm.`,
+      `<b>Anritsu:</b> pad on, External Loss 30. Ref Level <b>+30 dBm</b>, Input Atten <b>20 dB</b>, Center = the UL test frequency, Span 1 MHz, RBW 3 kHz, VBW 1 kHz, Max Hold, Marker 1 on the tone.`,
+      `<b>Turn the tone up</b> a few dB at a time. The output climbs with it, then stops. Where it stops is the <b>max uplink output</b> (the BDA's UL limit). Don't keep pushing past that.`,
+      `<b>Save:</b> ${fn('UL_MAX')}. Write the marker reading below.`])+
+    ex('Good:',`it tops out near the UL limit set in the GUI (example: 14.14 dBm). The report works out the signal at the tower from it (max UL output − path loss).`)+
+    `<div class="tw"><table class="grid stack"><tr><th>Max UL output (dBm)</th></tr><tr><td data-l="Max UL output (dBm)">${inp('ulmaxm','14')}</td></tr></table></div>`+
+    `<p class="explain"><b>E. Uplink spurious emissions</b> (same hookup as D, tone still on)</p>`+
+    ol([`<b>Anritsu:</b> pad on, External Loss 30. Ref Level +20 dBm, Atten 20, RBW 10 kHz, VBW 3 kHz, Average.`,
+      `<b>Wide span</b> so you see past both band edges: ${big?'about 70 MHz around the band':'about 10 MHz around the band'}.`,
+      `<b>Markers</b> on the band edges (and on anything that sticks up outside the band).`,
+      `<b>Save:</b> ${fn('UL_SPUR')}.`])+
+    ex('Good:',`your tone and the band's hump, then it drops off at the edges with nothing poking up outside. A spike outside the band = spur or the start of oscillation, find it before you leave. The FCC limit for signal booster spurious emissions is generally −13 dBm, check with your lead.`)+
+    ex('Done:','turn the signal generator off before you unhook anything.')+
     table(S.out,'out',[{k:'f',h:'Channel (MHz)',ph:'155.310'},{k:'p',h:'Output (dBm)',ph:'+9'},{k:'note',h:'Note',ph:'gain step +9.5',text:1}],'Add channel')+
     `<div class="tw"><table class="grid stack"><tr><th>UL noise, top of hump (dBm)</th><th>Under −43?</th></tr><tr><td data-l="UL noise, top of hump (dBm)">${inp('noise','−60',{neg:1})}</td><td class="out" data-l="Under −43?" data-o="noiseok">—</td></tr></table></div>`,'BDA ON · PAD ON'));
 
