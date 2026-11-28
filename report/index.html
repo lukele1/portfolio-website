@@ -157,6 +157,13 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
 .t.gn td.calc{font-weight:600}
 .t.uc th{font-size:10.5px}.t.uc td{font-size:11.5px}.t.uc sup{font-size:8px;margin-left:1px}
 .fn{font-size:11px;margin:2px auto 14px}
+.mbox .mrow{display:grid;grid-template-columns:62% 38%;align-items:center}.mbox .mrow.full{grid-template-columns:1fr}
+.mbox .mimg{border-right:1px solid #000}.mbox .mrow.full .mimg{border-right:0}
+.mbox .drop img{max-height:3.55in}
+.mside{text-align:left;padding:8px 12px;font-size:13px;line-height:1.45}
+.mside .kv{margin:2px 0}.mside .kvi{font-style:italic;margin-top:8px}.mside .gap{height:8px}
+.mside .ed.blk{white-space:pre-line}
+.ocrst{font-size:11px;color:#2E74B5;margin-top:8px;font-style:italic}.ocrst button{border:0;background:none;color:#b3261e;font:600 11px var(--sans);cursor:pointer;text-decoration:underline}
 .cvh{margin:6px 0 8px}.cvh .h1{font:700 19px Carlito,Calibri,Arial}.cvh .h2{font:700 17px Carlito,Calibri,Arial}.cvh .h3{font:700 15px Carlito,Calibri,Arial}
 .okc{color:#00a14b;font-weight:700}.badc{color:#c62828;font-weight:700}
 .cvs{font-weight:700;margin:10px 0}
@@ -263,12 +270,14 @@ let J,C;
 try{J=JSON.parse(localStorage.getItem('report2-job')||'{}')}catch(e){J={}}
 try{C=JSON.parse(localStorage.getItem('report2-company')||'{}')}catch(e){C={}}
 const BANDS=()=>SRC&&SRC.bands?SRC.bands:[];
+const PHOTOS=['ERRCS Equipment Overview','BDA','BDA Internal','BDA Model','BDA Donor Connections','BDA Service Connections','Battery Backup Unit','BBU Internal','BBU Model','BBU Connections','Electrical Breaker','AC Disconnect','EPO Switch','Annunciator','Fire Alarm Modules','ERRCS Headend Splitters','ERRCS Headend Grounding','Headend Room','Headend Room Door','Service Antenna','Donor Antenna Overview','Donor Antenna Model','Polyphaser & Donor Grounding','Donor Grounding','Floor Photo','Floor Photo'];
 function defaults(){
   J.ov=J.ov||{};J.cap=J.cap||{};J.lists=J.lists||{};J.gain=J.gain||[];J.alarms=J.alarms||[];C.cap=C.cap||{};C.lists=C.lists||{};
   if(!J.eq)J.eq=[['Signal Booster',''],['Battery Backup Unit',''],['Donor Antenna',''],['Service Antenna','']];
   if(!J.lists.cov)J.lists.cov=[];if(!J.lists.gui)J.lists.gui=[];if(!C.lists.certs)C.lists.certs=[];
   if(!J.lists.meas){J.lists.meas=[];const nb=Math.max(1,BANDS().length);for(let i=0;i<nb;i++)['donor:Donor Signal','dlout:Downlink Output','isodl:System Isolation - Downlink','isoul:System Isolation - Uplink','ulout:Uplink Output','spur:Uplink Spurious Emissions','noiseon:Uplink Quiescent Noise - RF On','noiseoff:Uplink Quiescent Noise - RF Off'].forEach(x=>{const [k,c]=x.split(':');const id=`m${i}_${k}`;J.lists.meas.push(id);if(J.cap[id]==null)J.cap[id]=(nb>1&&BANDS()[i]?BANDS()[i].name+' ':'')+c})}
-  if(!J.lists.photos){J.lists.photos=[];['Headend Room','BDA','BDA Internal','BDA Model','BBU','BBU Internal','BBU Model','BDA and BBU Wiring','Antenna Connection','Annunciator','Fire Alarm Modules','Ground','Headend Room Overview','Headend Room Door','Donor Overview','Donor Model','Donor Ground','Donor Poly Phaser','Floor Photo','Floor Photo'].forEach((c,i)=>{const id='ph'+i;J.lists.photos.push(id);if(J.cap[id]==null)J.cap[id]=c})}
+  if(!J.lists.photos){J.lists.photos=[];PHOTOS.forEach((c,i)=>{const id='ph'+i;J.lists.photos.push(id);if(J.cap[id]==null)J.cap[id]=c})}
+  if(J.lists.photos&&J.photoV!==2){const have=J.lists.photos.map(id=>(J.cap[id]||'').toLowerCase());PHOTOS.forEach((c,i)=>{if(c==='Floor Photo'||!have.includes(c.toLowerCase())){const id='ph2_'+i;if(!J.lists.photos.includes(id)){J.lists.photos.push(id);J.cap[id]=c}}});J.photoV=2}
   if(SRC&&SRC.site){const s=SRC.site;if(!J.site&&s.name)J.site=s.name;if(!J.date&&s.date)J.date=s.date;if(!C.tester&&s.tech)C.tester=s.tech}
 }
 defaults();
@@ -409,18 +418,6 @@ function pages(){
   const cov=listIds('cov');
   cov.forEach(id=>pg('',slot(id,'',{nocap:1,page:1,list:'J|cov'}),{title:''}));
   if(!PRINT)P[P.length-1].body+=addBtn('cov','Add an extra coverage page (picture)');
-  // uplink calculations
-  pg('Uplink Calculations',(bs.length?bs:[{i:0,name:'',short:''}]).map(b=>{
-    const g=k=>num(J.ov[k+b.i])??null;
-    const dlo=g('udl')??b.dlout,tx=g('utx')??b.tx,ug=g('ug')??b.ulgain,cpl=g('ucpl')??b.cplUL,mx=g('umx')??b.ulmax;
-    const Av=num(J['ulcA'+b.i]),Bv=num(J['ulcB'+b.i]),Cv=num(J['ulcC'+b.i]);
-    const lerp=(x,y,f)=>isN(x)&&isN(y)?x+(y-x)*f:null;
-    const dl=[Av,lerp(Av,Bv,1/3),lerp(Av,Bv,2/3),Bv,lerp(Bv,Cv,1/3),lerp(Bv,Cv,2/3),Cv];
-    const lab=['A','','','B','','','C'];const key=['ulcA','','','ulcB','','','ulcC'];
-    const rows=dl.map((d,r)=>{const uin=isN(d)&&isN(dlo)&&isN(tx)?d-dlo+tx:null;const raw=isN(uin)&&isN(ug)?uin+ug:null;const uo=isN(raw)?(isN(mx)?Math.min(raw,mx):raw):null;const cu=isN(uo)&&isN(cpl)?uo-cpl:null;
-      const q=c=>`uc${b.i}_${r}_${c}`;return `<tr><td><b>${key[r]?E(key[r]+b.i,'',{ph:lab[r]==='A'?'max':lab[r]==='B'?'avg':'min'}):A(q('dl'),fd(isN(d)?Math.round(d*100)/100:null))}${lab[r]?`<sup>${lab[r]}</sup>`:''}</b></td><td>${r===0?A_('udl'+b.i,fd(dlo)):A(q('o'),fd(dlo))}</td><td>${r===0?A_('utx'+b.i,fd(tx)):A(q('t'),fd(tx))}</td><td>${A(q('in'),f2(uin))}</td><td>${r===0?A_('ug'+b.i,fd(ug)):A(q('g'),fd(ug))}</td><td>${A(q('uo'),f2(uo))}</td><td>${r===0?A_('ucpl'+b.i,f2(cpl)):A(q('pl'),f2(cpl))}</td><td><b>${A(q('cu'),f2(cu))}</b></td></tr>`}).join('');
-    return `<h4>${esc(b.short==='150'?'150MHz':b.short==='450'?'450MHz':b.short?b.short+'MHz':'')}</h4><table class="t uc"><tr><th>Measured Downlink (dBm)</th><th>BDA DL Output (dBm)</th><th>Mobile Radio Tx Power (dBm)</th><th>BDA UL Input (dBm)</th><th>BDA UL Gain (dB)</th><th>BDA UL Output (dBm)</th><th>Calculated Path Loss (dB)</th><th>Calculated Uplink (dBm)</th></tr>${rows}</table>
-    <p class="fn">BDA UL max output: ${A_('umx'+b.i,fd(mx))} dBm (UL output stops here)<br><i>A: Maximum Measured Downlink during the Commissioning Test &nbsp; B: Average Measured Downlink &nbsp; C: Minimum Measured Downlink</i></p>`}).join('')+(PRINT?'':'<p class="tip noprint">Type the max (A), average (B) and min (C) downlink from your 20-grid walk. The rows between are filled in evenly. DL output, Tx power, UL gain, path loss and UL max come from the worksheet; click one to change it.</p>'),{title:'UPLINK CALCULATIONS'});
   // monitoring
   pg('System Monitoring',(bs.length?bs:[{i:0,short:''}]).map(b=>{const al=alarms(b.i,b.short);const bn=b.short==='150'?'VHF':b.short==='450'?'UHF':b.short?b.short+'MHz':'';
     return `<h4>${esc(bn?bn+' ':'')}Alarms</h4><table class="t al"><tr><th>ERRCS Alarm</th><th>ERRCS Supervisory Description</th><th>Annunciator</th><th>FACP</th></tr>${al.map((a,r)=>`<tr><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.a">${esc(a.a)}</span></td><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.l">${esc(a.l)}</span></td>${['an','fa'].map(k=>`<td class="pfc ${a[k]==='PASS'?'pass':a[k]==='FAIL'?'fail':a[k]==='N/A'?'na':''}">${PRINT?(a[k]||''):`<select class="pfs" data-alsel="${b.i}.${r}.${k}" aria-label="${esc(a.a)} ${k==='an'?'Annunciator':'FACP'}"><option value=""${a[k]?'':' selected'}>—</option>${['PASS','FAIL','N/A'].map(x=>`<option${a[k]===x?' selected':''}>${x}</option>`).join('')}</select>`}</td>`).join('')}</tr>`).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-allpass="${b.i}">Mark all PASS</button>`}`}).join(''),{title:'SYSTEM MONITORING'});
@@ -428,8 +425,8 @@ function pages(){
   pg('Measured System Gain',bs.length?bs.map(b=>{const g=gain(b.i,b);const tb=(dir,rows,gui)=>`<table class="t gn"><tr><th colspan="5">${bs.length>1?esc(b.name)+' ':''}${dir}</th></tr><tr><th>Freq (MHz)</th><th>Input (dBm)</th><th>Measured</th><th>Gain</th><th>GUI</th></tr>${rows.map((r,k)=>{const gn=(isN(num(r.out))&&isN(num(r.in)))?num(r.out)-num(r.in):null;return `<tr><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.f" data-ph="MHz">${esc(r.f)}</span></td><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.in">${esc(r.in)}</span></td><td><span class="ed${r.out===''?' empty':''}" contenteditable="true" data-gn="${b.i}.${dir}.${k}.out" data-ph="type">${esc(r.out)}</span></td><td class="calc">${A(`gg${b.i}${dir[0]}${k}`,fd(gn))}</td><td>${A(`gu${b.i}${dir[0]}${k}`,fd(gui))}${PRINT?'':` <button class="x noprint" data-gdel="${b.i}.${dir}.${k}" aria-label="Delete row">×</button>`}</td></tr>`}).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-gadd="${b.i}.${dir}">+ Add ${dir.toLowerCase()} row</button>`}`;const hasCC=b.ch.some(c=>c.cc==='Y');return (PRINT?'':`<div class="noprint gmode">${hasCC?`<button class="addslot" data-gmode="${b.i}.cc">Control channel only</button>`:''}<button class="addslot" data-gmode="${b.i}.all">All channels</button></div>`)+tb('Downlink',g.dl,b.dlgui)+tb('Uplink',g.ul,b.ulgui)}).join('')+(PRINT?'':'<p class="tip noprint">Type what you measured at the output for each frequency you tested. Gain = measured − input. GUI is the gain setting from the worksheet. On a control channel site it starts with just the control channel; on a traffic site, every channel. Use the buttons or × to change which rows show.</p>'):'<p class="tip">Make the report from a worksheet to fill this in.</p>',{title:'MEASURED SYSTEM GAIN'});
   // GUI screenshots 2/page
   chunk(listIds('gui'),2,!PRINT).forEach((ids,k,arr)=>pg(k===0?'BDA GUI Settings Screenshots':'',`<div class="g1">${ids.map(id=>id?slot(id,'',{nocap:1,list:'J|gui'}):'').join('')}</div>${k===arr.length-1?addBtn('gui','Add GUI screenshot'):''}`,{title:k===0?'BDA GUI SETTINGS SCREENSHOTS':''}));
-  // BDA measurement screenshots 2/page with captions
-  chunk(listIds('meas').filter(id=>!PRINT||IMG[id]),2,!PRINT).forEach((ids,k,arr)=>pg(k===0?'BDA Measurements Screenshots':'',`<div class="g1">${ids.map(id=>id?slot(id,'',{list:'J|meas'}):'').join('')}</div>${k===arr.length-1?addBtn('meas','Add measurement screenshot'):''}`,{title:k===0?'BDA MEASUREMENTS SCREENSHOTS':''}));
+  // BDA measurement screenshots: picture left, math right (2 per page)
+  chunk(listIds('meas').filter(id=>!PRINT||IMG[id]),2,!PRINT).forEach((ids,k,arr)=>pg(k===0?'BDA Measurements Screenshots':'',`<div class="g1">${ids.map(id=>id?measBox(id,bs):'').join('')}</div>${k===arr.length-1?addBtn('meas','Add measurement screenshot'):''}`,{title:k===0?'BDA MEASUREMENTS SCREENSHOTS':''}));
   // photos 4/page
   chunk(listIds('photos').filter(id=>!PRINT||IMG[id]),4,!PRINT).forEach((ids,k,arr)=>pg(k===0?'Site Photo':'',`<div class="g2 phg">${ids.map(id=>id?slot(id,'',{list:'J|photos'}):'').join('')}</div>${k===arr.length-1?addBtn('photos','Add photo'):''}`,{title:k===0?'SITE PHOTO':''}));
   pg('FCC License',slot('keep_fcc','',{nocap:1,page:1})+(PRINT?'':'<p class="tip noprint">Your FCC license. Add it once, it stays for every report.</p>'),{title:'FCC LICENSE'});
@@ -457,6 +454,75 @@ function covResults(cv){
 }
 function getP(path){let o=J.cv||{};for(const k of path.split('.')){if(o==null)return undefined;o=o[k]}return o}
 function setP(path,v){const ks=path.split('.');let o=J.cv;ks.slice(0,-1).forEach((k,i)=>{if(o[k]==null)o[k]=/^\d+$/.test(ks[i+1])?[]:{};o=o[k]});o[ks.at(-1)]=v}
+
+// ---------- measurement boxes (picture left, math right) ----------
+const KIND=id=>{const m=/^m(\d+)_(\w+)$/.exec(id);return m?{b:+m[1],k:m[2]}:{b:0,k:'x'}};
+const MKIND={donor:'list',dlout:'list',isodl:'iso',isoul:'iso',ulout:'ulmax',noiseon:'noise',noiseoff:'noise'};
+function measBox(id,bs){
+  const {b,k}=KIND(id);const kind=MKIND[k];const B=bs[b]||null;const im=IMG[id];
+  if(PRINT&&!im)return '';
+  J.mval=J.mval||{};J.mkr=J.mkr||{};
+  const st=OCRST[id];
+  const mv=(J.mval[id]??'')!==''?num(J.mval[id]):null;
+  const meas=`<span class="ed${(J.mval[id]??'')===''?' empty':''}" contenteditable="true" spellcheck="false" data-mv="${id}" data-ph="read from screenshot">${esc(J.mval[id]??'')}</span>`;
+  const kv=(lab,val,key)=>`<div class="kv">${lab}: <b>${key?A(key,val):val}</b></div>`;
+  const it=t=>`<div class="kvi">${t}</div>`;
+  let side='';
+  if(kind==='iso'&&B){
+    const inj=num(B.s.inj);const fall=num(k==='isodl'?B.s.readA:B.s.readB);const m=isN(mv)?mv:fall;
+    const iso=isN(inj)&&isN(m)?inj-m:null;const gmax=[B.dlgui,B.ulgui].filter(isN);const g=gmax.length?Math.max(...gmax):null;
+    const ok=isN(iso)&&isN(g)&&g<=iso-20;
+    const sgn=x=>isN(x)?(x>0?'+':'')+fd(x):'';
+    side=kv('Injected Signal',`${A(id+'_inj',sgn(inj))} dBm`)+`<div class="kv">Measured Signal: <b>${isN(mv)?meas:(isN(fall)?A(id+'_mf',fd(fall)):meas)} dBm</b></div>`+
+      kv('Measured Isolation',`${A(id+'_iso',isN(iso)?`${fd(iso)} dB`:'')}</b> ${isN(iso)&&isN(inj)?`(${fd(-m)} ${inj>=0?'+':'-'} ${fd(Math.abs(inj))})`:''}<b>`)+
+      kv('Max Allowed Gain',`${A(id+'_mag',isN(iso)?fd(iso-20)+' dB':'')}</b> ${isN(iso)?`(${fd(iso)} - 20)`:''}<b>`)+
+      kv('Max Measured Gain',A(id+'_mmg',isN(g)?fd(g)+' dB':''))+
+      it(A(id+'_txt',isN(iso)&&isN(g)?(ok?'The isolation is within the acceptable parameters and is FCC compliant with the current BDA settings.':'The gain is too close to the isolation. Lower the gain or improve the isolation.'):'',{block:1}));
+  }else if(kind==='ulmax'&&B){
+    const cpl=B.cplUL;const tw=isN(mv)&&isN(cpl)?mv-cpl:null;
+    side=`<div class="kv">Max Uplink Output: <b>${meas} dBm</b></div>`+kv('Meas. Space Path Loss',A(id+'_pl',isN(cpl)?f2(cpl)+' dB':''))+kv('Max Signal at Tower',A(id+'_tw',isN(tw)?f2(tw)+' dBm':''));
+  }else if(kind==='noise'&&B){
+    const cpl=B.cplUL;const ng=isN(B.gd)&&isN(B.loss)?B.gd-B.loss:null;const tw=isN(mv)&&isN(cpl)?mv-cpl:null;const erp=isN(mv)&&isN(ng)?mv+ng:null;
+    side=`<div class="kv">Measured Signal: <b>${meas} dBm</b></div>`+kv('Meas. Space Path Loss',A(id+'_pl',isN(cpl)?f2(cpl)+' dB':''))+kv('Signal at Tower',A(id+'_tw',isN(tw)?f2(tw)+' dBm':''))+
+      '<div class="gap"></div>'+kv('Donor Gain – Cable Loss',A(id+'_ng',isN(ng)?f2(ng)+' dB':''))+kv('Donor Antenna ERP',A(id+'_erp',isN(erp)?f2(erp)+' dBm':''))+
+      it(A(id+'_txt',isN(erp)?(erp<=-43?'The uplink quiescent noise is within the acceptable parameters and is FCC compliant.':'Donor ERP is over the -43 dBm limit. Check the UL gain and noise.'):'',{block:1}));
+  }else if(kind==='list'){
+    const mk=J.mkr[id]||[];const auto=mk.map(x=>`${x.f} MHz: ${x.p} dBm`).join('\n');
+    side=A(id+'_list',auto,{block:1,ph:k==='donor'?'Channel readings (filled in from the screenshot)':'Output readings (filled in from the screenshot)'})+(k==='dlout'&&B&&isN(B.dlgui)?kv('DL Gain Set',A(id+'_g',fd(B.dlgui)+' dB')):'');
+  }
+  const c=J.cap[id]??'';
+  const status=PRINT?'':`<div class="ocrst noprint">${st==='busy'?'Reading the screenshot…':st==='fail'?'Couldn\'t read the numbers, type them in.':st==='ok'?'Numbers read from the screenshot. Check them.':''}${im&&kind?` <button data-ocr="${id}">Read again</button>`:''}</div>`;
+  return `<figure class="slot mbox${im?' has':''}" data-slot="${id}"><figcaption><span class="ed capt" contenteditable="true" spellcheck="false" data-cap="${id}" data-ph="Name this screenshot">${esc(c)}</span></figcaption>
+    <div class="mrow${kind?'':' full'}"><div class="mimg"><div class="drop" tabindex="0" role="button" aria-label="Add screenshot${c?': '+esc(c):''}">${im?`<img src="${im.url}" alt="${esc(c)}">`:`<span class="hint">Click to add the screenshot<br><small>or drop one here</small></span>`}</div></div>${kind?`<div class="mside">${side}${status}</div>`:''}</div>
+    <div class="slotbar noprint">${im?`<button data-rm="${id}">Remove picture</button>`:''}<button data-del="J|meas|${id}">Delete box</button></div></figure>`;
+}
+// ---------- read numbers off an Anritsu screenshot ----------
+const OCRST={};let OCRW=null;
+async function ocrWorker(){if(OCRW)return OCRW;if(!window.Tesseract){await new Promise((res,rej)=>{const s=document.createElement('script');s.src='ocr/tesseract.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+  OCRW=await Tesseract.createWorker('eng',1,{workerPath:'ocr/worker.min.js',corePath:'ocr/',langPath:'ocr/',gzip:true});return OCRW}
+function prepCrop(img,box,scale){const sx=img.naturalWidth/801,sy=img.naturalHeight/601;const w=Math.round((box[2]-box[0])*sx),h=Math.round((box[3]-box[1])*sy);
+  const c=document.createElement('canvas');c.width=w*scale;c.height=h*scale;const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.drawImage(img,box[0]*sx,box[1]*sy,w,h,0,0,c.width,c.height);
+  const d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){const v=Math.max(a[i],a[i+1],a[i+2])>90?0:255;a[i]=a[i+1]=a[i+2]=v;a[i+3]=255}x.putImageData(d,0,0);return c}
+function parseOCR(top,bot){
+  const fix=s=>s.replace(/[–—]/g,'-').replace(/MZ/g,'M2').replace(/\s+/g,' ');
+  top=fix(top);bot=fix(bot);const out={mk:[],val:null};
+  const big=/^\s*([+-]?\d+\.\d+)\s*dBm\s*\|?\s*([\d.]+(?:\s\d{3})?)\s*MHz/.exec(bot);
+  const rows=[...bot.matchAll(/(\d)\s+ON\s+OFF\s+([\d.]+(?:\s\d{3})?)\s*MHz\s+([+-]?\d+\.\d+)\s*dBm/g)].map(m=>({f:m[2].replace(' ',''),p:m[3]}));
+  const tp=/M\d\s*([+-]?\d+\.\d+)\s*dBm\s*@\s*([\d.]+(?:\s\d{3})?)\s*MHz/.exec(top);
+  if(rows.length){out.mk=rows;out.val=rows[0].p}
+  else if(big){out.mk=[{f:big[2].replace(' ',''),p:big[1]}];out.val=big[1]}
+  else if(tp){out.mk=[{f:tp[2].replace(' ',''),p:tp[1]}];out.val=tp[1]}
+  return out;
+}
+async function readShot(id){
+  if(!IMG[id]||!MKIND[KIND(id).k])return;OCRST[id]='busy';render();
+  try{const w=await ocrWorker();const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=IMG[id].url});
+    const top=(await w.recognize(prepCrop(img,[108,47,560,66],3))).data.text;const bot=(await w.recognize(prepCrop(img,[108,440,668,575],2))).data.text;
+    const r=parseOCR(top,bot);J.mval=J.mval||{};J.mkr=J.mkr||{};
+    if(r.val!=null){J.mval[id]=r.val;J.mkr[id]=r.mk;OCRST[id]='ok'}else OCRST[id]='fail';save()}
+  catch(e){console.error(e);OCRST[id]='fail'}
+  render();
+}
 function chunk(ids,n,keepOne){const out=[];for(let i=0;i<ids.length;i+=n)out.push(ids.slice(i,i+n));if(!out.length&&keepOne)out.push([]);return out}
 function alarms(i,short){
   if(!J.alarms[i]){const d=short;J.alarms[i]=[['Loss of Normal AC Power','AC LOSS PWR'],['System Battery Charger Failure','CHRG FAIL'],['Low-Battery Capacity','LOW BATT'],['Active RF-Emitting Device Malfunction','RF MALF'],['Donor Antenna Malfunction','DONOR MALF'],['Failure of Critical System Components','SYS COMP'],['Communication Link Failure','COM FAIL'],['Oscillation of Active RF-Emitting Device','OSC ALARM']].map(([a,l])=>({a,l:d?`DAS/${d} ${l}`:`DAS ${l}`,an:'',fa:''}))}
@@ -487,17 +553,18 @@ function status(){
 
 // ---------- events ----------
 const picker=document.createElement('input');picker.type='file';picker.accept='image/png,image/jpeg';picker.hidden=true;document.body.appendChild(picker);let target=null;
-picker.onchange=async()=>{if(picker.files[0]&&target){await setImg(target,picker.files[0]);if(target==='keep_banner')C.bannerOn=true;save();render()}picker.value=''};
+picker.onchange=async()=>{if(picker.files[0]&&target){await setImg(target,picker.files[0]);if(target==='keep_banner')C.bannerOn=true;save();render();if(MKIND[KIND(target).k]){J.mval&&delete J.mval[target];readShot(target)}}picker.value=''};
 document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.classList.contains('ed'))t.classList.remove('empty')});
 let RENDERING=false;
 document.addEventListener('focusout',e=>{const t=e.target;if(RENDERING||!t.isConnected||!t.classList||!t.classList.contains('ed'))return;
   if(t.dataset.e&&t.dataset.e.startsWith('O:')&&!t.textContent.trim()){t.textContent=t.dataset.auto||''}
   if(!t.textContent.trim())t.classList.add('empty');
-  if(t.dataset.gn||t.dataset.cv||/^(J:erp|J:ulc|O:)/.test(t.dataset.e||''))setTimeout(render,0)});
+  if(t.dataset.gn||t.dataset.cv||t.dataset.mv||/^(J:erp|J:ulc|O:)/.test(t.dataset.e||''))setTimeout(render,0)});
 document.addEventListener('input',e=>{const t=e.target;const v=t.innerText.replace(/ /g,' ').replace(/\n$/,'');
   if(t.dataset.e){const [sc,k]=t.dataset.e.split(/:(.+)/);if(sc==='C')C[k]=v;else if(sc==='J')J[k]=v;else{J.ov[k]=(v===t.dataset.auto)?'':v}save()}
   if(t.dataset.cap){(isKeep(t.dataset.cap)?C.cap:J.cap)[t.dataset.cap]=v;save()}
   if(t.dataset.cv){setP(t.dataset.cv,v);save()}
+  if(t.dataset.mv){J.mval=J.mval||{};J.mval[t.dataset.mv]=v;save()}
   if(t.dataset.eq){const [r,c]=t.dataset.eq.split('.');J.eq[r][c]=v;save()}
   if(t.dataset.al){const [b,r,k]=t.dataset.al.split('.');J.alarms[b][r][k]=v;save()}
   if(t.dataset.gn){const [b,d,r,k]=t.dataset.gn.split('.');J.gain[b][d==='Downlink'?'dl':'ul'][r][k]=v;save()}});
@@ -511,6 +578,7 @@ document.addEventListener('click',async e=>{const t=e.target;
   if(t.dataset.add){const [sc,name]=t.dataset.add.split('|');const id=(sc==='C'?'keep_':'')+name+'_'+Date.now().toString(36);const L2=(sc==='C'?C.lists:J.lists);(L2[name]=L2[name]||[]).push(id);save();render();return}
   if(t.dataset.cyc){const [b,r,k]=t.dataset.cyc.split('.');const cur=J.alarms[b][r][k];J.alarms[b][r][k]=cur===''?'PASS':cur==='PASS'?'FAIL':cur==='FAIL'?'N/A':'';save();render();return}
   if(t.dataset.allpass){J.alarms[t.dataset.allpass].forEach(a=>{a.an='PASS';a.fa='PASS'});save();render();return}
+  if(t.dataset.ocr){readShot(t.dataset.ocr);return}
   if(t.dataset.gdel){const [b,d,r]=t.dataset.gdel.split('.');J.gain[b][d==='Downlink'?'dl':'ul'].splice(+r,1);save();render();return}
   if(t.dataset.gadd){const [b,d]=t.dataset.gadd.split('.');J.gain[b][d==='Downlink'?'dl':'ul'].push({f:'',in:'-55',out:''});save();render();return}
   if(t.dataset.gmode){const [b,m]=t.dataset.gmode.split('.');const bb=band(+b);if(J.gain[b]&&J.gain[b].dl.some(r=>r.out)&&!confirm('Reset this band\'s gain rows? Measured numbers you typed will be cleared.'))return;J.gain[b]=gainRows(bb,m);save();render();return}
@@ -529,14 +597,14 @@ document.addEventListener('paste',e=>{const t=e.target.closest&&e.target.closest
 document.addEventListener('dragover',e=>{const z=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(z){e.preventDefault();z.classList.add('over')}});
 document.addEventListener('dragleave',e=>{const z=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(z)z.classList.remove('over')});
 document.addEventListener('drop',async e=>{const d=e.target.closest('.drop'),bulk=e.target.closest('#bulk');if(!d&&!bulk)return;e.preventDefault();const f=[...e.dataTransfer.files];if(!f.length)return;
-  if(d&&f.length===1){await setImg(d.closest('.slot').dataset.slot,f[0]);render();return}await bulkAdd(f)});
+  if(d&&f.length===1){const sid=d.closest('.slot').dataset.slot;await setImg(sid,f[0]);render();if(MKIND[KIND(sid).k]){J.mval&&delete J.mval[sid];readShot(sid)}return}await bulkAdd(f)});
 const MATCH=[[/DL_DONOR/,'donor'],[/DL_OUT/,'dlout'],[/ISO_DL/,'isodl'],[/ISO_UL/,'isoul'],[/UL_MAX|UL_OUT/,'ulout'],[/SPUR/,'spur'],[/NOISE_ON/,'noiseon'],[/NOISE_OFF/,'noiseoff']];
 async function bulkAdd(files){let m=0,x=0;
   for(const f of files){if(!/\.(png|jpe?g)$/i.test(f.name))continue;const n=f.name.toUpperCase().replace(/\.[A-Z]+$/,'').replace(/[\s-]+/g,'_');let id=null;
     for(const [re,k] of MATCH)if(re.test(n)){let bi=0;BANDS().forEach((b,i)=>{if(i>0&&new RegExp('_'+b.key.toUpperCase()+'(_|$)').test(n))bi=i});id=`m${bi}_${k}`;break}
     if(id&&J.lists.meas.includes(id)&&!IMG[id]){m++}else{id='meas_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);J.lists.meas.push(id);J.cap[id]=f.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');x++}
     await setImg(id,f)}
-  save();render();toast(`${m} screenshot${m===1?'':'s'} matched by name${x?`, ${x} added at the end of BDA Measurements (rename them there)`:''}.`)}
+  save();render();for(const id of J.lists.meas)if(IMG[id]&&MKIND[KIND(id).k]&&!(J.mval||{})[id])await readShot(id);toast(`${m} screenshot${m===1?'':'s'} matched by name${x?`, ${x} added at the end of BDA Measurements (rename them there)`:''}.`)}
 $('bulkbtn').onclick=()=>$('bulkin').click();$('bulkin').onchange=async()=>{await bulkAdd([...$('bulkin').files]);$('bulkin').value=''};
 $('bannerbtn').onclick=()=>{target='keep_banner';picker.click()};
 $('bannerreset').onclick=async()=>{await dbDel('keep_banner');delete IMG.keep_banner;render()};
