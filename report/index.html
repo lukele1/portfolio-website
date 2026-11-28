@@ -370,7 +370,7 @@ function pages(){
     <tr><td class="k"></td><td></td><td class="k">Coverage Requirement:</td><td>${A('covreq','General: 95%, Critical: 99%')}</td></tr></table>`,{title:'TEST PROCEDURES & SETTING'});
   // coverage pages (SeeHawk-style)
   const covT=`${bs.map(b=>b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz').join(' & ')||'SIGNAL'} – SIGNAL COVERAGE READINGS`.toUpperCase();
-  const cv=covData();const R=covResults(cv);const allCh=bs.flatMap(b=>b.ch.map(c=>c.f.toFixed(5)));
+  const cv=covData();const R=covResults(cv);const testedTxt=(J.ov.tested!=null&&J.ov.tested!=='')?J.ov.tested:bs.map(b=>b.ch.map(c=>c.f.toFixed(5)).join('\n')).join('\n');const allCh=testedTxt.split(/[\n,;]+|\s{2,}/).map(x=>x.trim()).filter(Boolean);
   const rs=x=>x?`<span class="${x==='Pass'?'okc':'badc'}">${x}</span>`:'';
   const pct=(p,t)=>t?`${p}/${t} (${Math.round(p/t*100)}%)`:'';
   const PHONLY=new Set(['band','group','device','calexp','anti','app','floors']);const cell=(path,ph='')=>{let v=getP(path);if((v==null||v==='')&&ph&&!PHONLY.has(path)&&!/^floors\./.test(path))v=ph;return `<span class="ed" contenteditable="true" spellcheck="false" data-cv="${path}" data-ph="${esc(ph)}">${esc(v??'')}</span>`};
