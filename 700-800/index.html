@@ -286,7 +286,7 @@ const f1 = x => isN(x) ? (Math.round(x*10)/10).toFixed(1).replace('-','−') : '
 const lowest = a => { a=a.filter(isN); return a.length?Math.min(...a):null; };
 const num = v => { if(v===''||v===null||v===undefined) return null; const n=Number(String(v).replace(/[−–]/g,'-')); return isFinite(n)?n:null; };
 /* typed once, used by both bands (physical stuff) */
-const SHK = ['donors','cap','inj','ttgt','dft','taps','th','sp','jmp','gs','N','dr','tgt','rlDonor','rlDas','gridGen','gridCrit','talk'];
+const SHK = ['donors','cap','inj','antinj','ttgt','dft','taps','th','sp','jmp','gs','N','dr','tgt','rlDonor','rlDas','gridGen','gridCrit','talk'];
 const DEF = () => ({sh:{site:{},tgt:10,ants:[{},{},{}],checks:{}}, b:PAIR.bands.map(B=>({cl:B.cable,chans:[{},{},{},{}]}))});
 let S; try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){} if(!S||!S.sh||!S.b) S=DEF();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
@@ -488,13 +488,14 @@ function render(){
   H.push(card('0B','Antenna verification',
     `<p class="use"><b>Use:</b> Anritsu (or a signal generator) to inject + the <b>PCTEL</b> to read at each antenna. One walk is enough: the same antennas carry both bands. Use a test frequency in either band.</p>`+
     hook('Hook up',[`At the head end: Anritsu ${P('Sig gen out')} (or the signal generator OUT) → the <b>DAS</b> cable, still unhooked from the BDA ${P('DAS / Server')} port.`,
-      `CW tone at <b>0 dBm</b> on an <b>unused test frequency</b>, <b>not</b> an assigned channel. Ask your lead which one.`])+
+      `CW tone at your injected level: <b>0 dBm</b> from the Anritsu, or <b>+10 dBm</b> if you use a signal generator that goes that high. Type it in the <b>Injected</b> box below. Use an <b>unused test frequency</b>, <b>not</b> an assigned channel. Ask your lead which one.`])+
     hook('Walk it with the PCTEL',[`Set the PCTEL to scan that same test frequency.`,
       `Take it to each service antenna and hold the PCTEL antenna <b>right at the antenna</b> if you can reach it (or straight under it). Same spot and distance every time.`,
       `Write down the reading for each antenna in the table below.`,
       `A reading way lower than the others, or nothing at all = bad connector, wrong tap, crushed cable or a dead antenna on that run. Fix it before you go on.`])+
-    how('Anritsu settings',[['Mode','CW Signal Generator (turn sig-gen ON)'],['Output level','0.0 dBm'],['Frequency','Unused test frequency in band'],['Coupling','RX/TX coupling on, if your model has it']])+
-    `<div class="tw"><table class="grid"><tr><th>Antenna</th><th>Floor / area</th><th>PCTEL read (dBm)</th><th>DAS loss ≈ 0 − read − 30</th><th></th></tr>${antRows}</table></div><button class="add" data-add="sh.ants">+ Add antenna</button>`+
+    how('Anritsu settings',[['Mode','CW Signal Generator (turn sig-gen ON)'],['Output level','0.0 dBm (the Anritsu tops out here; for +10 dBm use a signal generator)'],['Frequency','Unused test frequency in band'],['Coupling','RX/TX coupling on, if your model has it']])+
+    `<div class="fields">${fld('antinj','Injected (dBm)','0',0)}</div>`+
+    `<div class="tw"><table class="grid"><tr><th>Antenna</th><th>Floor / area</th><th>PCTEL read (dBm)</th><th>DAS loss ≈ injected − read − 30</th><th></th></tr>${antRows}</table></div><button class="add" data-add="sh.ants">+ Add antenna</button>`+
     `<p class="note">Rule of thumb right at the antenna: reading ≈ 0 − DAS loss − 30, so most land around −55 to −75. All the antennas should be close to each other. Around −90 to −100 means a problem on that run.</p>`,'BDA OFF'));
 
   H.push(card(1,'Isolation and max gain',
@@ -616,7 +617,7 @@ function update(){
   const fixed=['taps','th','sp','jmp'].map(k=>num(S.sh[k]));
   const extra={inj:num(S.sh.inj),__dft:num(S.sh.dft),__fixed:(fixed[0]||0)+(fixed[1]||0)*1+(fixed[2]||0)*3.3+(fixed[3]||0)};
   document.querySelectorAll('[data-o]').forEach(e=>{const [i,k]=e.dataset.o.split(':');const o=O[+i];const v=k.startsWith('b_')?num(S.b[+i][k.slice(2)]):k in extra?extra[k]:(k==='nch'?(o.nch||null):o[k]);e.textContent=isN(v)?(k==='nch'?String(v):f1(v)):'—'});
-  document.querySelectorAll('[data-ant]').forEach(e=>{const r=num(S.sh.ants[+e.dataset.ant].r);if(!isN(r)){e.textContent='—';e.style.color='';return}const d=-r-30;e.textContent=f1(d)+' dB'+(r<-90?' ✗ check this run':' ✓');e.style.color=r<-90?'var(--bad)':'var(--ok)'});
+  document.querySelectorAll('[data-ant]').forEach(e=>{const r=num(S.sh.ants[+e.dataset.ant].r);if(!isN(r)){e.textContent='—';e.style.color='';return}const ij=num(S.sh.antinj)??0;const d=ij-r-30;e.textContent=f1(d)+' dB'+(r<ij-90?' ✗ check this run':' ✓');e.style.color=r<(num(S.sh.antinj)??0)-90?'var(--bad)':'var(--ok)'});
   O.forEach((o,i)=>{
     if(isN(o.iso)) setV(i,'iso',o.iso>=80?'ok':'warn',o.iso>=80?`No gain, DL or UL, can go above ${f1(o.mg)} dB.`:`Only ${f1(o.mg)} dB of gain allowed. Check donor placement before going on.`); else setV(i,'iso','na','Type the injected level and at least one read.');
     if(isN(o.tp)) setV(i,'tp',Math.abs(o.tp)<=2?'ok':'bad',Math.abs(o.tp)<=2?`Within 2 dB (${f1(o.tp)}). Reading, pad value and GUI agree.`:`${f1(o.tp)} dB off. Check connectors, the pad value, or that both are the same channel.`); else setV(i,'tp','na','Optional: compare the Anritsu cable reading to the GUI on the same channel.');

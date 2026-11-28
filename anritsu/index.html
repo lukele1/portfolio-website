@@ -397,14 +397,15 @@ function render(){
     `<p class="note">Do <b>both</b> directions every time. Isolation = injected − read, for each one. Use the <b>lower</b> isolation of the two (that's the read closer to 0). Max gain = that − 20. Example: DL 88 dB, UL 72 dB → use 72 → 52 dB max gain for both DL and UL.</p>`,'RF OFF · PAD OFF'));
 
   H.push(card(4,'Antenna verification (injection)',
-    hook('Hook up',[`At the head end: ${P('Sig gen out')} → the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`,`CW tone at <b>0 dBm</b> on an <b>unused test frequency</b> in ${B.dl}. Ask your lead which one.`])+
-    ol([`<b>Mode:</b> Shift → Mode (9) → <b>Signal Generator</b> (CW). Output <b>0.0 dBm</b>, frequency = your test frequency, RF output <b>On</b>.`,
+    hook('Hook up',[`At the head end: ${P('Sig gen out')} → the <b>DAS</b> cable, unhooked from the BDA ${P('DAS / Server')} port.`,`CW tone at <b>0 dBm</b> from the Anritsu, or <b>+10 dBm</b> from a signal generator if you have one that goes that high. Use an <b>unused test frequency</b> in ${B.dl}. Ask your lead which one.`])+
+    ol([`<b>Mode:</b> Shift → Mode (9) → <b>Signal Generator</b> (CW). Output <b>0.0 dBm</b> (the Anritsu tops out here), frequency = your test frequency, RF output <b>On</b>. Using a signal generator at +10 instead? Set it to +10 and put <b>10</b> in the Injected box below.`,
       `<b>PCTEL:</b> set it to scan the same test frequency.`,
       `<b>Walk:</b> go to each service antenna. Hold the PCTEL antenna at the same spot every time, right at the antenna if you can reach it, or hip high straight under it.`,
       `<b>Write it down</b> in the table. The sheet works out the rough DAS loss for each one.`,
       `<b>Done:</b> generator off before you unhook anything.`])+
-    ex('What good looks like:',`right at the antenna, reading ≈ 0 − DAS loss − 30, so most land around <b>−55 to −75</b>. All the antennas close to each other (example: best −60, worst −80).`)+
+    ex('What good looks like:',`right at the antenna, reading ≈ injected − DAS loss − 30. With 0 dBm in, most land around <b>−55 to −75</b>. With +10 in, everything reads about 10 dB stronger (−45 to −65). All the antennas close to each other (example: best −60, worst −80).`)+
     ex('One antenna way lower, or nothing:',`bad connector, wrong tap, crushed cable or a dead antenna on that run. Fix it before you move on.`)+
+    `<div class="tw"><table class="grid stack"><tr><th>Injected (dBm)</th></tr><tr><td data-l="Injected (dBm)">${inp('antinj','0')}</td></tr></table></div>`+
     table(S.ants,'ants',[{k:'id',h:'Antenna',ph:'A1',text:1},{k:'fl',h:'Floor / area',ph:'L1',text:1},{k:'r',h:'PCTEL read (dBm)',ph:'−65',neg:1},{k:'loss',h:'DAS loss ≈',out:1}],'Add antenna')+
     `<div class="sumline" data-o="antsum"></div>`,'BDA OFF'));
 
@@ -437,8 +438,8 @@ function update(){
   const both=[dl,ul].filter(v=>v!=null),iso=both.length?Math.min(...both):null;
   setO('isoW',iso==null?'—':dl!=null&&ul!=null?(dl<=ul?'DL':'UL')+(Math.abs(dl-ul)<0.05?' (tie)':''):'Do the other direction too','');
   setO('iso',iso==null?'—':f1(iso),iso==null?'':iso>=60?'ok':'bad');setO('mg',iso==null?'—':f1(iso-20));
-  const ls=[];S.ants.forEach((x,i)=>{const r=num(x.r);if(r==null)return setO(`ants.${i}.loss`,'—');const l=0-r-30;ls.push(r);setO(`ants.${i}.loss`,f1(l)+' dB')});
-  setO('antsum',ls.length>1?`Best ${f1(Math.max(...ls))}, worst ${f1(Math.min(...ls))} dBm, a ${f1(Math.max(...ls)-Math.min(...ls))} dB spread.${Math.min(...ls)<=-90?' One is down near −90 or lower, check that run.':''}`:'');
+  const ls=[];S.ants.forEach((x,i)=>{const r=num(x.r);if(r==null)return setO(`ants.${i}.loss`,'—');const ij=num(S.antinj)??0;const l=ij-r-30;ls.push(r);setO(`ants.${i}.loss`,f1(l)+' dB')});
+  setO('antsum',ls.length>1?`Best ${f1(Math.max(...ls))}, worst ${f1(Math.min(...ls))} dBm, a ${f1(Math.max(...ls)-Math.min(...ls))} dB spread.${Math.min(...ls)<=(num(S.antinj)??0)-90?' One is 90 dB or more below what you injected, check that run.':''}`:'');
   const n=num(S.noise);setO('noiseok',n==null?'—':n<-43?'Yes':'No, over the limit',n==null?'':n<-43?'ok':'bad');
 }
 document.addEventListener('input',e=>{const el=e.target;

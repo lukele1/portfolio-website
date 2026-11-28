@@ -462,13 +462,14 @@ function render(){
   H.push(card('0B','Antenna verification',
     `<p class="use"><b>Use:</b> Anritsu (or a signal generator) to inject + the <b>PCTEL</b> to read at each antenna. Proves every service antenna is connected and radiating, and gives you real DAS loss.</p>`+
     hook('Hook up',[`At the head end: Anritsu ${P('Sig gen out')} (or the signal generator OUT) → the <b>DAS</b> cable, still unhooked from the BDA ${P('DAS / Server')} port.`,
-      `CW tone at <b>0 dBm</b> on an <b>unused test frequency</b> in the band, <b>not</b> an assigned channel. Ask your lead which one.`])+
+      `CW tone at your injected level: <b>0 dBm</b> from the Anritsu, or <b>+10 dBm</b> if you use a signal generator that goes that high. Type it in the <b>Injected</b> box below. Use an <b>unused test frequency</b> in the band, <b>not</b> an assigned channel. Ask your lead which one.`])+
     hook('Walk it with the PCTEL',[`Set the PCTEL to scan that same test frequency.`,
       `Take it to each service antenna and hold the PCTEL antenna <b>right at the antenna</b> if you can reach it (or straight under it). Same spot and distance every time.`,
       `Write down the reading for each antenna in the table below.`,
       `A reading way lower than the others, or nothing at all = bad connector, wrong tap, crushed cable or a dead antenna on that run. Fix it before you go on.`])+
-    how('Anritsu settings',[['Mode','CW Signal Generator (turn sig-gen ON)'],['Output level','0.0 dBm'],['Frequency','Unused test frequency in band'],['Coupling','RX/TX coupling on, if your model has it']])+
-    `<div class="tw"><table class="grid"><tr><th>Antenna</th><th>Floor / area</th><th>PCTEL read (dBm)</th><th>DAS loss ≈ 0 − read − 30</th><th></th></tr>${antRows}</table></div><button class="add" data-add="ants">+ Add antenna</button>`+
+    how('Anritsu settings',[['Mode','CW Signal Generator (turn sig-gen ON)'],['Output level','0.0 dBm (the Anritsu tops out here; for +10 dBm use a signal generator)'],['Frequency','Unused test frequency in band'],['Coupling','RX/TX coupling on, if your model has it']])+
+    `<div class="fields">${fld('antinj','Injected (dBm)','0')}</div>`+
+    `<div class="tw"><table class="grid"><tr><th>Antenna</th><th>Floor / area</th><th>PCTEL read (dBm)</th><th>DAS loss ≈ injected − read − 30</th><th></th></tr>${antRows}</table></div><button class="add" data-add="ants">+ Add antenna</button>`+
     `<p class="note">Rule of thumb right at the antenna: reading ≈ 0 − DAS loss − 30, so most land around −55 to −75. All the antennas should be close to each other. Around −90 to −100 means a problem on that run. The worst antenna's DAS loss can go straight into step 7.</p>`,'BDA OFF'));
 
   H.push(card(1,'Isolation and max gain',
@@ -584,7 +585,7 @@ function setV(id,cls,txt){const e=$('v-'+id);if(!e)return;e.className='verdict '
 function update(){
   const o=calc(S.s,S.chans,S.ants,BAND);
   document.querySelectorAll('[data-o]').forEach(e=>{const k=e.dataset.o;const v=k==='nch'?(o.nch||null):o[k];e.textContent=isN(v)?(k==='nch'?String(v):f1(v)):'—'});
-  document.querySelectorAll('[data-ant]').forEach(e=>{const r=num(S.ants[+e.dataset.ant].r);if(!isN(r)){e.textContent='—';e.style.color='';return}const d=-r-30;e.textContent=f1(d)+' dB'+(r<-90?' ✗ check this run':' ✓');e.style.color=r<-90?'var(--bad)':'var(--ok)'});
+  document.querySelectorAll('[data-ant]').forEach(e=>{const r=num(S.ants[+e.dataset.ant].r);if(!isN(r)){e.textContent='—';e.style.color='';return}const ij=num(S.s.antinj)??0;const d=ij-r-30;e.textContent=f1(d)+' dB'+(r<ij-90?' ✗ check this run':' ✓');e.style.color=r<(num(S.s.antinj)??0)-90?'var(--bad)':'var(--ok)'});
   if(isN(o.iso)) setV('iso',o.iso>=80?'ok':'warn',o.iso>=80?`No gain, DL or UL, can go above ${f1(o.mg)} dB.`:`Only ${f1(o.mg)} dB of gain allowed. Check donor placement before going on.`); else setV('iso','na','Type the injected level and at least one read.');
   if(isN(o.tp)) setV('tp',Math.abs(o.tp)<=2?'ok':'bad',Math.abs(o.tp)<=2?`Within 2 dB (${f1(o.tp)}). Reading, pad value and GUI agree.`:`${f1(o.tp)} dB off. Check connectors, the pad value, or that both are the same channel.`); else setV('tp','na','Optional: compare the Anritsu cable reading to the GUI on the same channel.');
   if(isN(o.tp2)) setV('tp2',Math.abs(o.tp2)<=2?'ok':'bad',Math.abs(o.tp2)<=2?`Within 2 dB (${f1(o.tp2)}). The GUI reads right on the weak end too.`:`${f1(o.tp2)} dB off. Check the connector, the loss-after number, or that both are the same channel. Voice channel? Use Max Hold.`); else setV('tp2','na','Optional: the same check on the weakest channel.');
