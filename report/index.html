@@ -149,7 +149,10 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
 .t th{background:#f2f2f2;font-weight:700}
 .t td.k{font-weight:700}
 .t.si td.l{width:50%;text-align:center}.t.si td.l p{margin:6px 0}.t.si td.r{width:50%}
-.t.al td.pfc{font-weight:700}.t.al td.pass{background:#e8f5e9}.t.al td.fail{background:#fdecea}
+.t.al td.pfc{font-weight:700;padding:0}.t.al td.pass{background:#c6efce;color:#006100}.t.al td.fail{background:#ffc7ce;color:#9c0006}.t.al td.na{background:#ededed;color:#555}
+.pfs{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:700 12px Carlito,Calibri,Arial;color:inherit;width:100%;min-height:26px;text-align:center;text-align-last:center;cursor:pointer;padding:2px 4px}
+.pfs:focus-visible{outline:2px solid var(--blue)}
+.t.al td.pfc:not(.pass):not(.fail):not(.na) .pfs{color:#9aa3ad}
 .cyc{border:0;background:none;font:700 12px Carlito,Calibri,Arial;cursor:pointer;min-width:60px;min-height:24px;color:inherit}
 .t.gn td.calc{font-weight:600}
 .t.uc th{font-size:10.5px}.t.uc td{font-size:11.5px}.t.uc sup{font-size:8px;margin-left:1px}
@@ -372,7 +375,8 @@ function pages(){
     return `<h4>${esc(b.short==='150'?'150MHz':b.short==='450'?'450MHz':b.short?b.short+'MHz':'')}</h4><table class="t uc"><tr><th>Measured Downlink (dBm)</th><th>BDA DL Output (dBm)</th><th>Mobile Radio Tx Power (dBm)</th><th>BDA UL Input (dBm)</th><th>BDA UL Gain (dB)</th><th>BDA UL Output (dBm)</th><th>Calculated Path Loss (dB)</th><th>Calculated Uplink (dBm)</th></tr>${rows}</table>
     <p class="fn">BDA UL max output: ${A_('umx'+b.i,fd(mx))} dBm (UL output stops here)<br><i>A: Maximum Measured Downlink during the Commissioning Test &nbsp; B: Average Measured Downlink &nbsp; C: Minimum Measured Downlink</i></p>`}).join('')+(PRINT?'':'<p class="tip noprint">Type the max (A), average (B) and min (C) downlink from your 20-grid walk. The rows between are filled in evenly. DL output, Tx power, UL gain, path loss and UL max come from the worksheet; click one to change it.</p>'),{title:'UPLINK CALCULATIONS'});
   // monitoring
-  pg('System Monitoring',bs.length?bs.map(b=>{const al=alarms(b.i,b.short);return `<h4>${esc(b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz')} Alarms</h4><table class="t al"><tr><th>ERRCS Alarm</th><th>ERRCS Supervisory Description</th><th>Annunciator</th><th>FACP</th></tr>${al.map((a,r)=>`<tr><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.a">${esc(a.a)}</span></td><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.l">${esc(a.l)}</span></td>${['an','fa'].map(k=>`<td class="pfc ${a[k]==='PASS'?'pass':a[k]==='FAIL'?'fail':''}"><button class="cyc" data-cyc="${b.i}.${r}.${k}">${a[k]||'—'}</button></td>`).join('')}</tr>`).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-allpass="${b.i}">Mark all PASS</button>`}`}).join(''):'<p class="tip">Make the report from a worksheet to fill in the alarm tables.</p>',{title:'SYSTEM MONITORING'});
+  pg('System Monitoring',(bs.length?bs:[{i:0,short:''}]).map(b=>{const al=alarms(b.i,b.short);const bn=b.short==='150'?'VHF':b.short==='450'?'UHF':b.short?b.short+'MHz':'';
+    return `<h4>${esc(bn?bn+' ':'')}Alarms</h4><table class="t al"><tr><th>ERRCS Alarm</th><th>ERRCS Supervisory Description</th><th>Annunciator</th><th>FACP</th></tr>${al.map((a,r)=>`<tr><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.a">${esc(a.a)}</span></td><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.l">${esc(a.l)}</span></td>${['an','fa'].map(k=>`<td class="pfc ${a[k]==='PASS'?'pass':a[k]==='FAIL'?'fail':a[k]==='N/A'?'na':''}">${PRINT?(a[k]||''):`<select class="pfs" data-alsel="${b.i}.${r}.${k}" aria-label="${esc(a.a)} ${k==='an'?'Annunciator':'FACP'}"><option value=""${a[k]?'':' selected'}>—</option>${['PASS','FAIL','N/A'].map(x=>`<option${a[k]===x?' selected':''}>${x}</option>`).join('')}</select>`}</td>`).join('')}</tr>`).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-allpass="${b.i}">Mark all PASS</button>`}`}).join(''),{title:'SYSTEM MONITORING'});
   // measured gain
   pg('Measured System Gain',bs.length?bs.map(b=>{const g=gain(b.i,b);const tb=(dir,rows,gui)=>`<table class="t gn"><tr><th colspan="5">${bs.length>1?esc(b.name)+' ':''}${dir}</th></tr><tr><th>Freq (MHz)</th><th>Input (dBm)</th><th>Measured</th><th>Gain</th><th>GUI</th></tr>${rows.map((r,k)=>{const gn=(isN(num(r.out))&&isN(num(r.in)))?num(r.out)-num(r.in):null;return `<tr><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.f" data-ph="MHz">${esc(r.f)}</span></td><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.in">${esc(r.in)}</span></td><td><span class="ed${r.out===''?' empty':''}" contenteditable="true" data-gn="${b.i}.${dir}.${k}.out" data-ph="type">${esc(r.out)}</span></td><td class="calc" data-gcalc="${b.i}.${dir}.${k}">${fd(gn)}</td><td>${fd(gui)}</td></tr>`}).join('')}</table>`;return tb('Downlink',g.dl,b.dlgui)+tb('Uplink',g.ul,b.ulgui)}).join('')+(PRINT?'':'<p class="tip noprint">Type what you measured at the output for each frequency. Gain = measured − input. GUI is the gain setting from the worksheet.</p>'):'<p class="tip">Make the report from a worksheet to fill this in.</p>',{title:'MEASURED SYSTEM GAIN'});
   // GUI screenshots 2/page
@@ -387,7 +391,8 @@ function pages(){
 }
 function chunk(ids,n,keepOne){const out=[];for(let i=0;i<ids.length;i+=n)out.push(ids.slice(i,i+n));if(!out.length&&keepOne)out.push([]);return out}
 function alarms(i,short){
-  if(!J.alarms[i]){const d=short;J.alarms[i]=[['Loss of Normal AC Power','AC LOSS PWR'],['System Battery Charger Failure','CHRG FAIL'],['Low-Battery Capacity','LOW BATT'],['Active RF-Emitting Device Malfunction','RF MALF'],['Donor Antenna Malfunction','DONOR MALF'],['Failure of Critical System Components','SYS COMP'],['Communication Link Failure','COM FAIL'],['Oscillation of Active RF-Emitting Device','OSC ALARM']].map(([a,l])=>({a,l:`DAS/${d} ${l}`,an:'',fa:''}))}
+  if(!J.alarms[i]){const d=short;J.alarms[i]=[['Loss of Normal AC Power','AC LOSS PWR'],['System Battery Charger Failure','CHRG FAIL'],['Low-Battery Capacity','LOW BATT'],['Active RF-Emitting Device Malfunction','RF MALF'],['Donor Antenna Malfunction','DONOR MALF'],['Failure of Critical System Components','SYS COMP'],['Communication Link Failure','COM FAIL'],['Oscillation of Active RF-Emitting Device','OSC ALARM']].map(([a,l])=>({a,l:d?`DAS/${d} ${l}`:`DAS ${l}`,an:'',fa:''}))}
+  if(short)J.alarms[i].forEach(x=>{if(/^DAS (?!\/)/.test(x.l))x.l=x.l.replace(/^DAS /,`DAS/${short} `)});
   return J.alarms[i];
 }
 function gain(i,b){
@@ -425,6 +430,7 @@ document.addEventListener('input',e=>{const t=e.target;const v=t.innerText.repla
   if(t.dataset.eq){const [r,c]=t.dataset.eq.split('.');J.eq[r][c]=v;save()}
   if(t.dataset.al){const [b,r,k]=t.dataset.al.split('.');J.alarms[b][r][k]=v;save()}
   if(t.dataset.gn){const [b,d,r,k]=t.dataset.gn.split('.');J.gain[b][d==='Downlink'?'dl':'ul'][r][k]=v;save();const row=J.gain[b][d==='Downlink'?'dl':'ul'][r];const g=(isN(num(row.out))&&isN(num(row.in)))?num(row.out)-num(row.in):null;const c=document.querySelector(`[data-gcalc="${b}.${d}.${r}"]`);if(c)c.textContent=fd(g)}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.alsel){const [b,r,k]=t.dataset.alsel.split('.');J.alarms[b][r][k]=t.value;save();const td=t.closest('td');td.className='pfc '+(t.value==='PASS'?'pass':t.value==='FAIL'?'fail':t.value==='N/A'?'na':'')}});
 document.addEventListener('keydown',e=>{const d=e.target.closest&&e.target.closest('.drop');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();d.click()}
   if(e.target.classList&&e.target.classList.contains('ed')&&e.key==='Enter'&&!e.target.classList.contains('blk')&&!e.target.closest('.tester,.conducted,.l')){e.preventDefault();e.target.blur()}});
 document.addEventListener('click',async e=>{const t=e.target;
