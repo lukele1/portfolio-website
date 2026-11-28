@@ -694,6 +694,8 @@ render();
 })();
 
 $('mkreport').onclick=()=>{try{localStorage.setItem('report-src',JSON.stringify({page:PAIR.key,when:Date.now(),site:S.sh.site,bands:PAIR.bands.map((B,i)=>{const s=Object.assign({},S.sh,S.b[i]);return {name:B.name,key:B.key,s,chans:S.b[i].chans,o:calc(s,S.b[i].chans,S.sh.ants,B)}})}))}catch(e){}location.href='../report/'};
+
+window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){try{const n=JSON.parse(e.newValue);if(n&&(n.s||(n.sh&&n.b))){S=n;render()}}catch(_){}}});
 </script>
 </body>
 </html>

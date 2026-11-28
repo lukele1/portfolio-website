@@ -239,6 +239,7 @@ section.card{counter-reset:st}.gl{list-style:none;padding:0;margin:10px 0;displa
 .pad{display:inline-block;font:700 11px var(--sans);letter-spacing:.02em;padding:2px 8px;border-radius:999px;margin-right:4px;vertical-align:1px}
 .pad.on{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn)}.pad.off{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok)}
 .padbox{border:1.5px solid var(--warn);border-radius:12px;padding:12px 14px;margin:12px 0;background:var(--warn-bg)}.padbox .t{font-weight:700;margin-bottom:6px}.padbox .tw{background:var(--card);border-radius:8px}
+.sendbox{border:1.5px solid var(--accent);border-radius:12px;padding:10px 14px;margin:0 0 12px;background:var(--card)}.sendbox select{font:600 15px var(--sans);min-height:40px;padding:4px 8px;border-radius:8px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);max-width:100%}
 .bandpick{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card);margin:4px 0 14px}
 .bandpick button{font:700 14px var(--sans);border:0;background:none;color:var(--muted);min-height:40px;padding:6px 16px;cursor:pointer}
 .bandpick button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
@@ -279,9 +280,10 @@ code.fn{white-space:nowrap}table.names td:nth-child(2){white-space:nowrap}
   <button type="button" id="print">Print / save PDF</button>
   <button type="button" class="danger" id="clear">Clear this sheet</button>
 </div>
+<div class="sendbox"><label for="target"><b>Send my readings to:</b></label> <select id="target"></select><p id="syncst" class="sumline"></p><p class="sumline">Pick your worksheet first. Donor readings, isolation and the antenna walk go straight into it, and measured gain, max UL and noise go into the report.</p></div>
 <div class="bandpick" id="bandpick" role="group" aria-label="Band"><button data-b="700">700</button><button data-b="800">800</button><button data-b="UHF">UHF</button><button data-b="VHF">VHF</button></div>
 <p class="taphint">Each bubble is one step. Tap it when it's done and it turns into a check.</p>
-<nav class="jump" aria-label="Steps"><a href="#a-step-1">1 Sweep</a><a href="#a-step-2">2 Donor</a><a href="#a-step-3">3 Isolation</a><a href="#a-step-4">4 Antenna check</a><a href="#a-step-5">5 Output and noise</a></nav>
+<nav class="jump" aria-label="Steps"><a href="#a-step-1">1 Sweep</a><a href="#a-step-2">2 Donor</a><a href="#a-step-3">3 Isolation</a><a href="#a-step-4">4 Antenna check</a><a href="#a-step-5">5 Output and noise</a><a href="#a-step-6">6 Measured gain</a></nav>
 <div id="app"></div>
 <footer>Menus can be named a little differently by firmware version. Check against your AHJ rules, the design and your BDA manual.</footer>
 </div>
@@ -297,11 +299,13 @@ const KEY='anritsu-sheet';
 const $=id=>document.getElementById(id);
 const P=t=>`<span class="port">${t}</span>`;
 const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-const blank=()=>({done:{},band:'700',lines:[{n:'Donor'},{n:'DAS'}],ch:[{},{},{}],iso:{inj:'0'},ants:[{},{},{}],out:[{},{}],chk:{}});
+const blank=()=>({done:{},gdl:[{in:'-55'}],gul:[{in:'-55'}],band:'700',lines:[{n:'Donor'},{n:'DAS'}],ch:[{},{},{}],iso:{inj:'0'},ants:[{},{},{}],out:[{},{}],chk:{}});
 let S;try{S=Object.assign(blank(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=blank()}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+if(!S.gdl)S.gdl=[{in:'-55'}];if(!S.gul)S.gul=[{in:'-55'}];
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};if(typeof queueSync==='function')queueSync()};
 const get=p=>p.split('.').reduce((o,k)=>o==null?o:o[k],S);
 const setP=(p,v)=>{const ks=p.split('.');let o=S;ks.slice(0,-1).forEach(k=>{o=o[k]??(o[k]={})});o[ks.at(-1)]=v};
+const isN=v=>typeof v==="number"&&isFinite(v);
 const num=v=>{const n=parseFloat(String(v??'').replace('−','-'));return isFinite(n)?n:null};
 const inp=(k,ph,o={})=>`<input data-k="${k}" value="${esc(get(k))}" placeholder="${ph}" ${o.text?'style="font-family:var(--sans)"':'inputmode="decimal"'} ${o.neg?'data-neg="1"':''}>`;
 const chk=(k,t)=>`<label class="chk"><input type="checkbox" data-chk="${k}" ${S.chk[k]?'checked':''}><span>${t}</span></label>`;
@@ -314,6 +318,36 @@ const ol=items=>`<ol class="gl">${items.map(x=>{const d='d'+(GI++);return `<li d
 const ex=(b,t)=>`<p class="explain"><b>${b}</b> ${t}</p>`;
 const table=(arr,key,cols,addLbl)=>`<div class="tw"><table class="grid stack"><tr>${cols.map(c=>`<th>${c.h}</th>`).join('')}<th></th></tr>${arr.map((r,i)=>`<tr>${cols.map(c=>c.out?`<td class="out" data-l="${c.h}" data-o="${key}.${i}.${c.k}">—</td>`:`<td data-l="${c.h}">${inp(`${key}.${i}.${c.k}`,c.ph==='A1'?'A'+(i+1):c.ph,c)}</td>`).join('')}<td class="delc"><button class="del" data-del="${key}.${i}" aria-label="Remove row">×</button></td></tr>`).join('')}</table></div><button class="add" data-add="${key}">+ ${addLbl}</button>`;
 
+
+// ---------- send readings to a band worksheet (and the report) ----------
+const TARGETS={'':'Nothing (just this page)','700':'700 MHz worksheet','800':'800 MHz worksheet','UHF':'UHF worksheet','VHF':'VHF worksheet','700-800|0':'700/800 worksheet – 700 side','700-800|1':'700/800 worksheet – 800 side','UHF-VHF|0':'UHF/VHF worksheet – UHF side','UHF-VHF|1':'UHF/VHF worksheet – VHF side'};
+let syncT=null;
+function syncNow(){
+  const tg=S.target||'';if(!tg)return;const [key,sideS]=tg.split('|');const pair=sideS!=null;const side=+sideS||0;const LK='bda-gain-'+key;
+  let W;try{W=JSON.parse(localStorage.getItem(LK)||'null')}catch(e){W=null}
+  if(pair){if(!W||!W.sh||!W.b)W={sh:{site:{},tgt:10,ants:[],checks:{}},b:[{chans:[]},{chans:[]}]};W.b[side]=W.b[side]||{chans:[]}}
+  else if(!W||!W.s)W={site:{},s:{tgt:10},chans:[],ants:[],checks:{}};
+  const bb=pair?W.b[side]:W;const sh=pair?W.sh:W.s;const bs=pair?W.b[side]:W.s;
+  bb.chans=bb.chans||[];
+  // donor readings -> Power IN by frequency
+  S.ch.forEach(c=>{const f=num(c.f),r=num(c.r);if(!isN(f))return;let row=bb.chans.find(x=>Math.abs((num(x.f)??-1)-f)<0.00051);
+    if(!row){row=bb.chans.find(x=>!String(x.f??'').trim());if(row)row.f=String(c.f).trim();else{row={f:String(c.f).trim()};bb.chans.push(row)}}
+    if(isN(r))row.p=String(c.r).trim();if(/cc|control/i.test(c.note||''))row.cc='Y'});
+  // isolation
+  const inj=S.iso.dlinj??S.iso.inj;if(String(inj??'').trim()!=='')sh.inj=String(inj);if(String(S.iso.a??'').trim())bs.readA=String(S.iso.a);if(String(S.iso.b??'').trim())bs.readB=String(S.iso.b);
+  // antenna verification
+  if(String(S.antinj??'').trim())sh.antinj=String(S.antinj);
+  const ants=pair?(W.sh.ants=W.sh.ants||[]):(W.ants=W.ants||[]);S.ants.forEach((a,i)=>{if(!String(a.r??'').trim()&&!String(a.id??'').trim())return;ants[i]=Object.assign(ants[i]||{},{id:a.id??'',fl:a.fl??'',r:a.r??''})});
+  if(S.site&&pair){W.sh.site=W.sh.site||{};if(!W.sh.site.name)W.sh.site.name=S.site}else if(S.site&&!pair){W.site=W.site||{};if(!W.site.name)W.site.name=S.site}
+  try{localStorage.setItem(LK,JSON.stringify(W))}catch(e){}
+  // report: measured gain rows + max UL / noise readings
+  try{const RJ=JSON.parse(localStorage.getItem('report2-job')||'{}');RJ.gain=RJ.gain||[];const rows=k=>S[k].filter(r=>String(r.f??'').trim()).map(r=>({f:String(r.f).trim(),in:String(r.in??'-55'),out:String(r.out??'')}));
+    if(rows('gdl').length||rows('gul').length)RJ.gain[side]={dl:rows('gdl'),ul:rows('gul')};
+    RJ.mval=RJ.mval||{};if(String(S.ulmaxm??'').trim()&&!RJ.mval['m'+side+'_ulout'])RJ.mval['m'+side+'_ulout']=String(S.ulmaxm);if(String(S.noise??'').trim()&&!RJ.mval['m'+side+'_noiseon'])RJ.mval['m'+side+'_noiseon']=String(S.noise);
+    localStorage.setItem('report2-job',JSON.stringify(RJ))}catch(e){}
+  const st=$('syncst');if(st)st.textContent=`Sent to the ${TARGETS[tg]} at ${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}. Open that worksheet to see it (it updates itself if it's already open).`;
+}
+const queueSync=()=>{clearTimeout(syncT);syncT=setTimeout(syncNow,400)};
 function render(){
   GI=0;
   const B=BANDS[S.band], big=B.key==='700'||B.key==='800';
@@ -439,6 +473,20 @@ function render(){
     table(S.out,'out',[{k:'f',h:'Channel (MHz)',ph:'155.310'},{k:'p',h:'Output (dBm)',ph:'+9'},{k:'note',h:'Note',ph:'gain step +9.5',text:1}],'Add channel')+
     `<div class="tw"><table class="grid stack"><tr><th>UL noise, top of hump (dBm)</th><th>Under −43?</th></tr><tr><td data-l="UL noise, top of hump (dBm)">${inp('noise','−60',{neg:1})}</td><td class="out" data-l="Under −43?" data-o="noiseok">—</td></tr></table></div>`,'BDA ON · PAD ON'));
 
+  H.push(card(6,'Measured system gain (BDA on, both cables off)',
+    hook('Hook up',[`<b>Unhook both cables from the BDA</b> (donor and DAS) so the test tone never reaches an antenna. These are real channel frequencies.`,`<b>Downlink:</b> signal generator → BDA ${P('Donor')} port. BDA ${P('DAS / Server')} → <b>30 dB pad</b> → ${P('RF In')}.`,`<b>Uplink:</b> flip it. Signal generator → BDA ${P('DAS / Server')} port at the UL frequency. BDA ${P('Donor')} → pad → ${P('RF In')}.`])+
+    ol([`<span class="pad on">PAD ON</span> Amplitude → External Loss <b>30 dB</b>. Ref Level <b>+20 dBm</b>, Atten <b>10 dB</b>.`,
+      `<b>Signal generator:</b> CW at the <b>Input</b> level below (−55 dBm is our usual), on the row's frequency.`,
+      `<b>Anritsu:</b> Center = that frequency, Span 1 MHz, RBW 3 kHz, VBW 1 kHz. Marker 1 on the tone.`,
+      `<b>Type the marker reading</b> in Measured. Gain = measured − input fills in.`,
+      `<b>Next row:</b> move the generator and the Anritsu center to the next frequency. On a control channel site you usually only do the control channel. On a traffic site, every channel.`,
+      `<b>Save</b> one screenshot each way: ${fn('GAIN_DL')} and ${fn('GAIN_UL')}.`])+
+    ex('Good:',`each gain lands within about <b>2 dB</b> of the GUI gain. Example: −55 in, +4.2 out = 59.2 dB next to a GUI of 59.6.`)+
+    ex('All about the same amount low?','check for attenuation set in the GUI. Real gain = GUI gain − attenuation.')+
+    `<p class="explain"><b>Downlink</b></p>`+table(S.gdl,'gdl',[{k:'f',h:'Freq (MHz)',ph:TESTF[B.key].dl},{k:'in',h:'Input (dBm)',ph:'-55'},{k:'out',h:'Measured (dBm)',ph:'4.2'},{k:'g',h:'Gain (dB)',out:1}],'Add downlink row')+
+    `<p class="explain"><b>Uplink</b></p>`+table(S.gul,'gul',[{k:'f',h:'Freq (MHz)',ph:TESTF[B.key].ul},{k:'in',h:'Input (dBm)',ph:'-55'},{k:'out',h:'Measured (dBm)',ph:'23'},{k:'g',h:'Gain (dB)',out:1}],'Add uplink row')+
+    ex('Turn off:','signal generator off and the pad off before you hook the cables back up.'),'BDA ON · PAD ON'));
+
   $('app').innerHTML=H.join('');update();
 }
 function setO(k,t,cls){document.querySelectorAll(`[data-o="${k}"]`).forEach(e=>{e.textContent=t;e.className=e.className.replace(/ (ok|bad)/g,'')+(cls?' '+cls:'')})}
@@ -455,6 +503,7 @@ function update(){
   setO('iso',iso==null?'—':f1(iso),iso==null?'':iso>=60?'ok':'bad');setO('mg',iso==null?'—':f1(iso-20));
   const ls=[];S.ants.forEach((x,i)=>{const r=num(x.r);if(r==null)return setO(`ants.${i}.loss`,'—');const ij=num(S.antinj)??0;const l=ij-r-30;ls.push(r);setO(`ants.${i}.loss`,f1(l)+' dB')});
   setO('antsum',ls.length>1?`Best ${f1(Math.max(...ls))}, worst ${f1(Math.min(...ls))} dBm, a ${f1(Math.max(...ls)-Math.min(...ls))} dB spread.${Math.min(...ls)<=(num(S.antinj)??0)-90?' One is 90 dB or more below what you injected, check that run.':''}`:'');
+  ['gdl','gul'].forEach(k=>S[k].forEach((r,i)=>{const o=num(r.out),n2=num(r.in);setO(`${k}.${i}.g`,isN(o)&&isN(n2)?f1(o-n2)+' dB':'—')}));
   const n=num(S.noise);setO('noiseok',n==null?'—':n<-43?'Yes':'No, over the limit',n==null?'':n<-43?'ok':'bad');
 }
 document.addEventListener('input',e=>{const el=e.target;
@@ -468,6 +517,8 @@ document.addEventListener('click',e=>{const t=e.target;{const li=t.closest&&t.cl
   if(t.dataset.del){const [k,i]=t.dataset.del.split('.');S[k].splice(+i,1);save();render()}
   if(t.dataset.b){S.band=t.dataset.b;save();render()}});
 $('print').onclick=()=>window.print();
+$('target').innerHTML=Object.entries(TARGETS).map(([v,l])=>`<option value="${v}"${(S.target||'')===v?' selected':''}>${l}</option>`).join('');
+$('target').onchange=e=>{S.target=e.target.value;const k=S.target.split('|');const map={'700':'700','800':'800','UHF':'UHF','VHF':'VHF'};let b=map[k[0]];if(k[0]==='700-800')b=k[1]==='1'?'800':'700';if(k[0]==='UHF-VHF')b=k[1]==='1'?'VHF':'UHF';if(b)S.band=b;save();render();syncNow();if(!S.target)$('syncst').textContent='';};
 $('clear').onclick=()=>{if(confirm('Clear everything on this sheet?')){S=blank();save();render()}};
 render();
 

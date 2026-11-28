@@ -658,6 +658,8 @@ render();
 })();
 
 $('mkreport').onclick=()=>{try{localStorage.setItem('report-src',JSON.stringify({page:BAND.slug,when:Date.now(),site:S.site,bands:[{name:BAND.name,key:BAND.key,s:S.s,chans:S.chans,o:calc(S.s,S.chans,S.ants,BAND)}]}))}catch(e){}location.href='../report/'};
+
+window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){try{const n=JSON.parse(e.newValue);if(n&&(n.s||(n.sh&&n.b))){S=n;render()}}catch(_){}}});
 </script>
 </body>
 </html>
