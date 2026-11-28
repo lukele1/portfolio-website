@@ -137,7 +137,7 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
 /* ---- report pages ---- */
 #pages{color-scheme:light;--card:#fff;--soft:#f6f8fa;--line:#d0d7de;--ink:#111;--muted:#6b7785;--in-bg:#fff;--blue:#2E74B5;font-family:Carlito,Calibri,"Segoe UI",Arial,sans-serif;color:#111}
 .page{background:#fff;width:8.5in;max-width:100%;min-height:11in;margin:0 auto 18px;box-shadow:0 2px 14px rgba(0,0,0,.15);position:relative;display:flex;flex-direction:column;box-sizing:border-box;padding:0 .55in .45in}
-.ph{margin:0 -.55in}.banner{display:block;width:100%;height:auto}
+.rhead{margin:0 -.55in}.banner{display:block;width:100%;height:auto}
 .band{height:.62in;background:linear-gradient(100deg,var(--blue) 0 55%,#cfe2f5 100%);display:flex;align-items:center;justify-content:flex-end;padding:0 .4in;color:#0b3d6e;font:800 18px Carlito,Calibri,Arial;letter-spacing:.04em}
 .pt{font:800 15px Carlito,Calibri,Arial;color:var(--blue);letter-spacing:.06em;margin:.12in 0 .14in;padding-bottom:4px;border-bottom:3px solid var(--blue)}
 .pb{flex:1;text-align:center;font-size:12.5px;line-height:1.35}
@@ -164,7 +164,7 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
 .t td.ml{white-space:pre-line}
 .t.cv th,.t.cv td{font-size:10.5px}.t.th8 th,.t.th8 td{font-size:10.5px}
 .t.pts{table-layout:auto}.t.pts th,.t.pts td{font-size:9.5px;padding:1px 2px}.t.pts .ed{min-width:1.2em}
-.page.ctl{min-height:0;box-shadow:none;background:transparent}.page.ctl .ph,.page.ctl .pf{display:none}
+.page.ctl{min-height:0;box-shadow:none;background:transparent}.page.ctl .rhead,.page.ctl .pf{display:none}
 
 .frh{font-weight:700;white-space:pre-line;margin:6px 0}.frl{white-space:pre-line}
 .para{text-align:center;max-width:6.6in;margin:4px auto 10px}
@@ -189,7 +189,7 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
 .slot.big .drop img{max-height:3.3in}.slot.pg{border:0}.slot.pg .drop{min-height:3in}.slot.pg .drop img{max-height:8.4in}
 .slot:not(.has).pg .drop{min-height:6in}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:.18in}
-.g2.ph .drop img{max-height:3.6in}
+.g2.phg .drop img{max-height:3.6in}
 .g1 .drop img{max-height:3.9in}
 .t.si .slot{border:0;margin:0}.t.si .drop img{max-height:3in}
 .slotbar{display:flex;gap:10px;justify-content:center;padding:2px 0 4px}
@@ -204,7 +204,7 @@ html{scroll-behavior:smooth}.page{scroll-margin-top:70px}
 .cov .pt{display:none}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:var(--card);padding:12px 16px;border-radius:10px;font-size:14px;max-width:min(560px,92vw);transition:transform .25s;z-index:50}
 #toast.on{transform:translateX(-50%) translateY(0)}
-@media screen and (max-width:860px){.t.pts{display:block;overflow-x:auto;max-width:100%}.page{min-height:0;padding:0 14px 14px}.ph{margin:0 -14px}.g2{grid-template-columns:1fr}.pb{font-size:12px}.t th,.t td{padding:3px 3px;font-size:11px}}
+@media screen and (max-width:860px){.t.pts{display:block;overflow-x:auto;max-width:100%}}
 @media print{
   @page{size:letter;margin:0}
   html,body{background:#fff!important}
@@ -429,7 +429,7 @@ function pages(){
   // BDA measurement screenshots 2/page with captions
   chunk(listIds('meas').filter(id=>!PRINT||IMG[id]),2,!PRINT).forEach((ids,k,arr)=>pg(k===0?'BDA Measurements Screenshots':'',`<div class="g1">${ids.map(id=>id?slot(id,'',{list:'J|meas'}):'').join('')}</div>${k===arr.length-1?addBtn('meas','Add measurement screenshot'):''}`,{title:k===0?'BDA MEASUREMENTS SCREENSHOTS':''}));
   // photos 4/page
-  chunk(listIds('photos').filter(id=>!PRINT||IMG[id]),4,!PRINT).forEach((ids,k,arr)=>pg(k===0?'Site Photo':'',`<div class="g2 ph">${ids.map(id=>id?slot(id,'',{list:'J|photos'}):'').join('')}</div>${k===arr.length-1?addBtn('photos','Add photo'):''}`,{title:k===0?'SITE PHOTO':''}));
+  chunk(listIds('photos').filter(id=>!PRINT||IMG[id]),4,!PRINT).forEach((ids,k,arr)=>pg(k===0?'Site Photo':'',`<div class="g2 phg">${ids.map(id=>id?slot(id,'',{list:'J|photos'}):'').join('')}</div>${k===arr.length-1?addBtn('photos','Add photo'):''}`,{title:k===0?'SITE PHOTO':''}));
   pg('FCC License',slot('keep_fcc','',{nocap:1,page:1})+(PRINT?'':'<p class="tip noprint">Your FCC license. Add it once, it stays for every report.</p>'),{title:'FCC LICENSE'});
   const certs=listIds('certs',1);(certs.length?certs:(PRINT?[]:[null])).forEach((id,k,arr)=>pg(k===0?'Manufacturer Certifications':'',(id?slot(id,'',{nocap:1,page:1,list:'C|certs'}):'<p class="tip noprint">Your manufacturer training certificates (Fiplex, Comba, ADRF…). Add them once, they stay for every report.</p>')+(k===arr.length-1?addBtn('certs','Add certificate',1):''),{title:k===0?'MANUFACTURER CERTIFICATIONS':''}));
   return P;
@@ -469,7 +469,7 @@ function gain(i,b){
 function render(){
   const ae=document.activeElement;let fk=null;if(ae&&ae.dataset){for(const k of ['e','gn','cap','eq','al']){if(ae.dataset[k]){fk=`[data-${k}="${ae.dataset[k]}"]`;break}}}
   RENDERING=true;const P=pages();let nn=0;P.forEach(p=>{p.no=p.cls.includes('ctl')?0:++nn});const total=nn;
-  $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}" id="pg-${p.no}"><header class="ph"><img class="banner" src="${IMG.keep_banner?IMG.keep_banner.url:'banner.png'}" alt=""></header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${p.no} of ${total}</footer></section>`).join('');
+  $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}" id="pg-${p.no}"><header class="rhead"><img class="banner" src="${IMG.keep_banner?IMG.keep_banner.url:'banner.png'}" alt=""></header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${p.no} of ${total}</footer></section>`).join('');
   // TOC
   const secs=[];P.forEach((p,k)=>{if(p.sec&&k>1)secs.push([p.sec,p.no])});
   $('toc').innerHTML=secs.map(([s,n])=>`<a class="tl" href="#pg-${n}"><span>${esc(s.toUpperCase())}</span><i></i><span>${n}</span></a>`).join('');
