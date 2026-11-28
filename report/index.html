@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Commissioning Report Builder</title>
-<meta name="description" content="Turn a BDA worksheet into an ERRCS commissioning report.">
+<title>Commissioning Report</title>
+<meta name="description" content="Fill in and print an ERRCS commissioning report.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -125,141 +125,83 @@ footer{font-size:13px;color:var(--muted);margin-top:20px}
   details.how{display:none}
   .wrap{padding:0}
 }
-</style>
-<style id="look-refresh">
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500;600;700&display=swap');
-/* ===== Look refresh: riser-drawing blueprint, fire-red callouts. Styling only, no content changes. ===== */
-:root{
-  --bg:#ECF0F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#13243A; --muted:#56677A; --line:#CBD5DC; --soft:#F3F6F8; --fixed-bg:#F1F4F6;
-  --accent:#C62828; --signal:#C62828; --link:#1B5E9E; --calc:#1B5E9E; --ans:#1B5E9E; --calc-bg:#E8F0F9; --ans-bg:#E8F0F9;
-  --in-bg:#FFF6D6; --in-line:#D4A000; --hook-bg:#EEF2F6;
-  --ok:#23733A; --ok-bg:#E5F3E8; --bad:#B42318; --bad-bg:#FBEAE8; --warn:#8A5A00; --warn-bg:#FDF2D8;
-  --gain:#23733A; --gain-bg:#EAF5EC; --loss:#B42318; --loss-bg:#FBEDEB;
-  --grid:rgba(19,36,58,.045); --panel:#0E1E30;
-  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --body:var(--sans); --display:var(--sans); --font-ui:var(--sans);
-  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --font-num:var(--mono);
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
-  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
-  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
-  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
-  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B;
-  --grid:rgba(140,180,220,.05); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0D1823; --card:#132131; --paper:#132131; --ink:#E4EBF1; --muted:#93A4B4; --line:#24364A; --soft:#182A3C; --fixed-bg:#192B3D;
-  --accent:#F0614F; --signal:#F0614F; --link:#79B4F2; --calc:#79B4F2; --ans:#79B4F2; --calc-bg:#16293F; --ans-bg:#16293F;
-  --in-bg:#2A2410; --in-line:#CDA22B; --hook-bg:#172839;
-  --ok:#76C98A; --ok-bg:#15291C; --bad:#F28B7F; --bad-bg:#33191A; --warn:#E6C26B; --warn-bg:#2E2510;
-  --gain:#76C98A; --gain-bg:#16291C; --loss:#F28B7F; --loss-bg:#301B1B; --grid:rgba(140,180,220,.05); color-scheme:dark}
-body{background-color:var(--bg);
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:24px 24px;background-attachment:fixed;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-input,select,button{font-family:var(--sans)}
-a{text-underline-offset:3px}
-.burger{background:var(--card)}
-.menu{border-radius:10px;box-shadow:0 18px 40px -12px rgba(13,24,35,.35)}
-.menu .lbl{font:700 12px/1.3 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--accent)}
-.menu a{font-weight:600}
-.menu a small{font-weight:400}
-.menu a[aria-current="page"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
-@media print{body{background-image:none}}
 
-.top{background:color-mix(in srgb,var(--card) 90%,transparent)}
-.top .home{font-weight:800;font-stretch:85%;font-size:16px}
-.bands a{font:700 13px var(--sans);border-radius:6px;padding:6px 10px}
-.bands a[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:#fff}
-header h1{font-weight:800;font-stretch:72%;font-size:clamp(34px,6.5vw,52px);line-height:.95;letter-spacing:-.015em;margin:22px 0 10px}
-header p{font-size:15.5px;line-height:1.6}
-.tools button{font-weight:600;border-radius:8px}
-.legend{font-weight:500}
-.card{border-radius:10px;padding:18px 20px;margin-bottom:14px}
-.card h2{font-size:19px;font-weight:700;font-stretch:90%;gap:10px;margin-bottom:10px}
-.card h2 .n{background:transparent;color:var(--accent);border:2px solid var(--accent);border-radius:999px;min-width:34px;height:34px;padding:0 7px;font:700 13px var(--mono)}
-.tag{font:700 11px var(--sans);letter-spacing:.02em;padding:3px 9px}
-.tag.off{background:var(--bad-bg)}
-.hook{border-left-color:var(--ink);border-radius:4px 8px 8px 4px;padding:10px 14px}
-.hook .t{font:700 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink)}
-.port{font:700 11.5px var(--mono);border-radius:4px;padding:1px 6px;background:var(--card)}
-details.how summary{font-weight:700}
-.eq{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--soft)}
-.eq .f{font-weight:700;font-size:14.5px}
-.eq .op{color:var(--accent)}
-.verdict{border-radius:8px;padding:9px 12px}
-.rule{border-radius:10px}
-table.grid th{font-weight:700}
-button.add{font-weight:700}
-#bar{background:var(--panel);border-top:2px solid var(--accent);box-shadow:none}
-#bar div{color:rgba(228,235,241,.62)}
-#bar b{color:#fff}
-#bar .ok b{color:#7BD88F} #bar .bad b{color:#FF8A80}#bar .warn b{color:#FFD166}
-footer{line-height:1.6}
-.jmsg{align-self:center;font-size:13.5px;font-weight:600;color:var(--ok)}
-table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
-
-@media (max-width:560px){
-  #step-4 .tw,#step-0B .tw{overflow:visible}
-  #step-4 table.grid,#step-0B table.grid,.duo #step-4 table.grid{min-width:0!important;table-layout:auto}
-  #step-4 table.grid tr:first-child,#step-0B table.grid tr:first-child{display:none}
-  #step-4 table.grid tr,#step-0B table.grid tr{display:grid;gap:6px 8px;padding:8px 0;border-bottom:1px solid var(--line);align-items:end}
-  #step-4 table.grid tr{grid-template-columns:1fr 76px 36px;grid-template-areas:"f c x" "p s s"}
-  #step-0B table.grid tr{grid-template-columns:1fr 1fr 36px;grid-template-areas:"a l x" "r o o"}
-  #step-4 table.grid td,#step-0B table.grid td{border:0;padding:0;display:flex;flex-direction:column;gap:3px;min-width:0}
-  #step-4 table.grid td::before,#step-0B table.grid td::before{font-size:12px;color:var(--muted)}
-  #step-4 td:nth-child(1){grid-area:f}#step-4 td:nth-child(1)::before{content:"DL freq (MHz)"}
-  #step-4 td:nth-child(2){grid-area:c}#step-4 td:nth-child(2)::before{content:"Control ch?"}
-  #step-4 td:nth-child(3){grid-area:p}#step-4 td:nth-child(3)::before{content:"Power IN (dBm)"}
-  #step-4 td:nth-child(4){grid-area:s}#step-4 td:nth-child(4)::before{content:"How you got it"}
-  #step-4 td:nth-child(5){grid-area:x;align-self:center}
-  #step-0B td:nth-child(1){grid-area:a}#step-0B td:nth-child(1)::before{content:"Antenna"}
-  #step-0B td:nth-child(2){grid-area:l}#step-0B td:nth-child(2)::before{content:"Floor / area"}
-  #step-0B td:nth-child(3){grid-area:r}#step-0B td:nth-child(3)::before{content:"PCTEL read (dBm)"}
-  #step-0B td:nth-child(4){grid-area:o;justify-content:flex-end}#step-0B td:nth-child(4)::before{content:"DAS loss"}
-  #step-0B td:nth-child(5){grid-area:x;align-self:center}
-}
-
-.why{font-size:13.5px;color:var(--muted);margin:-2px 0 10px;border-left:3px solid var(--accent);padding:2px 0 2px 10px}
-.why b{color:var(--ink)}
-.measure{border:1.5px solid var(--ok);background:var(--ok-bg);border-radius:10px;padding:10px 12px;margin:10px 0}
-.measure .t{display:block;color:var(--ok);margin-bottom:2px}
-.explain{font-size:13.5px;margin:6px 0 0;color:var(--ink)}
-.explain b{color:var(--ink)}
-#m-src,[id^="m-src-"]{font-weight:600}
-.guide{border-color:var(--accent)}.guide summary{color:var(--accent)}.gl{padding-left:20px;margin:6px 0}.gl li{margin:5px 0}
-.srcbox{border:1.5px solid var(--line);background:var(--soft);border-radius:12px;padding:12px 14px;margin:0 0 16px;font-size:15px}
-.why{font-size:14px;color:var(--muted);margin:-4px 0 10px}
-.ins{font-size:14px;color:var(--muted)}
-.card h3{font-size:15px;margin:16px 0 8px}
-.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 14px;margin:6px 0 10px}
-.fld.wide{grid-column:1/-1}
-.fld textarea,.fld input{width:100%;box-sizing:border-box;font:500 15px var(--sans);padding:8px 10px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);min-height:40px}
-.fld textarea{resize:vertical}
-.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:8px 0}
-.slot{border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--card);display:flex;flex-direction:column;gap:6px}
-.drop{border:2px dashed var(--line);border-radius:9px;min-height:120px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:14px;cursor:pointer;overflow:hidden;background:var(--soft)}
-.drop small{font-size:12px}
-.drop.over{border-color:var(--accent);background:var(--warn-bg)}
-.slot.has .drop{border-style:solid;background:#000}
-.drop img{max-width:100%;max-height:180px;display:block}
-.capin{font:600 14px var(--sans);padding:7px 9px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);width:100%;box-sizing:border-box}
-.srow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
-.fname{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.lnk{border:0;background:none;color:var(--accent);font:600 13px var(--sans);cursor:pointer;padding:4px 0;min-height:32px}
-.sum{display:grid;gap:8px}
-.srow2{display:grid;grid-template-columns:minmax(180px,1.1fr) 96px 2fr;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:6px 0}
-.srow2 .st{font-weight:600;font-size:14px}.srow2 select,.srow2 input{font:500 14px var(--sans);min-height:38px;border-radius:7px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);padding:4px 8px;width:100%;box-sizing:border-box}
-.auto{font:700 10px var(--sans);background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok);border-radius:999px;padding:1px 6px;vertical-align:1px}
-#bulk{border:2px dashed var(--accent);border-radius:12px;padding:14px;text-align:center;margin:0 0 16px;background:var(--card)}
-#bulk.over{background:var(--warn-bg)}
-#bulk p{margin:4px 0;font-size:14px;color:var(--muted)}
+.rp-tools{max-width:8.5in;margin:0 auto 14px;display:grid;gap:10px}
+.rp-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rp-tools .box{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;font-size:14px}
 .bigbtn{font:700 16px var(--sans);background:var(--accent);color:#fff;border:0;border-radius:10px;min-height:46px;padding:10px 18px;cursor:pointer}
-.bigbtn[disabled]{opacity:.6}
+.rbtn{font:600 14px var(--sans);min-height:40px;padding:6px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.rbtn.danger{color:var(--bad)}
+#bulk{border:2px dashed var(--accent);text-align:center}#bulk.over{background:var(--warn-bg)}
+#bulk p{margin:4px 0;color:var(--muted)}
+/* ---- report pages ---- */
+#pages{--blue:#2E74B5;font-family:Carlito,Calibri,"Segoe UI",Arial,sans-serif;color:#111}
+.page{background:#fff;width:8.5in;max-width:100%;min-height:11in;margin:0 auto 18px;box-shadow:0 2px 14px rgba(0,0,0,.15);position:relative;display:flex;flex-direction:column;box-sizing:border-box;padding:0 .55in .45in}
+.ph{margin:0 -.55in}.banner{display:block;width:100%;height:auto}
+.band{height:.62in;background:linear-gradient(100deg,var(--blue) 0 55%,#cfe2f5 100%);display:flex;align-items:center;justify-content:flex-end;padding:0 .4in;color:#0b3d6e;font:800 18px Carlito,Calibri,Arial;letter-spacing:.04em}
+.pt{font:800 15px Carlito,Calibri,Arial;color:var(--blue);letter-spacing:.06em;margin:.12in 0 .14in;padding-bottom:4px;border-bottom:3px solid var(--blue)}
+.pb{flex:1;text-align:center;font-size:12.5px;line-height:1.35}
+.pf{font-size:10.5px;color:#333;margin-top:.15in}
+.pb h4{font-size:13px;margin:14px 0 6px}
+.t{width:100%;border-collapse:collapse;margin:8px auto 12px;table-layout:fixed}
+.t th,.t td{border:1px solid #000;padding:4px 6px;text-align:center;vertical-align:middle;word-wrap:break-word}
+.t th{background:#f2f2f2;font-weight:700}
+.t td.k{font-weight:700}
+.t.si td.l{width:50%;text-align:center}.t.si td.l p{margin:6px 0}.t.si td.r{width:50%}
+.t.al td.pf{font-weight:700}.t.al td.pass{background:#e8f5e9}.t.al td.fail{background:#fdecea}
+.cyc{border:0;background:none;font:700 12px Carlito,Calibri,Arial;cursor:pointer;min-width:60px;min-height:24px;color:inherit}
+.t.gn td.calc{font-weight:600}
+.frh{font-weight:700;white-space:pre-line;margin:6px 0}.frl{white-space:pre-line}
+.para{text-align:center;max-width:6.6in;margin:4px auto 10px}
+.ed{outline:none;border-radius:3px;min-width:1.5em;display:inline-block;white-space:pre-line}
+.ed.blk{display:block}
+.ed:hover{background:#fff7d6}.ed:focus{background:#fff3c4;box-shadow:0 0 0 2px #f5c542}
+.ed:empty::before{content:attr(data-ph);color:#9aa3ad;font-style:italic}
+.cover{display:flex;flex-direction:column;align-items:center}
+.cover h1{font:700 24px Carlito,Calibri,Arial;margin:.1in 0 .12in;line-height:1.2;color:#111}
+.cover .lab{font-style:italic;font-size:12px;margin-top:8px}
+.cover .bx{border:1px solid #000;width:100%;padding:3px 6px;font-style:italic;font-size:12px;min-height:18px}
+.cover .bx.big{font:700 20px Carlito,Calibri,Arial;font-style:normal}
+.cover .conducted{margin:12px 0 4px;font-size:12px;line-height:1.5}
+.cover .tester{font-style:italic;line-height:1.45}
+.slot{margin:6px auto;border:1px solid #000;display:flex;flex-direction:column;width:100%;break-inside:avoid}
+.slot figcaption{border-bottom:1px solid #000;font-weight:700;font-size:12px;padding:2px 4px;text-align:center}
+.drop{display:flex;align-items:center;justify-content:center;min-height:1.4in;cursor:pointer;padding:6px}
+.drop img{max-width:100%;max-height:3.4in;display:block}
+.slot:not(.has) .drop{background:repeating-linear-gradient(45deg,#fafafa 0 10px,#f1f4f7 10px 20px);border:2px dashed #b8c4cf;margin:6px}
+.hint{color:#6b7785;font-size:13px}.hint small{font-size:11px}
+.drop.over{outline:3px solid var(--blue)}
+.slot.big .drop img{max-height:3.3in}.slot.pg{border:0}.slot.pg .drop{min-height:3in}.slot.pg .drop img{max-height:8.4in}
+.slot:not(.has).pg .drop{min-height:6in}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.18in}
+.g2.ph .drop img{max-height:3.6in}
+.g1 .drop img{max-height:3.9in}
+.t.si .slot{border:0;margin:0}.t.si .drop img{max-height:3in}
+.slotbar{display:flex;gap:10px;justify-content:center;padding:2px 0 4px}
+.slotbar button,.addslot,.x{border:0;background:none;color:#b3261e;font:600 12px var(--sans);cursor:pointer;min-height:28px}
+.addslot{color:var(--blue);font-size:13px;border:1px dashed var(--blue);border-radius:8px;padding:6px 12px;margin:8px auto;display:inline-block}
+.x{color:#999;font-size:16px}
+.tip{font-size:12px;color:#6b7785;font-style:italic;margin:6px auto;max-width:6in}
+#toc .tl{display:flex;align-items:baseline;gap:6px;text-align:left;font-size:12.5px;margin:6px 0}
+#toc .tl i{flex:1;border-bottom:1.5px dotted #333;transform:translateY(-3px)}
+.cov .pt{display:none}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:var(--card);padding:12px 16px;border-radius:10px;font-size:14px;max-width:min(560px,92vw);transition:transform .25s;z-index:50}
 #toast.on{transform:translateX(-50%) translateY(0)}
-.card td input,.card td select{width:100%;box-sizing:border-box;font:500 14px var(--sans);min-height:36px;border-radius:6px;border:1.5px solid var(--in-line);background:var(--in-bg);color:var(--ink);padding:4px 6px}
-@media (max-width:620px){.srow2{grid-template-columns:1fr 96px}.srow2 input{grid-column:1/-1}.slots{grid-template-columns:1fr 1fr}.drop{min-height:100px}}
-@media (max-width:380px){.slots{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+@media screen and (max-width:860px){.page{min-height:0;padding:0 14px 14px}.ph{margin:0 -14px}.g2{grid-template-columns:1fr}.pb{font-size:12px}.t th,.t td{padding:3px 3px;font-size:11px}}
+@media print{
+  @page{size:letter;margin:0}
+  html,body{background:#fff!important}
+  body>*:not(.wrap){display:none!important}
+  .wrap{max-width:none!important;padding:0!important;margin:0!important}
+  .wrap>*:not(#pages){display:none!important}
+  .page{box-shadow:none;margin:0;width:8.5in;height:11in;min-height:11in;overflow:hidden;break-after:page;page-break-after:always}
+  .page:last-child{break-after:auto}
+  .noprint,.slotbar,.addslot,.x{display:none!important}
+  .ed:empty::before{content:""}
+  .ed:hover,.ed:focus{background:none;box-shadow:none}
+  -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 </style>
 </head>
 <body>
@@ -278,355 +220,220 @@ table.grid select{min-width:66px;width:100%;padding:6px 24px 6px 8px}
     <a href="../">Home</a>
   </nav>
 </div></div>
-<div class="wrap">
-<header>
-  <h1>Commissioning report</h1>
-  <p>Fill in what the worksheet doesn't know, add your screenshots, then download a Word report in the same layout as our commissioning reports. Open it in Word, check it, and save it as a PDF.</p>
-</header>
-<div class="tools">
-  <button type="button" class="bigbtn" id="make">Download Word report</button>
-  <button type="button" class="danger" id="newjob">Start a new report</button>
+<div class="wrap" style="max-width:none">
+<div class="rp-tools">
+  <header style="text-align:left"><h1>Commissioning report</h1><p>Every number from your worksheet is already in. Click any text to change it, click a box to add a picture, then hit <b>Print / Save PDF</b> and pick "Save as PDF". Everything stays in this browser on this device.</p></header>
+  <div class="rp-row"><button type="button" class="bigbtn" id="print">Print / Save PDF</button><button type="button" class="rbtn danger" id="newjob">Start a new report</button></div>
+  <div class="box" id="srcbox"></div>
+  <div class="box"><span id="bannerst"></span> <button type="button" class="rbtn" id="bannerbtn">Load header banner</button></div>
+  <div class="box" id="bulk"><b>Drop all your Anritsu screenshots here at once</b><p>Files named like <code>ABC12_ISO_DL.jpg</code> or <code>ABC12_DL_DONOR.jpg</code> go in the right box. Anything else is added at the end of BDA Measurements for you to name.</p><button type="button" class="rbtn" id="bulkbtn">Pick screenshots</button><input type="file" id="bulkin" accept="image/png,image/jpeg" multiple hidden></div>
 </div>
-<div id="bulk"><b>Drop all your screenshots here at once</b><p>Files named like the Anritsu page (for example <code>ABC12_ISO_DL.jpg</code>, <code>ABC12_DL_DONOR.jpg</code>) go into the right box by themselves. Anything else lands in "Other screenshots" for you to rename.</p><button type="button" id="bulkbtn">Pick screenshots</button><input type="file" id="bulkin" accept="image/png,image/jpeg" multiple hidden></div>
-<div id="app"></div>
-<footer>Everything on this page, screenshots included, stays in this browser on this device. Nothing is uploaded.</footer>
+<div id="pages"></div>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
-<script src="docx.js"></script>
 <script>
-// ===== Report builder =====
+// ===== Commissioning report (HTML, print to PDF) =====
 const $=id=>document.getElementById(id);
 const isN=v=>typeof v==='number'&&isFinite(v);
-const num=v=>{if(v==null||v==='')return null;const n=parseFloat(String(v).replace('−','-'));return isFinite(n)?n:null};
-const L=x=>Math.log10(x);
+const num=v=>{if(v==null||v==='')return null;const n=parseFloat(String(v).replace('−','-').replace(/[^\d.+-]/g,''));return isFinite(n)?n:null};
 const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-const f2=n=>isN(n)?(Math.round(n*100)/100).toFixed(2):'—';
-const f1=n=>isN(n)?(Math.round(n*10)/10).toFixed(1):'—';
-const sg=n=>isN(n)?(n>0?'+':'')+f1(n):'—';
-const fmtd=n=>isN(n)?String(Math.round(n*100)/100):'—';
+const f2=n=>isN(n)?(Math.round(n*100)/100).toFixed(2):'';
+const fd=n=>isN(n)?String(Math.round(n*100)/100):'';
+const L=Math.log10;
 
-// ---------- data ----------
-let SRC=null; try{SRC=JSON.parse(localStorage.getItem('report-src')||'null')}catch(e){}
-const RKEY='report-job', CKEY='report-company';
+let SRC=null;try{SRC=JSON.parse(localStorage.getItem('report-src')||'null')}catch(e){}
 let J,C;
-try{J=JSON.parse(localStorage.getItem(RKEY)||'{}')}catch(e){J={}}
-try{C=JSON.parse(localStorage.getItem(CKEY)||'{}')}catch(e){C={}}
-J.cap=J.cap||{}; J.multi=J.multi||{}; J.sum=J.sum||{}; J.b=J.b||[{},{}]; J.alarms=J.alarms||null;
-const save=()=>{try{localStorage.setItem(RKEY,JSON.stringify(J));localStorage.setItem(CKEY,JSON.stringify(C))}catch(e){}};
+try{J=JSON.parse(localStorage.getItem('report2-job')||'{}')}catch(e){J={}}
+try{C=JSON.parse(localStorage.getItem('report2-company')||'{}')}catch(e){C={}}
 const BANDS=()=>SRC&&SRC.bands?SRC.bands:[];
-// prefill from worksheet
-if(SRC&&SRC.site){const s=SRC.site;if(!J.site&&s.name)J.site=s.name;if(!J.date&&s.date)J.date=s.date;if(!C.tester&&s.tech)C.tester=s.tech;if(!J.bdaModel&&s.model)J.bdaModel=s.model;}
-if(!J.alarms)J.alarms=[['AC Fail','ERRCS LOSS OF POWER'],['Low Battery','ERRCS LOW BATTERY'],['Charger Fail','ERRCS CHARGER FAIL'],['BDA Fail','ERRCS BDA TROUBLE'],['Donor Antenna','ERRCS ANTENNA TROUBLE']].map(([a,l])=>({a,l,an:'',fa:''}));
+function defaults(){
+  J.ov=J.ov||{};J.cap=J.cap||{};J.lists=J.lists||{};J.gain=J.gain||[];J.alarms=J.alarms||[];C.cap=C.cap||{};C.lists=C.lists||{};
+  if(!J.eq)J.eq=[['Signal Booster',''],['Battery Backup Unit',''],['Donor Antenna',''],['Service Antenna','']];
+  if(!J.lists.cov)J.lists.cov=[];if(!J.lists.gui)J.lists.gui=[];if(!C.lists.certs)C.lists.certs=[];
+  if(!J.lists.meas){J.lists.meas=[];const nb=Math.max(1,BANDS().length);for(let i=0;i<nb;i++)['donor:Donor Signal','dlout:Downlink Output','isodl:System Isolation - Downlink','isoul:System Isolation - Uplink','ulout:Uplink Output','spur:Uplink Spurious Emissions','noiseon:Uplink Quiescent Noise - RF On','noiseoff:Uplink Quiescent Noise - RF Off'].forEach(x=>{const [k,c]=x.split(':');const id=`m${i}_${k}`;J.lists.meas.push(id);if(J.cap[id]==null)J.cap[id]=(nb>1&&BANDS()[i]?BANDS()[i].name+' ':'')+c})}
+  if(!J.lists.photos){J.lists.photos=[];['Headend Room','BDA','BDA Internal','BDA Model','BBU','BBU Internal','BBU Model','BDA and BBU Wiring','Antenna Connection','Annunciator','Fire Alarm Modules','Ground','Headend Room Overview','Headend Room Door','Donor Overview','Donor Model','Donor Ground','Donor Poly Phaser','Floor Photo','Floor Photo'].forEach((c,i)=>{const id='ph'+i;J.lists.photos.push(id);if(J.cap[id]==null)J.cap[id]=c})}
+  if(SRC&&SRC.site){const s=SRC.site;if(!J.site&&s.name)J.site=s.name;if(!J.date&&s.date)J.date=s.date;if(!C.tester&&s.tech)C.tester=s.tech}
+}
+defaults();
+const save=()=>{try{localStorage.setItem('report2-job',JSON.stringify(J));localStorage.setItem('report2-company',JSON.stringify(C))}catch(e){}};
 
-// ---------- images (IndexedDB) ----------
-let DB=null;
-const dbOpen=()=>new Promise(res=>{try{const r=indexedDB.open('report-imgs',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>{DB=r.result;res()};r.onerror=()=>res()}catch(e){res()}});
+// ---------- images ----------
+let DB=null;const IMG={};
+const dbOpen=()=>new Promise(res=>{try{const r=indexedDB.open('report2-imgs',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>{DB=r.result;res()};r.onerror=()=>res()}catch(e){res()}});
 const dbPut=(k,v)=>new Promise(res=>{if(!DB)return res();const t=DB.transaction('img','readwrite');t.objectStore('img').put(v,k);t.oncomplete=res;t.onerror=res});
-const dbGet=k=>new Promise(res=>{if(!DB)return res(null);const r=DB.transaction('img').objectStore('img').get(k);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null)});
 const dbDel=k=>new Promise(res=>{if(!DB)return res();const t=DB.transaction('img','readwrite');t.objectStore('img').delete(k);t.oncomplete=res;t.onerror=res});
-const dbClear=()=>new Promise(res=>{if(!DB)return res();const t=DB.transaction('img','readwrite');t.objectStore('img').clear();t.oncomplete=res;t.onerror=res});
-const IMG={}; // slot -> {url,w,h,name}
-function readImg(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const im=new Image();im.onload=()=>res({blob:file,w:im.naturalWidth,h:im.naturalHeight,name:file.name,type:file.type});im.onerror=()=>rej(new Error('Not a picture'));im.src=url})}
-async function setImg(slot,file){
-  if(!/^image\/(png|jpe?g)$/i.test(file.type)&&!/\.(png|jpe?g)$/i.test(file.name)){toast(`${file.name}: use JPG or PNG`);return false}
-  const d=await readImg(file);await dbPut(slot,d);IMG[slot]={url:URL.createObjectURL(d.blob),w:d.w,h:d.h,name:d.name};
-  if(!J.cap[slot]||J.cap[slot]===''){} save();return true;
+const dbAll=()=>new Promise(res=>{if(!DB)return res([]);const out=[];const r=DB.transaction('img').objectStore('img').openCursor();r.onsuccess=()=>{const c=r.result;if(c){out.push([c.key,c.value]);c.continue()}else res(out)};r.onerror=()=>res(out)});
+async function setImg(id,file){
+  if(!/\.(png|jpe?g)$/i.test(file.name)&&!/^image\/(png|jpe?g)$/.test(file.type)){toast(file.name+': use a JPG or PNG');return}
+  await dbPut(id,{blob:file,name:file.name});if(IMG[id])URL.revokeObjectURL(IMG[id].url);IMG[id]={url:URL.createObjectURL(file),name:file.name};
 }
+const isKeep=id=>id.startsWith('keep_');
 
-// ---------- slot definitions ----------
-const BS=i=>{const b=BANDS()[i];return b?b.name:''};
-function slotsFor(sec){
-  const nb=Math.max(1,BANDS().length),out=[];
-  const per=(arr)=>{for(let i=0;i<nb;i++)arr.forEach(([k,c])=>out.push([`b${i}_${k}`,(nb>1?BS(i)+' ':'')+c]))};
-  switch(sec){
-    case 'loc':return[['loc','ERRCS Equipment Location'],['overview','ERRCS Headend Overview']];
-    case 'freq':return[['freqimg','Assigned Frequencies']];
-    case 'tower':return[['towermap','Donor Tower Map']];
-    case 'meas':per([['donor','Donor Signal'],['donorwide','Donor Signal Wide – Multiple Channels'],['dlout','Downlink Output'],['dloutwide','Downlink Output Wide – Multiple Channels'],['isodl','System Isolation - Downlink'],['isoul','System Isolation - Uplink'],['ulmax','Max Uplink Output'],['spur','Uplink Spurious Emissions'],['noiseon','Uplink Quiescent Noise – RF On'],['noiseoff','Uplink Quiescent Noise – RF Off']]);return out;
-    case 'sweep':per([['rldonor','Donor Antenna Return Loss'],['dtfdonor','Donor Antenna Distance to Fault']]);out.push(['rldas','DAS / Service Return Loss'],['dtfdas','DAS / Service Distance to Fault']);return out;
-    case 'mon':return[['alarmgui','GUI Alarm Settings']];
-    case 'batt':return[['battery','Battery Backup Calculations']];
-    case 'photos':return['ERRCS Equipment Overview','BDA','BDA Internal','BDA Model','BDA Donor Connections','BDA Service Connections','Battery Backup Unit','BBU Internal','BBU Connections','Electrical Breaker','AC Disconnect','EPO Switch','Annunciator','ERRCS Headend Splitters','ERRCS Headend Grounding','Service Antenna','Donor Antenna Overview','Lightning Protection & Donor Grounding'].map((c,i)=>['ph'+i,c]);
-    case 'fcc':return[['fcc','FCC License'],['cert','BDA Certification']];
-  }
-  return[];
+// ---------- numbers from the worksheet ----------
+const fspl=(mhz,mi)=>(isN(mhz)&&isN(mi)&&mi>0)?20*L(mhz)+20*L(mi)+36.6:null;
+const UL_OFF={'700':30,'800':-45};
+function band(i){
+  const B=BANDS()[i];if(!B)return null;const o=B.o||{},s=B.s||{};
+  const ch=(B.chans||[]).map(c=>({f:num(c.f),p:num(c.p),cc:c.cc})).filter(c=>isN(c.f));
+  const meas=ch.filter(c=>isN(c.p));const ref=meas.find(c=>c.cc==='Y')||meas.slice().sort((a,b)=>b.p-a.p)[0]||ch[0]||null;
+  const fs=ref?fspl(ref.f,o.mi):null;const cpl=(isN(fs)&&isN(o.gd)&&isN(o.loss))?fs-o.gd+o.loss:null;
+  return {i,name:B.name,key:B.key,o,s,ch,ref,fs,cpl,mi:o.mi,gd:o.gd,loss:o.loss,dlgui:o.dlgui,ulgui:o.ulgui,short:B.key==='VHF'?'150':B.key==='UHF'?'450':B.key};
 }
-const MULTI={cov:'Coverage report page',gui:'BDA GUI Settings',extra:'Screenshot'};
-const multiSlots=sec=>(J.multi[sec]||[]).map(id=>[id,MULTI[sec]]);
-const cap=(id,def)=>(J.cap[id]??'')!==''?J.cap[id]:def;
+const bandsAll=()=>BANDS().map((b,i)=>band(i));
+const bandList=()=>{const n=bandsAll().map(b=>b.name);return n.length?n.join(' and '):''};
 
-// ---------- filename auto-match ----------
-const MATCH=[[/DL_DONOR_MAXHOLD|DONOR_WIDE/,'donorwide'],[/DL_DONOR/,'donor'],[/DL_OUT_WIDE/,'dloutwide'],[/DL_OUT/,'dlout'],[/ISO_DL/,'isodl'],[/ISO_UL/,'isoul'],[/UL_MAX|UL_OUT/,'ulmax'],[/SPUR/,'spur'],[/UL_NOISE_ON|NOISE_ON/,'noiseon'],[/UL_NOISE_OFF|NOISE_OFF/,'noiseoff'],[/RL_DONOR/,'rldonor'],[/DTF_DONOR/,'dtfdonor'],[/RL_DAS/,'rldas'],[/DTF_DAS/,'dtfdas']];
-function matchSlot(fname){
-  const n=fname.toUpperCase().replace(/\.[A-Z]+$/,'').replace(/[\s-]+/g,'_');
-  for(const [re,k] of MATCH){if(re.test(n)){
-    if(k==='rldas'||k==='dtfdas')return k;
-    let bi=0;BANDS().forEach((b,i)=>{if(i>0&&new RegExp('_'+b.key.toUpperCase()+'(_|$)').test(n))bi=i});
-    return `b${bi}_${k}`;}}
-  return null;
+// ---------- editable text ----------
+// E: inline editable. key in J (or C when scope C). auto = suggested value when blank / not edited.
+function E(key,auto='',o={}){
+  const src=o.C?C:J;let v;
+  if(o.ov){v=(J.ov[key]!=null&&J.ov[key]!=='')?J.ov[key]:auto}else v=src[key]??'';
+  const ph=o.ph||'';const empty=!String(v).trim();
+  return `<span class="ed${o.block?' blk':''}${empty?' empty':''}" contenteditable="true" spellcheck="false" data-e="${o.C?'C':o.ov?'O':'J'}:${key}" data-ph="${esc(ph)}"${o.ov?` data-auto="${esc(auto)}"`:''}>${esc(v)}</span>`;
 }
+const A=(key,auto,o={})=>E(key,auto,Object.assign({ov:1},o)); // auto-filled, editable
 
-// ---------- calculations for the report ----------
-const fsplF=(mhz,mi)=>(isN(mhz)&&isN(mi)&&mi>0)?20*L(mhz)+20*L(mi)+36.6:null;
-function bandCalc(i){
-  const B=BANDS()[i]; if(!B) return null; const o=B.o||{}, s=B.s||{}, jb=J.b[i]||{};
-  const r={name:B.name,key:B.key,o};
-  r.mi=o.mi; r.gd=o.gd; r.loss=o.loss; r.netGain=(isN(o.gd)&&isN(o.loss))?o.gd-o.loss:null;
-  r.erp=num(jb.erp);
-  r.chans=(B.chans||[]).map(c=>({f:num(c.f),p:num(c.p),cc:c.cc})).filter(c=>isN(c.f));
-  r.rows=r.chans.map(c=>{const fs=fsplF(c.f,o.mi);const cpl=(isN(fs)&&isN(o.gd)&&isN(o.loss))?fs-o.gd+o.loss:null;
-    return {f:c.f,p:c.p,fspl:fs,cpl,pred:(isN(r.erp)&&isN(cpl))?r.erp-cpl:null,mpl:(isN(r.erp)&&isN(c.p))?r.erp-c.p:null}});
-  r.cplUL=(isN(o.fspl)&&isN(o.gd)&&isN(o.loss))?o.fspl-o.gd+o.loss:null;
-  r.inj=num(s.inj); r.readA=num(s.readA); r.readB=num(s.readB);
-  r.isoA=(isN(r.inj)&&isN(r.readA))?r.inj-r.readA:null; r.isoB=(isN(r.inj)&&isN(r.readB))?r.inj-r.readB:null;
-  r.gainMax=[o.dlset,o.ulset].filter(isN).length?Math.max(...[o.dlset,o.ulset].filter(isN)):null;
-  r.ulMaxMeas=num(jb.ulmaxm); r.ulMaxTower=(isN(r.ulMaxMeas)&&isN(r.cplUL))?r.ulMaxMeas-r.cplUL:null;
-  const nz=k=>{const m=num(jb[k]);return {m,tower:(isN(m)&&isN(r.cplUL))?m-r.cplUL:null,erp:(isN(m)&&isN(r.netGain))?m+r.netGain:null}};
-  r.non=nz('non'); r.noff=nz('noff');
-  r.outs=(B.chans||[]).map(c=>({f:num(c.f),p:num(c.p)})).filter(c=>isN(c.f)&&isN(c.p)&&isN(o.dlset)).map(c=>({f:c.f,out:isN(o.ceil)?Math.min(c.p+o.dlset,o.ceil):c.p+o.dlset}));
-  return r;
+// ---------- picture boxes ----------
+function slot(id,defCap,o={}){
+  const keep=isKeep(id);const capSrc=keep?C.cap:J.cap;const c=capSrc[id]??defCap??'';const im=IMG[id];
+  if(PRINT&&!im)return '';
+  return `<figure class="slot${im?' has':''}${o.big?' big':''}${o.page?' pg':''}" data-slot="${id}">
+    ${o.nocap?'':`<figcaption><span class="ed capt" contenteditable="true" spellcheck="false" data-cap="${id}" data-ph="Name this picture">${esc(c)}</span></figcaption>`}
+    <div class="drop" tabindex="0" role="button" aria-label="Add picture${c?': '+esc(c):''}">${im?`<img src="${im.url}" alt="${esc(c)}">`:`<span class="hint">Click to add a picture<br><small>or drop one here</small></span>`}</div>
+    <div class="slotbar noprint">${im?`<button data-rm="${id}">Remove picture</button>`:''}${o.list?`<button data-del="${o.list}|${id}">Delete box</button>`:''}</div></figure>`;
 }
-const allBands=()=>BANDS().map((b,i)=>bandCalc(i));
-function autoSummary(){
-  const bs=allBands(), a={};
-  const isoOK=bs.length&&bs.every(b=>[b.isoA,b.isoB].filter(isN).length===2&&isN(b.gainMax)&&Math.min(b.isoA,b.isoB)-b.gainMax>=20);
-  const anyIso=bs.some(b=>isN(b.isoA)||isN(b.isoB));
-  if(anyIso){a.iso=[isoOK?'PASS':'FAIL',bs.map(b=>`${bs.length>1?b.name+': ':''}isolation DL ${fmtd(b.isoA)} / UL ${fmtd(b.isoB)} dB, gain ${fmtd(b.gainMax)} dB`).join('; ')+(isoOK?'. Over 20 dB of margin for downlink and uplink.':'. Needs isolation at least 20 dB over gain.')];}
-  const nzs=bs.filter(b=>isN(b.non.erp));
-  if(nzs.length){const ok=nzs.every(b=>b.non.erp<=-43);a.noise=[ok?'PASS':'FAIL',nzs.map(b=>`${bs.length>1?b.name+': ':''}donor ERP ${f2(b.non.erp)} dBm (limit -43), ${f2(b.non.tower)} dBm at tower`).join('; ')];}
-  if(J.tower)a.az=['PASS',`Donor antenna points to ${J.tower} tower${J.az?' ('+J.az+'°)':''}`];
-  const ap=num(J.areaPct),cp=num(J.critPct);
-  if(isN(ap)||isN(cp)){const ok=(!isN(ap)||ap>=num(J.areaReq||95))&&(!isN(cp)||cp>=num(J.critReq||99));a.int=[ok?'PASS':'FAIL',`Area points ${isN(ap)?ap+'%':'—'}, critical points ${isN(cp)?cp+'%':'—'} at ${J.sigReq||'-95'} dBm`];}
-  return a;
-}
-const SUMROWS=[['int','Interior Signal Strength (Downlink)',()=>`Meets ${J.sigReq||'-95'} dBm coverage requirement for all areas`],
- ['filt','Correct Frequency Filtering',()=>`All assigned ${J.cell||''} frequencies are programmed`],
- ['mute','BDA Uplink Mute/Squelch',()=>`UL power amp muting enabled${J.squelch?', '+J.squelch+' dBm threshold':''}`],
- ['noise','Quiescent Noise Floor Measurement',()=>'Within FCC limit at the donor and tower'],
- ['iso','Isolation Tests',()=>'System has over 20 dB of isolation for downlink and uplink'],
- ['az','Donor Antenna Azimuth',()=>'Donor antenna points to the donor tower'],
- ['run','Backup Power Supply Calculated Runtime',()=>'Meets 24-hour, all ERRCS equipment on battery backup'],
- ['drop','Backup Power Load Test (Drop Test)',()=>'BBU passed the 1-hour drop test'],
- ['ac','AC Power Connection',()=>`ERRCS is on a dedicated breaker, hardwired with breaker lock${J.panel?'. ELEC Panel: '+J.panel:''}`],
- ['gnd','Grounding and Lightning Protection',()=>'Grounded, lightning protection at the donor entry'],
- ['ann','Annunciator Test',()=>`Annunciator located in ${J.annLoc||'the headend room'}`],
- ['facp','FACP Alarm Test',()=>`${J.alarms.length} labeled alarms for ERRCS, all monitored as supervisory alarms`],
- ['sign','Equipment Signage and Labeling',()=>'Signs installed and equipment has been labeled']];
-function sumRow(k,defTxt){const a=autoSummary()[k];const m=J.sum[k]||{};return {res:m.res||(a?a[0]:''),txt:(m.txt??'')!==''?m.txt:(a?a[1]:defTxt()),auto:!!a}}
+const listIds=(name,keep)=>(keep?C.lists[name]:J.lists[name])||[];
+const addBtn=(name,label,keep)=>PRINT?'':`<button class="addslot noprint" data-add="${keep?'C':'J'}|${name}">+ ${label}</button>`;
 
-// ---------- UI helpers ----------
-const F=(scope,k,label,ph='',o={})=>{const src=scope==='C'?C:J;const v=src[k]??'';const id=`f-${scope}-${k}`;
-  return `<div class="fld${o.wide?' wide':''}"><label for="${id}">${label}</label>${o.area?`<textarea id="${id}" data-r="${scope}.${k}" rows="2" placeholder="${esc(ph)}">${esc(v)}</textarea>`:`<input id="${id}" data-r="${scope}.${k}" value="${esc(v)}" placeholder="${esc(ph)}"${o.num?' inputmode="decimal"':''}>`}</div>`};
-const FB=(i,k,label,ph='')=>{const v=(J.b[i]||{})[k]??'';return `<div class="fld"><label for="fb-${i}-${k}">${label}</label><input id="fb-${i}-${k}" data-b="${i}.${k}" value="${esc(v)}" placeholder="${ph}" inputmode="decimal" data-neg="${/meas|non|noff/.test(k)?1:''}"></div>`};
-function slotHTML(id,def,removable){
-  const im=IMG[id];
-  return `<div class="slot${im?' has':''}" data-slot="${id}"><div class="drop" tabindex="0" role="button" aria-label="Add picture for ${esc(cap(id,def))}">${im?`<img src="${im.url}" alt="">`:`<span>Drop a screenshot here<br><small>or tap to pick one</small></span>`}</div>
-  <input class="capin" data-cap="${id}" value="${esc(J.cap[id]??'')}" placeholder="${esc(def)}" aria-label="Screenshot name">
-  <div class="srow">${im?`<small class="fname">${esc(im.name)}</small><button class="lnk" data-rm="${id}">Remove picture</button>`:'<small class="fname">No picture yet</small>'}${removable?`<button class="lnk" data-del="${id}">Delete box</button>`:''}</div></div>`;
+// ---------- pages ----------
+let PRINT=false;
+function pages(){
+  const P=[];const bs=bandsAll();const pg=(sec,body,o={})=>P.push({sec,body,cls:o.cls||'',title:o.title??sec});
+  // cover
+  pg('',`<div class="cover"><h1>Emergency Responder Radio Communications System (ERRCS) Commissioning Report</h1>
+    ${slot('cover','',{big:1,nocap:1})}
+    <div class="lab">Site Name</div><div class="bx big">${E('site','',{ph:'Site name'})}</div>
+    <div class="lab">Site Address</div><div class="bx">${E('addr','',{ph:'Street, City, ST ZIP'})}</div>
+    <div class="lab">Site Coordinates</div><div class="bx">${E('coords','',{ph:'00.0000, -000.0000'})}</div>
+    <div class="lab">Date of Inspection</div><div class="bx">${E('date','',{ph:'Month Day, Year'})}</div>
+    <div class="conducted">Conducted By: ${E('co','',{C:1,ph:'Company name'})}<br>${E('coAddr','',{C:1,ph:'Company address'})}<br>P: ${E('coPhone','',{C:1,ph:'phone'})}<br>Email: ${E('coEmail','',{C:1,ph:'email'})}</div>
+    <div class="lab">Tester Information</div><div class="bx tester">${E('tester','',{C:1,ph:'Tester name'})}<br>${E('tPhone','',{C:1,ph:'Phone'})}<br>${E('tEmail','',{C:1,ph:'Email'})}<br><br>FCC License: ${E('fcc','',{C:1,ph:'PG00000000'})}</div></div>`,{title:'',cls:'cov'});
+  pg('Table of Contents','<div id="toc"></div>',{title:'TABLE OF CONTENTS'});
+  // site info
+  pg('Site Info',`<table class="t si"><tr><td class="l">
+      <p><b>Test Date:</b><br>${A('si_date',J.date||'')}</p><p><b>Test Site:</b><br>${A('si_site',J.site||'')}</p>
+      <p><b>Site Description</b><br>${E('desc','',{ph:'A four-story building with…'})}</p>
+      <p>Total Building Area: ${E('area','',{ph:'0'})} Sq. Ft.</p><p>Occupancy Classification: ${E('occ','',{ph:'Group R2'})}</p>
+      <p>ERRCS Unit is located at ${E('unitLoc','',{ph:'Mech Room 211'})}</p></td><td class="r">${slot('map','',{nocap:1})}</td></tr></table>
+    <table class="t eq"><tr><th colspan="2">Site Equipment Information</th></tr>${J.eq.map((r,i)=>`<tr><td class="k"><span class="ed" contenteditable="true" data-eq="${i}.0" data-ph="Equipment">${esc(r[0])}</span></td><td><span class="ed" contenteditable="true" data-eq="${i}.1" data-ph="Maker, Model, SN">${esc(r[1])}</span>${PRINT?'':` <button class="x noprint" data-eqdel="${i}" aria-label="Delete row">×</button>`}</td></tr>`).join('')}</table>
+    ${PRINT?'':'<button class="addslot noprint" data-eqadd="1">+ Add equipment row</button>'}`,{title:'SITE INFO'});
+  pg('ERRCS Equipment Location & Overview',`<div class="g2">${slot('loc1','ERRCS Headend')}${slot('loc2','ERRCS Headend Overview')}</div>`,{title:'ERRCS EQUIPMENT LOCATION & OVERVIEW'});
+  const freqAuto=bs.map(b=>b.ch.map(c=>c.f.toFixed(5)).join('\n')).join('\n\n');
+  pg('Assigned Frequencies',`<table class="t fr"><tr><th>Frequencies listed for ${A('fr_site',J.site||'')} - ${A('fr_addr',(J.addr||'').split('\n')[0])}</th></tr><tr><td>
+    <div class="frh">${E('frHead','',{block:1,ph:'LOCAL RADIO FREQUENCIES\nAgency name\nSystem (e.g. Public Safety 800MHz trunked)'})}</div>
+    <div class="frl">${A('fr_list',freqAuto,{block:1,ph:'Frequencies'})}</div></td></tr></table>`,{title:'ASSIGNED FREQUENCIES'});
+  pg('Donor Tower Information',`${slot('donormap','',{nocap:1,big:1})}
+    <table class="t"><tr><th>Tower Name</th><th>Tower Location</th><th>Distance to Site</th><th>Direction (True North)</th></tr>
+    <tr><td>${E('tower','',{ph:'Tower name'})}</td><td>${E('towerLoc','',{ph:'Coordinates'})}</td><td>${A('dist',bs[0]&&isN(bs[0].mi)?fd(bs[0].mi):'')}</td><td>${E('az','',{ph:'0'})} degrees</td></tr></table>
+    <h4>Calculated Path Loss</h4><table class="t"><tr><th>Frequency</th><th>Free Space Path Loss (dB)</th><th>Donor Antenna Gain (dBd)</th><th>Cable Loss (dB)</th><th>Calculated Path Loss (dB)</th></tr>
+    ${(bs.length?bs:[{i:0,name:''}]).map(b=>`<tr><td>${A('cf'+b.i,b.name)}</td><td>${A('cfs'+b.i,f2(b.fs))}</td><td>${A('cgd'+b.i,fd(b.gd))}</td><td>${A('ccl'+b.i,f2(b.loss))}</td><td>${A('ccpl'+b.i,f2(b.cpl))}</td></tr>`).join('')}</table>
+    <h4>Measured Path Loss – Donor Signal</h4><table class="t"><tr><th>Cell</th><th>Tower Output ERP (dBm)</th><th>Calculated Path Loss (dB)</th><th>Expected Donor Signal (dBm)</th><th>Measured Donor Signal (dBm)</th><th>Measured Path Loss (dB)</th></tr>
+    ${(bs.length?bs:[{i:0,name:''}]).map(b=>{const erp=num(J['erp'+b.i]);const cpl=num(J.ov['ccpl'+b.i])??b.cpl;const md=b.ref?b.ref.p:null;
+      return `<tr><td>${A('mc'+b.i,b.name)}</td><td>${E('erp'+b.i,'',{ph:'50'})}</td><td>${A('mcpl'+b.i,f2(cpl))}</td><td>${A('mexp'+b.i,isN(erp)&&isN(cpl)?f2(erp-cpl):'')}</td><td>${A('mmd'+b.i,fd(md))}</td><td>${A('mpl'+b.i,isN(erp)&&isN(md)?f2(erp-md):'')}</td></tr>`}).join('')}</table>
+    ${PRINT?'':'<p class="tip noprint">Tower ERP comes from the licensee or the donor site sheet. Measured donor signal is the control channel from your worksheet (or the strongest one if none is marked). Click any number to change it.</p>'}`,{title:'DONOR TOWER INFORMATION'});
+  const tested=bs.map(b=>b.ch.map(c=>c.f.toFixed(5)).join('\n')).join('\n');
+  pg('Test Procedures & Setting',`<p class="para">${A('proc',`${J.site||'The site'} was tested for ${bandList()||'the assigned'} signal coverage using the assigned frequencies. The floor was divided into 20 grids of equal size. The center of each grid was tested for signal strength using a calibrated ${C.pctel||'PCTEL'}.`,{block:1})}</p>
+    <table class="t te"><tr><th colspan="4">Test Equipment &amp; Setting</th></tr>
+    <tr><td class="k">Spectrum Analyzer:</td><td>${E('pctel','',{C:1,ph:'PCTEL'})}</td><td class="k">Mode Setting:</td><td>${E('mode','',{ph:'Average Trace'})}</td></tr>
+    <tr><td class="k">Device S/N:</td><td>${E('pctelSN','',{C:1,ph:'S/N'})}</td><td class="k" rowspan="2">Tested Frequencies:</td><td rowspan="2">${A('tested',tested,{block:1})}</td></tr>
+    <tr><td class="k">Calibration Date:</td><td>${E('pctelCal','',{C:1,ph:'MM/DD/YYYY'})}</td></tr>
+    <tr><td class="k">Omni-directional Antenna:</td><td>${E('pctelAnt','',{C:1,ph:'Model'})}</td><td class="k">DL Signal Requirement:</td><td>${A('dlreq','≥ -95 dBm Measured')}</td></tr>
+    <tr><td class="k">Signal Generator:</td><td>${E('siggen','',{C:1,ph:'Model'})}</td><td class="k">UL Signal Requirement:</td><td>${A('ulreq','≥ -95 dBm Measured')}</td></tr>
+    <tr><td class="k"></td><td></td><td class="k">Coverage Requirement:</td><td>${A('covreq','General: 95%, Critical: 99%')}</td></tr></table>`,{title:'TEST PROCEDURES & SETTING'});
+  // coverage pages
+  const cov=listIds('cov');const covT=`${bs.map(b=>b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz').join(' & ')||'SIGNAL'} – SIGNAL COVERAGE READINGS`.toUpperCase();
+  if(cov.length||!PRINT){(cov.length?cov:[null]).forEach((id,k)=>{pg(k===0?covT:'',(id?slot(id,'',{nocap:1,page:1,list:'J|cov'}):'<p class="tip noprint">Add each page of the PCTEL / SeeHawk coverage report as a picture (export or screenshot each page). One picture per page.</p>')+(k===(cov.length||1)-1?addBtn('cov','Add coverage report page'):''),{title:k===0?covT:''})})}
+  // monitoring
+  pg('System Monitoring',bs.length?bs.map(b=>{const al=alarms(b.i,b.short);return `<h4>${esc(b.short==='150'?'VHF':b.short==='450'?'UHF':b.short+'MHz')} Alarms</h4><table class="t al"><tr><th>ERRCS Alarm</th><th>ERRCS Supervisory Description</th><th>Annunciator</th><th>FACP</th></tr>${al.map((a,r)=>`<tr><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.a">${esc(a.a)}</span></td><td><span class="ed" contenteditable="true" data-al="${b.i}.${r}.l">${esc(a.l)}</span></td>${['an','fa'].map(k=>`<td class="pf ${a[k]==='PASS'?'pass':a[k]==='FAIL'?'fail':''}"><button class="cyc" data-cyc="${b.i}.${r}.${k}">${a[k]||'—'}</button></td>`).join('')}</tr>`).join('')}</table>${PRINT?'':`<button class="addslot noprint" data-allpass="${b.i}">Mark all PASS</button>`}`}).join(''):'<p class="tip">Make the report from a worksheet to fill in the alarm tables.</p>',{title:'SYSTEM MONITORING'});
+  // measured gain
+  pg('Measured System Gain',bs.length?bs.map(b=>{const g=gain(b.i,b);const tb=(dir,rows,gui)=>`<table class="t gn"><tr><th colspan="5">${bs.length>1?esc(b.name)+' ':''}${dir}</th></tr><tr><th>Freq (MHz)</th><th>Input (dBm)</th><th>Measured</th><th>Gain</th><th>GUI</th></tr>${rows.map((r,k)=>{const gn=(isN(num(r.out))&&isN(num(r.in)))?num(r.out)-num(r.in):null;return `<tr><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.f" data-ph="MHz">${esc(r.f)}</span></td><td><span class="ed" contenteditable="true" data-gn="${b.i}.${dir}.${k}.in">${esc(r.in)}</span></td><td><span class="ed${r.out===''?' empty':''}" contenteditable="true" data-gn="${b.i}.${dir}.${k}.out" data-ph="type">${esc(r.out)}</span></td><td class="calc" data-gcalc="${b.i}.${dir}.${k}">${fd(gn)}</td><td>${fd(gui)}</td></tr>`}).join('')}</table>`;return tb('Downlink',g.dl,b.dlgui)+tb('Uplink',g.ul,b.ulgui)}).join('')+(PRINT?'':'<p class="tip noprint">Type what you measured at the output for each frequency. Gain = measured − input. GUI is the gain setting from the worksheet.</p>'):'<p class="tip">Make the report from a worksheet to fill this in.</p>',{title:'MEASURED SYSTEM GAIN'});
+  // GUI screenshots 2/page
+  chunk(listIds('gui'),2,!PRINT).forEach((ids,k,arr)=>pg(k===0?'BDA GUI Settings Screenshots':'',`<div class="g1">${ids.map(id=>id?slot(id,'',{nocap:1,list:'J|gui'}):'').join('')}</div>${k===arr.length-1?addBtn('gui','Add GUI screenshot'):''}`,{title:k===0?'BDA GUI SETTINGS SCREENSHOTS':''}));
+  // BDA measurement screenshots 2/page with captions
+  chunk(listIds('meas').filter(id=>!PRINT||IMG[id]),2,!PRINT).forEach((ids,k,arr)=>pg(k===0?'BDA Measurements Screenshots':'',`<div class="g1">${ids.map(id=>id?slot(id,'',{list:'J|meas'}):'').join('')}</div>${k===arr.length-1?addBtn('meas','Add measurement screenshot'):''}`,{title:k===0?'BDA MEASUREMENTS SCREENSHOTS':''}));
+  // photos 4/page
+  chunk(listIds('photos').filter(id=>!PRINT||IMG[id]),4,!PRINT).forEach((ids,k,arr)=>pg(k===0?'Site Photo':'',`<div class="g2 ph">${ids.map(id=>id?slot(id,'',{list:'J|photos'}):'').join('')}</div>${k===arr.length-1?addBtn('photos','Add photo'):''}`,{title:k===0?'SITE PHOTO':''}));
+  pg('FCC License',slot('keep_fcc','',{nocap:1,page:1})+(PRINT?'':'<p class="tip noprint">Your FCC license. Add it once, it stays for every report.</p>'),{title:'FCC LICENSE'});
+  const certs=listIds('certs',1);(certs.length?certs:(PRINT?[]:[null])).forEach((id,k,arr)=>pg(k===0?'Manufacturer Certifications':'',(id?slot(id,'',{nocap:1,page:1,list:'C|certs'}):'<p class="tip noprint">Your manufacturer training certificates (Fiplex, Comba, ADRF…). Add them once, they stay for every report.</p>')+(k===arr.length-1?addBtn('certs','Add certificate',1):''),{title:k===0?'MANUFACTURER CERTIFICATIONS':''}));
+  return P;
 }
-const slotGrid=sec=>`<div class="slots">${slotsFor(sec).map(([id,c])=>slotHTML(id,c)).join('')}${(J.multi[sec]||[]).map(id=>slotHTML(id,MULTI[sec],true)).join('')}</div>`;
-const addBtn=sec=>`<button class="add" data-addslot="${sec}">+ Add a screenshot</button>`;
-const card=(n,t,body,why='')=>`<section class="card" id="r-${n}"><h2><span class="n">${n}</span>${t}</h2>${why?`<p class="why"><b>Goes in the report as:</b> ${why}</p>`:''}${body}</section>`;
-const tbl=(head,rows)=>`<div class="tw"><table class="grid"><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;
+function chunk(ids,n,keepOne){const out=[];for(let i=0;i<ids.length;i+=n)out.push(ids.slice(i,i+n));if(!out.length&&keepOne)out.push([]);return out}
+function alarms(i,short){
+  if(!J.alarms[i]){const d=short;J.alarms[i]=[['Loss of Normal AC Power','AC LOSS PWR'],['System Battery Charger Failure','CHRG FAIL'],['Low-Battery Capacity','LOW BATT'],['Active RF-Emitting Device Malfunction','RF MALF'],['Donor Antenna Malfunction','DONOR MALF'],['Failure of Critical System Components','SYS COMP'],['Communication Link Failure','COM FAIL'],['Oscillation of Active RF-Emitting Device','OSC ALARM']].map(([a,l])=>({a,l:`DAS/${d} ${l}`,an:'',fa:''}))}
+  return J.alarms[i];
+}
+function gain(i,b){
+  if(!J.gain[i]){const off=UL_OFF[b.key];J.gain[i]={dl:b.ch.map(c=>({f:c.f.toFixed(4),in:'-55',out:''})),ul:b.ch.map(c=>({f:isN(off)?(c.f+off).toFixed(4):'',in:'-55',out:''}))}}
+  return J.gain[i];
+}
 
 function render(){
-  const bs=allBands(), H=[];
-  H.push(`<div class="srcbox">${SRC?`<b>Numbers from:</b> ${esc(BANDS().map(b=>b.name).join(' + '))} worksheet${SRC.site&&SRC.site.name?', site '+esc(SRC.site.name):''}. Taken ${new Date(SRC.when).toLocaleString()}. Changed something on the worksheet? Hit <b>Make report</b> there again and the numbers update here. Everything you type on this page stays.`:'<b>No worksheet numbers yet.</b> Open your band worksheet, fill it in, and hit <b>Make report</b> at the top. You can still fill this page in and add screenshots.'}</div>`);
-  H.push(card(1,'Cover page',`<p class="ins">Company and tester info is remembered for every report. Site info is just for this job.</p>
-    <h3>This site</h3><div class="fields">${F('J','site','Site name','Main Street Office')}${F('J','date','Date of inspection','January 15th, 2027')}${F('J','addr','Site address','123 Main St, City, ST 00000',{area:1,wide:1})}${F('J','coords','Site coordinates','00°00\'00.0"N, 000°00\'00.0"W')}${F('J','cell','Assigned cell / system','County VHF')}${F('J','erLoc','ERRCS location','1st Floor')}</div>
-    <h3>Your company (remembered)</h3><div class="fields">${F('C','co','Company name','')}${F('C','coAddr','Company address','',{area:1,wide:1})}${F('C','coPhone','Company phone','')}${F('C','coEmail','Company email','')}</div>
-    <h3>Tester (remembered)</h3><div class="fields">${F('C','tester','Tester name','')}${F('C','tPhone','Tester phone','')}${F('C','tEmail','Tester email','')}${F('C','fcc','FCC license #','PG00000000')}</div>`,'the cover page and the Site Info page.'));
-  H.push(card(2,'Site equipment',`<div class="fields">${F('J','bdaModel','Signal booster: maker and model','Maker and model')}${F('J','bdaSN','BDA serial #','')}${F('J','bdaFcc','BDA FCC ID','')}${F('J','bdaNote','BDA notes','Class A, 12.5 kHz bandwidth, -80 UL squelch',{wide:1})}${F('J','bbu','Battery backup: model','')}${F('J','bbuNote','BBU notes','100AH, 24VDC')}${F('J','panel','Electrical panel / breaker','Panel A #12')}${F('J','ann','Annunciator: model','Model')}${F('J','annLoc','Annunciator location','headend room')}${F('J','donorAnt','Donor antenna(s)','VHF: maker, model',{area:1})}${F('J','svcAnt','Service antennas','Omni low profile, 130-1000 MHz',{area:1})}</div>
-    <h3>Pictures</h3>${slotGrid('loc')}`,'the Site Equipment table and "Equipment Location & Overview".'));
-  H.push(card(3,'Assigned frequencies',(bs.length?bs.map(b=>`<h3>${esc(b.name)}</h3>`+tbl(['DL freq (MHz)','Control ch','Power IN at donor (dBm)'],b.chans.map(c=>[c.f,c.cc==='Y'?'Yes':'',isN(c.p)?c.p:'—']))).join(''):'<p class="ins">Comes from the channel list on your worksheet.</p>')+`<h3>Picture (optional)</h3>${slotGrid('freq')}`,'a table of your channels. Add a screenshot of the channel plan if you want it too.'));
-  H.push(card(4,'Donor tower',`<div class="fields">${F('J','tower','Tower name','Tower name')}${F('J','towerLoc','Tower coordinates','00°00\'00.0"N, 000°00\'00.0"W')}${F('J','az','Direction from site (° true north)','67',{num:1})}</div>
-    ${bs.map((b,i)=>`<h3>${esc(b.name)}</h3><div class="fields">${FB(i,'erp','Tower output / ERP (dBm)','50')}</div>
-    <p class="ins">Distance <b>${fmtd(b.mi)} mi</b>, donor gain <b>${fmtd(b.gd)} dBd</b>, cable and filter loss <b>${f2(b.loss)} dB</b>, all from the worksheet. Tower ERP comes from the licensee or the donor site sheet.</p>`+
-    tbl(['Freq (MHz)','FSPL (dB)','Calc. path loss (dB)','Predicted donor (dBm)','Measured donor (dBm)','Measured path loss (dB)'],b.rows.map(r=>[r.f,f2(r.fspl),f2(r.cpl),f2(r.pred),isN(r.p)?r.p:'—',f2(r.mpl)]))).join('')}
-    <h3>Picture (optional)</h3>${slotGrid('tower')}`,'the Donor Tower Information page with Calculated and Measured Path Loss tables, one row per channel. Calculated path loss = FSPL − donor gain + cable loss. Measured path loss = tower ERP − what you measured at the donor.'));
-  H.push(card(5,'Test equipment and settings',`<div class="fields">${F('C','pctel','Spectrum analyzer','PCTEL SeeGull IBFlex')}${F('C','pctelSN','Device S/N','')}${F('C','pctelCal','Factory calibration date','')}${F('C','pctelAnt','Omni antenna','Omni antenna model')}${F('J','floors','Floors tested','4',{num:1})}${F('J','sigReq','Signal requirement (dBm)','-95')}${F('J','areaReq','General coverage requirement (%)','95')}${F('J','critReq','Critical coverage requirement (%)','99')}</div>`,'the Test Procedures & Settings page. The paragraph is written for you from the site name, band and floors.'));
-  H.push(card(6,'Commissioning inspection summary',`<p class="ins">Pick PASS / FAIL / N/A for each row. Rows marked <b>auto</b> are filled in from your numbers, but you can still change them. Leave the text blank to use the gray suggestion.</p>
-    <div class="fields">${F('J','squelch','UL squelch threshold (dBm)','-80')}${F('J','areaPct','Area points passed (%)','100',{num:1})}${F('J','critPct','Critical points passed (%)','100',{num:1})}</div>
-    <div class="sum">${SUMROWS.map(([k,t,d])=>{const r=sumRow(k,d);const m=J.sum[k]||{};return `<div class="srow2"><div class="st">${t}${r.auto?' <span class="auto">auto</span>':''}</div><select data-sres="${k}" aria-label="Result for ${t}"><option value="">—</option>${['PASS','FAIL','N/A'].map(x=>`<option${r.res===x?' selected':''}>${x}</option>`).join('')}</select><input data-stxt="${k}" value="${esc(m.txt??'')}" placeholder="${esc(r.txt)}" aria-label="Summary for ${t}"></div>`}).join('')}</div>
-    <p class="note" id="sumwarn"></p>`,'the Commissioning Inspection Summary table.'));
-  H.push(card(7,'Signal coverage readings (PCTEL)',`<p class="ins">Add each page of the PCTEL / SeeHawk report as a picture (screenshot or export each page as JPG/PNG). They go in, in order.</p>${slotGrid('cov')}${addBtn('cov')}`,'the Signal Coverage Readings pages.'));
-  H.push(card(8,'BDA GUI settings',`<p class="ins">Screenshots of the BDA settings pages, one per box.</p>${slotGrid('gui')}${addBtn('gui')}`,'the BDA GUI Settings page.'));
-  H.push(card(9,'BDA measurements',`${bs.map((b,i)=>`<h3>${esc(b.name)}</h3><div class="fields">${FB(i,'ulmaxm','Max UL output measured (dBm)','14.14')}${FB(i,'non','UL noise, RF on (dBm)','-71')}${FB(i,'noff','UL noise, RF off (dBm)','-102')}</div>
-    <p class="ins">Isolation, gain, path loss and donor numbers come from the worksheet: isolation DL <b>${fmtd(b.isoA)}</b> / UL <b>${fmtd(b.isoB)}</b> dB, max allowed gain <b>${fmtd(isN(b.isoA)&&isN(b.isoB)?Math.min(b.isoA,b.isoB)-20:null)}</b> dB, gain set <b>${fmtd(b.gainMax)}</b> dB, UL path loss <b>${f2(b.cplUL)}</b> dB.</p>`).join('')}
-    ${slotGrid('meas')}`,'one box per screenshot with the math written out on the right, like the isolation page in your sample report.'));
-  H.push(card(10,'Sweep tests',`${slotGrid('sweep')}${addBtn('extra')}`,'the Sweep Test Measurements pages.'));
-  H.push(card(11,'System monitoring',tbl(['ERRCS alarm','FACP supervisory label','Annunciator','FACP'],J.alarms.map((a,i)=>[`<input data-al="${i}.a" value="${esc(a.a)}">`,`<input data-al="${i}.l" value="${esc(a.l)}">`,`<select data-al="${i}.an"><option value="">—</option>${['PASS','FAIL','N/A'].map(x=>`<option${a.an===x?' selected':''}>${x}</option>`).join('')}</select>`,`<select data-al="${i}.fa"><option value="">—</option>${['PASS','FAIL','N/A'].map(x=>`<option${a.fa===x?' selected':''}>${x}</option>`).join('')}</select>`]))+`<button class="add" data-addalarm="1">+ Add alarm</button> <button class="add" data-allpass="1">Mark all PASS</button><h3>Picture</h3>${slotGrid('mon')}`,'the System Monitoring table and GUI alarm screenshot.'));
-  H.push(card(12,'Battery backup',`${slotGrid('batt')}`,'the Battery Backup Calculations page.'));
-  H.push(card(13,'Equipment photos',`<p class="ins">Rename any box to match what you shot. Empty boxes are left out of the report.</p>${slotGrid('photos')}${addBtn('extra')}`,'the ERRCS Equipment Photos pages, four to a page.'));
-  H.push(card(14,'FCC license and BDA certification',`${slotGrid('fcc')}`,'the last two pages.'));
-  if((J.multi.extra||[]).length) H.push(card(15,'Other screenshots',slotGrid('extra'),'an "Additional Screenshots" section at the end.'));
-  $('app').innerHTML=H.join('');
-  sumWarn();
+  const P=pages();const total=P.length;
+  $('pages').innerHTML=P.map((p,k)=>`<section class="page ${p.cls}"><header class="ph">${C.bannerOn&&IMG.keep_banner?`<img class="banner" src="${IMG.keep_banner.url}" alt="">`:`<div class="band"><span>${esc(C.co||'')}</span></div>`}</header>${p.title?`<h2 class="pt">${esc(p.title)}</h2>`:''}<div class="pb">${p.body}</div><footer class="pf">Page ${k+1} of ${total}</footer></section>`).join('');
+  // TOC
+  const secs=[];P.forEach((p,k)=>{if(p.sec&&k>1)secs.push([p.sec,k+1])});
+  $('toc').innerHTML=secs.map(([s,n])=>`<div class="tl"><span>${esc(s.toUpperCase())}</span><i></i><span>${n}</span></div>`).join('');
+  status();
 }
-function sumWarn(){const n=SUMROWS.filter(([k,t,d])=>!sumRow(k,d).res).length;const e=$('sumwarn');if(e)e.textContent=n?`${n} row${n>1?'s':''} not marked yet. They'll show "—" in the report.`:'All rows marked.'}
+function status(){
+  $('srcbox').innerHTML=SRC?`<b>Numbers from:</b> ${esc(BANDS().map(b=>b.name).join(' + '))} worksheet${SRC.site&&SRC.site.name?', '+esc(SRC.site.name):''}, taken ${new Date(SRC.when).toLocaleString()}. Changed the worksheet? Hit <b>Make report</b> there again. What you typed here stays.`:'<b>No worksheet numbers yet.</b> Open your band worksheet and hit <b>Make report</b> at the top. You can still fill this in by hand.';
+  $('bannerst').textContent=IMG.keep_banner?'Header banner loaded.':'No header banner yet. Load your company banner image once (it stays on this device).';
+}
 
 // ---------- events ----------
-let fileTarget=null;
-const picker=document.createElement('input');picker.type='file';picker.accept='image/png,image/jpeg';picker.style.display='none';document.body.appendChild(picker);
-picker.onchange=async()=>{if(picker.files[0]&&fileTarget){await setImg(fileTarget,picker.files[0]);render()}picker.value=''};
-document.addEventListener('input',e=>{const t=e.target;
-  if(t.dataset.neg==='1'&&/^[1-9.]/.test(t.value))t.value='-'+t.value;
-  if(t.dataset.r){const [sc,k]=t.dataset.r.split('.');(sc==='C'?C:J)[k]=t.value;save();if(/^(tower|az|areaPct|critPct|sigReq|squelch|cell|panel|annLoc|areaReq|critReq)$/.test(k))refreshSum()}
-  if(t.dataset.b){const [i,k]=t.dataset.b.split('.');J.b[i]=J.b[i]||{};J.b[i][k]=t.value;save();refreshSum()}
-  if(t.dataset.cap){J.cap[t.dataset.cap]=t.value;save()}
-  if(t.dataset.stxt){const k=t.dataset.stxt;J.sum[k]=J.sum[k]||{};J.sum[k].txt=t.value;save()}
-  if(t.dataset.al&&t.tagName==='INPUT'){const [i,k]=t.dataset.al.split('.');J.alarms[i][k]=t.value;save()}});
-document.addEventListener('change',e=>{const t=e.target;
-  if(t.dataset.sres){const k=t.dataset.sres;J.sum[k]=J.sum[k]||{};J.sum[k].res=t.value;save();sumWarn()}
-  if(t.dataset.al&&t.tagName==='SELECT'){const [i,k]=t.dataset.al.split('.');J.alarms[i][k]=t.value;save()}});
-function refreshSum(){const box=document.querySelector('.sum');if(!box)return;SUMROWS.forEach(([k,t,d])=>{const r=sumRow(k,d);const s=box.querySelector(`[data-sres="${k}"]`),i=box.querySelector(`[data-stxt="${k}"]`);if(s&&!(J.sum[k]||{}).res)s.value=r.res;if(i)i.placeholder=r.txt});sumWarn()}
+const picker=document.createElement('input');picker.type='file';picker.accept='image/png,image/jpeg';picker.hidden=true;document.body.appendChild(picker);let target=null;
+picker.onchange=async()=>{if(picker.files[0]&&target){await setImg(target,picker.files[0]);if(target==='keep_banner')C.bannerOn=true;save();render()}picker.value=''};
+document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.classList.contains('ed'))t.classList.remove('empty')});
+document.addEventListener('focusout',e=>{const t=e.target;if(!t.classList||!t.classList.contains('ed'))return;
+  if(t.dataset.e&&t.dataset.e.startsWith('O:')&&!t.textContent.trim()){t.textContent=t.dataset.auto||''}
+  if(!t.textContent.trim())t.classList.add('empty');
+  if(t.dataset.gn||t.dataset.e==='J:erp0'||/^J:erp/.test(t.dataset.e||'')||/^O:ccpl/.test(t.dataset.e||''))render()});
+document.addEventListener('input',e=>{const t=e.target;const v=t.innerText.replace(/ /g,' ').replace(/\n$/,'');
+  if(t.dataset.e){const [sc,k]=t.dataset.e.split(/:(.+)/);if(sc==='C')C[k]=v;else if(sc==='J')J[k]=v;else{J.ov[k]=(v===t.dataset.auto)?'':v}save()}
+  if(t.dataset.cap){(isKeep(t.dataset.cap)?C.cap:J.cap)[t.dataset.cap]=v;save()}
+  if(t.dataset.eq){const [r,c]=t.dataset.eq.split('.');J.eq[r][c]=v;save()}
+  if(t.dataset.al){const [b,r,k]=t.dataset.al.split('.');J.alarms[b][r][k]=v;save()}
+  if(t.dataset.gn){const [b,d,r,k]=t.dataset.gn.split('.');J.gain[b][d==='Downlink'?'dl':'ul'][r][k]=v;save();const row=J.gain[b][d==='Downlink'?'dl':'ul'][r];const g=(isN(num(row.out))&&isN(num(row.in)))?num(row.out)-num(row.in):null;const c=document.querySelector(`[data-gcalc="${b}.${d}.${r}"]`);if(c)c.textContent=fd(g)}});
+document.addEventListener('keydown',e=>{const d=e.target.closest&&e.target.closest('.drop');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();d.click()}
+  if(e.target.classList&&e.target.classList.contains('ed')&&e.key==='Enter'&&!e.target.classList.contains('blk')&&!e.target.closest('.tester,.conducted,.l')){e.preventDefault();e.target.blur()}});
 document.addEventListener('click',async e=>{const t=e.target;
-  const d=t.closest('.drop');if(d){fileTarget=d.closest('.slot').dataset.slot;picker.click();return}
+  const d=t.closest('.drop');if(d){target=d.closest('.slot').dataset.slot;picker.click();return}
   if(t.dataset.rm){await dbDel(t.dataset.rm);delete IMG[t.dataset.rm];render();return}
-  if(t.dataset.del){const id=t.dataset.del;for(const s in J.multi)J.multi[s]=J.multi[s].filter(x=>x!==id);delete J.cap[id];await dbDel(id);delete IMG[id];save();render();return}
-  if(t.dataset.addslot){const s=t.dataset.addslot;J.multi[s]=J.multi[s]||[];const id=s+'_'+Date.now().toString(36);J.multi[s].push(id);save();render();return}
-  if(t.dataset.addalarm){J.alarms.push({a:'',l:'',an:'',fa:''});save();render();return}
-  if(t.dataset.allpass){J.alarms.forEach(a=>{a.an='PASS';a.fa='PASS'});save();render();return}
+  if(t.dataset.del){const [sc,name,id]=t.dataset.del.split('|');const L2=(sc==='C'?C.lists:J.lists);L2[name]=(L2[name]||[]).filter(x=>x!==id);await dbDel(id);delete IMG[id];save();render();return}
+  if(t.dataset.add){const [sc,name]=t.dataset.add.split('|');const id=(sc==='C'?'keep_':'')+name+'_'+Date.now().toString(36);const L2=(sc==='C'?C.lists:J.lists);(L2[name]=L2[name]||[]).push(id);save();render();return}
+  if(t.dataset.cyc){const [b,r,k]=t.dataset.cyc.split('.');const cur=J.alarms[b][r][k];J.alarms[b][r][k]=cur===''?'PASS':cur==='PASS'?'FAIL':cur==='FAIL'?'N/A':'';save();render();return}
+  if(t.dataset.allpass){J.alarms[t.dataset.allpass].forEach(a=>{a.an='PASS';a.fa='PASS'});save();render();return}
+  if(t.dataset.eqadd){J.eq.push(['','']);save();render();return}
+  if(t.dataset.eqdel){J.eq.splice(+t.dataset.eqdel,1);save();render();return}
 });
-document.addEventListener('keydown',e=>{const d=e.target.closest&&e.target.closest('.drop');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();d.click()}});
-document.addEventListener('dragover',e=>{if(e.target.closest('.drop')||e.target.closest('#bulk')){e.preventDefault();(e.target.closest('.drop')||e.target.closest('#bulk')).classList.add('over')}});
-document.addEventListener('dragleave',e=>{const x=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(x)x.classList.remove('over')});
-document.addEventListener('drop',async e=>{const d=e.target.closest('.drop');const bulk=e.target.closest('#bulk');if(!d&&!bulk)return;e.preventDefault();
-  const files=[...e.dataTransfer.files];if(!files.length)return;
-  if(d&&files.length===1){await setImg(d.closest('.slot').dataset.slot,files[0]);render();return}
-  await bulkAdd(files)});
-async function bulkAdd(files){
-  let m=0,x=0;
-  for(const f of files){if(!/\.(png|jpe?g)$/i.test(f.name))continue;let slot=matchSlot(f.name);
-    if(!slot||IMG[slot]){J.multi.extra=J.multi.extra||[];slot='extra_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);J.multi.extra.push(slot);J.cap[slot]=f.name.replace(/\.[^.]+$/,'');x++}else m++;
-    await setImg(slot,f)}
-  save();render();toast(`${m} matched by name${x?`, ${x} added to "Other screenshots" (rename or delete them there)`:''}.`);
-}
-$('bulkbtn').onclick=()=>$('bulkin').click();
-$('bulkin').onchange=async()=>{await bulkAdd([...$('bulkin').files]);$('bulkin').value=''};
-$('newjob').onclick=async()=>{if(!confirm('Start a new report? This clears the site info, summary and every screenshot on this page. Your company and tester info stays.'))return;J={cap:{},multi:{},sum:{},b:[{},{}]};J.alarms=null;await dbClear();for(const k in IMG)delete IMG[k];location.reload()};
+document.addEventListener('dragover',e=>{const z=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(z){e.preventDefault();z.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const z=e.target.closest&&(e.target.closest('.drop')||e.target.closest('#bulk'));if(z)z.classList.remove('over')});
+document.addEventListener('drop',async e=>{const d=e.target.closest('.drop'),bulk=e.target.closest('#bulk');if(!d&&!bulk)return;e.preventDefault();const f=[...e.dataTransfer.files];if(!f.length)return;
+  if(d&&f.length===1){await setImg(d.closest('.slot').dataset.slot,f[0]);render();return}await bulkAdd(f)});
+const MATCH=[[/DL_DONOR/,'donor'],[/DL_OUT/,'dlout'],[/ISO_DL/,'isodl'],[/ISO_UL/,'isoul'],[/UL_MAX|UL_OUT/,'ulout'],[/SPUR/,'spur'],[/NOISE_ON/,'noiseon'],[/NOISE_OFF/,'noiseoff']];
+async function bulkAdd(files){let m=0,x=0;
+  for(const f of files){if(!/\.(png|jpe?g)$/i.test(f.name))continue;const n=f.name.toUpperCase().replace(/\.[A-Z]+$/,'').replace(/[\s-]+/g,'_');let id=null;
+    for(const [re,k] of MATCH)if(re.test(n)){let bi=0;BANDS().forEach((b,i)=>{if(i>0&&new RegExp('_'+b.key.toUpperCase()+'(_|$)').test(n))bi=i});id=`m${bi}_${k}`;break}
+    if(id&&J.lists.meas.includes(id)&&!IMG[id]){m++}else{id='meas_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);J.lists.meas.push(id);J.cap[id]=f.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');x++}
+    await setImg(id,f)}
+  save();render();toast(`${m} screenshot${m===1?'':'s'} matched by name${x?`, ${x} added at the end of BDA Measurements (rename them there)`:''}.`)}
+$('bulkbtn').onclick=()=>$('bulkin').click();$('bulkin').onchange=async()=>{await bulkAdd([...$('bulkin').files]);$('bulkin').value=''};
+$('bannerbtn').onclick=()=>{target='keep_banner';picker.click()};
+$('print').onclick=()=>window.print();
+$('newjob').onclick=async()=>{if(!confirm('Start a new report? This clears the site info and every site picture. Your company info, banner, license and certificates stay.'))return;
+  for(const [k] of await dbAll())if(!isKeep(k))await dbDel(k);J={};localStorage.setItem('report2-job','{}');location.reload()};
+window.addEventListener('beforeprint',()=>{PRINT=true;render()});window.addEventListener('afterprint',()=>{PRINT=false;render()});
 let tt;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),5000)}
-
-// ---------- Word document ----------
-async function buildDocx(){
-  const D=window.docx;const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,HeadingLevel,BorderStyle,ShadingType,PageBreak,Footer,PageNumber,TableOfContents,VerticalAlign}=D;
-  const BLUE='2E74B5', bs=allBands();
-  const T=(t,o={})=>new TextRun({text:String(t??''),font:'Calibri',size:o.size||22,bold:o.bold,italics:o.it,color:o.color});
-  const P=(runs,o={})=>new Paragraph({children:Array.isArray(runs)?runs:[typeof runs==='string'?T(runs,o):runs],alignment:o.center?AlignmentType.CENTER:undefined,spacing:{after:o.after??120,before:o.before??0},keepNext:o.keepNext});
-  const H1=t=>new Paragraph({heading:HeadingLevel.HEADING_1,children:[new TextRun({text:t.toUpperCase(),font:'Calibri',bold:true,size:36,color:BLUE})],spacing:{before:120,after:160},border:{bottom:{style:BorderStyle.SINGLE,size:18,color:BLUE,space:4}}});
-  const brk=()=>new Paragraph({children:[new PageBreak()]});
-  const cell=(c,o={})=>new TableCell({children:(Array.isArray(c)?c:[P(typeof c==='string'||typeof c==='number'?[T(c,{bold:o.bold,size:o.size||20})]:[c],{center:o.center!==false,after:40,keepNext:o.keepNext})]),shading:o.head?{type:ShadingType.CLEAR,fill:'F2F2F2',color:'auto'}:undefined,columnSpan:o.span,verticalAlign:VerticalAlign.CENTER,width:o.w?{size:o.w,type:WidthType.PERCENTAGE}:undefined,margins:{top:60,bottom:60,left:80,right:80}});
-  const table=(head,rows,o={})=>new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[...(head?[new TableRow({tableHeader:true,children:head.map(h=>cell(h,{head:1,bold:1}))})]:[]),...rows.map(r=>new TableRow({children:r.map((c,ci)=>cell(c,{bold:o.boldFirst&&ci===0,head:o.boldFirst&&ci===0,center:o.left?false:true}))}))]});
-  const imgRun=async(id,maxW,maxH)=>{const d=await dbGet(id);if(!d)return null;const buf=await d.blob.arrayBuffer();let w=d.w,h=d.h;const s=Math.min(maxW/w,maxH/h,1.6);w=Math.round(w*s);h=Math.round(h*s);
-    return new ImageRun({type:/png/i.test(d.type||d.name)?'png':'jpg',data:buf,transformation:{width:w,height:h}})};
-  const has=id=>!!IMG[id];
-  // box: title header, image (left) + text (right) or full-width image
-  const box=async(id,title,lines)=>{const run=await imgRun(id,lines?400:620,lines?420:560);
-    const imgP=run?P([run],{center:1,after:0}):P([T('[ Add screenshot ]',{it:1,color:'999999'})],{center:1});
-    const rows=[new TableRow({cantSplit:true,children:[cell(title,{head:1,bold:1,span:lines?2:1,size:24,keepNext:true})]})];
-    if(lines)rows.push(new TableRow({cantSplit:true,children:[cell([imgP],{w:62}),cell(lines.map(l=>typeof l==='string'?P([T(l,{size:21})],{after:60}):l),{w:38})]}));
-    else rows.push(new TableRow({cantSplit:true,children:[cell([imgP])]}));
-    return [new Table({width:{size:100,type:WidthType.PERCENTAGE},rows}),P('',{after:200})]};
-  const kv=(k,v)=>P([T(k+': ',{size:21}),T(v,{bold:1,size:21})],{after:60});
-  const itl=t=>P([T(t,{it:1,size:21})],{before:120});
-  const ch=[];
-  // cover
-  const co=C.co||'';
-  ch.push(P('',{after:600}),P([T('Emergency Responder Communications Enhancement System (ERRCS) Commissioning Report',{bold:1,size:40,color:BLUE})],{center:1,after:600}));
-  const cv=(lab,val,big)=>{if(!val)return;ch.push(P([T(lab,{bold:1,size:22})],{center:1,after:20}));String(val).split('\n').forEach(l=>ch.push(P([T(l,{size:big?32:22,bold:big})],{center:1,after:20})));ch.push(P('',{after:120}))};
-  cv('',J.site,1);cv('Site Address:',J.addr);cv('Site Coordinates:',J.coords);cv('Date of Inspection:',J.date);cv('Assigned Cell:',J.cell);
-  cv('Conducted By: '+co,[C.coAddr,C.coPhone?'P: '+C.coPhone:'',C.coEmail?'Email: '+C.coEmail:''].filter(Boolean).join('\n')||' ');
-  cv('Tester Information:',[C.tester,C.tPhone?'P: '+C.tPhone:'',C.tEmail?'Email: '+C.tEmail:''].filter(Boolean).join('\n'));cv('FCC License:',C.fcc);
-  ch.push(brk(),P([T('TABLE OF CONTENTS',{bold:1,size:32,color:BLUE})],{after:200}),new TableOfContents('Contents',{hyperlink:true,headingStyleRange:'1-1'}),P([T('If the table above is empty, right-click it in Word and pick "Update Field".',{it:1,size:18,color:'888888'})]),brk());
-  // site info
-  ch.push(H1('Site Info'),kv('Test Date',J.date||'—'),P([T('Test Site:',{size:21})],{after:20}),...[J.site,...(J.addr||'').split('\n'),J.coords].filter(Boolean).map(l=>P([T(l,{bold:1,size:21})],{after:20})),P(''),kv('ERRCS Location',J.erLoc||'—'),P(''));
-  const eqRows=[['Signal Boosters',[J.bdaModel,J.bdaSN?'SN: '+J.bdaSN:'',J.bdaFcc?'FCC ID: '+J.bdaFcc:''].filter(Boolean).join('  ')+(J.bdaNote?'\n'+J.bdaNote:'')],['Battery Backup Unit',[J.bbu,J.bbuNote,J.panel?'Electrical Panel: '+J.panel:''].filter(Boolean).join('\n')],['System Monitoring',J.ann?'Annunciator: '+J.ann:''],['Donor Antenna',J.donorAnt||''],['Service Antennas',J.svcAnt||'']].filter(r=>r[1]);
-  ch.push(P([T('Site Equipment Information',{bold:1})],{center:1}),table(null,eqRows.map(([k,v])=>[k,String(v).split('\n').map(l=>P([T(l,{size:20})],{after:20}))]),{boldFirst:1,left:1}),brk());
-  // location + freqs
-  ch.push(H1('Equipment Location & Overview'));
-  const two=async(a,b)=>{const ra=await imgRun(a[0],300,300),rb=await imgRun(b[0],300,300);return new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({cantSplit:true,children:[cell(cap(a[0],a[1]),{head:1,bold:1,keepNext:true}),cell(cap(b[0],b[1]),{head:1,bold:1,keepNext:true})]}),new TableRow({cantSplit:true,children:[cell([ra?P([ra],{center:1}):P([T('[ Add photo ]',{it:1,color:'999999'})],{center:1})]),cell([rb?P([rb],{center:1}):P([T('[ Add photo ]',{it:1,color:'999999'})],{center:1})])]})]})};
-  ch.push(await two(...slotsFor('loc')),P(''));
-  ch.push(H1('Assigned Frequencies'));
-  bs.forEach(b=>{if(!b.chans.length)return;ch.push(P([T(b.name,{bold:1})],{after:60}),table(['Downlink Frequency (MHz)','Control Channel'],b.chans.map(c=>[String(c.f),c.cc==='Y'?'Yes':''])),P(''))});
-  if(has('freqimg'))ch.push(...await box('freqimg',cap('freqimg','Assigned Frequencies')));
-  ch.push(brk());
-  // donor tower
-  ch.push(H1('Donor Tower Information'));
-  bs.forEach(b=>{ch.push(table(['Tower Name','Tower Location','Distance to Site','Direction (True North)'],[[J.tower||'—',J.towerLoc||'—',isN(b.mi)?fmtd(b.mi)+' Miles':'—',J.az?J.az+'°':'—']]),P(''));
-    ch.push(P([T(`Calculated Path Loss${bs.length>1?' – '+b.name:''}`,{bold:1})],{center:1}),table(['Frequency (MHz)','Free Space Path Loss (dB)','Donor Antenna Gain (dBd)','Cable & Filter Loss (dB)','Calculated Path Loss (dB)'],b.rows.map(r=>[String(r.f),f2(r.fspl),fmtd(b.gd),f2(b.loss),f2(r.cpl)])),P(''));
-    ch.push(P([T(`Measured Path Loss${bs.length>1?' – '+b.name:''}`,{bold:1})],{center:1}),table(['Frequency (MHz)','Tower Output (dBm)','Calculated Path Loss (dB)','Predicted Donor Signal (dBm)','Measured Donor Signal (dBm)','Measured Path Loss (dB)'],b.rows.map(r=>[String(r.f),isN(b.erp)?fmtd(b.erp):'—',f2(r.cpl),f2(r.pred),isN(r.p)?String(r.p):'—',f2(r.mpl)])),P(''))});
-  if(has('towermap'))ch.push(...await box('towermap',cap('towermap','Donor Tower Map')));
-  ch.push(brk());
-  // procedures + summary
-  const band=J.cell||bs.map(b=>b.name).join(' / ');
-  ch.push(H1('Test Procedures & Settings'),P([T(`${J.site||'The site'} was commissioned and tested for ${bs.map(b=>b.name).join(' and ')||''} signal coverage using ${band} assigned frequencies. Each floor of the building${J.floors?' ('+J.floors+' floors)':''} was divided into 20 grids of equal size with additional measurements taken at critical areas. The center of each grid was tested for signal strength using a calibrated ${C.pctel||'spectrum analyzer'} on the Max Hold mode setting. Coverage was tested for both the downlink and uplink service antennas.`,{size:21})]));
-  ch.push(table(null,[['Spectrum Analyzer:',C.pctel||'—','Tested Frequencies:',band||'—'],['Device S/N:',C.pctelSN||'—','Mode Setting:','Max Hold'],['Factory Calibration Date:',C.pctelCal||'—','Signal Requirement:',`Downlink: ${J.sigReq||'-95'} dBm`],['Omni-directional Antenna:',C.pctelAnt||'—','Coverage Requirement:',`General: ${J.areaReq||95}%, Critical: ${J.critReq||99}%`]],{left:1}),P(''));
-  ch.push(H1('Commissioning Inspection Summary'),table(['Commissioning Test Requirements','Result','Result Summary'],SUMROWS.map(([k,t,d])=>{const r=sumRow(k,d);return [t,new TextRun({text:r.res||'—',bold:true,size:20,color:r.res==='PASS'?'2E7D32':r.res==='FAIL'?'C62828':undefined}),r.txt]})),brk());
-  // coverage
-  const cov=multiSlots('cov').filter(([id])=>has(id));
-  ch.push(H1('Signal Coverage Readings'));
-  if(cov.length){for(const [id,d] of cov){const r=await imgRun(id,620,820);ch.push(P([r],{center:1}),brk())}}else ch.push(P([T('[ Add the PCTEL coverage report pages ]',{it:1,color:'999999'})]),brk());
-  // GUI
-  ch.push(H1('BDA GUI Settings'));
-  const gui=multiSlots('gui').filter(([id])=>has(id));
-  if(gui.length){for(const [id,d] of gui)ch.push(...await box(id,cap(id,d)))}else ch.push(P([T('[ Add BDA GUI screenshots ]',{it:1,color:'999999'})]));
-  ch.push(brk());
-  // measurements
-  ch.push(H1('BDA Measurements'));
-  for(let i=0;i<Math.max(1,bs.length);i++){const b=bs[i]||{};const pre=bs.length>1?b.name+' ':'';const id=k=>`b${i}_${k}`;const c=(k,dft)=>cap(id(k),pre+dft);
-    const donorLines=b.rows&&b.rows.some(r=>isN(r.p))?b.rows.filter(r=>isN(r.p)).map(r=>`${r.f} MHz: ${r.p} dBm`):null;
-    ch.push(...await box(id('donor'),c('donor','Donor Signal'),donorLines));
-    if(has(id('donorwide')))ch.push(...await box(id('donorwide'),c('donorwide','Donor Signal Wide – Multiple Channels')));
-    const outLines=b.outs&&b.outs.length?[...b.outs.map(x=>`${x.f} MHz: ${sg(x.out)} dBm (predicted)`),`DL gain set: ${fmtd(b.o.dlset)} dB`]:null;
-    ch.push(...await box(id('dlout'),c('dlout','Downlink Output'),outLines));
-    if(has(id('dloutwide')))ch.push(...await box(id('dloutwide'),c('dloutwide','Downlink Output Wide – Multiple Channels')));
-    const isoL=(read,iso)=>isN(iso)?[kv('Injected Signal',sg(b.inj)+' dBm'),kv('Measured Signal',fmtd(read)+' dBm'),kv('Measured Isolation',`${fmtd(iso)} dB (${fmtd(b.inj)} - (${fmtd(read)}))`),kv('Max Allowed Gain',`${fmtd(iso-20)} dB (${fmtd(iso)} - 20)`),kv('Max Measured Gain',fmtd(b.gainMax)+' dB'),itl(isN(b.gainMax)&&b.gainMax<=iso-20?'The isolation is within the acceptable parameters and is FCC compliant with the current BDA settings.':'Gain is too close to the isolation. Lower the gain or improve isolation.')]:null;
-    ch.push(...await box(id('isodl'),c('isodl','System Isolation - Downlink'),isoL(b.readA,b.isoA)));
-    ch.push(...await box(id('isoul'),c('isoul','System Isolation - Uplink'),isoL(b.readB,b.isoB)));
-    ch.push(...await box(id('ulmax'),c('ulmax','Max Uplink Output'),isN(b.ulMaxMeas)?[kv('Max Uplink Output',fmtd(b.ulMaxMeas)+' dBm'),kv('Calc. Path Loss',f2(b.cplUL)+' dB'),kv('Max Signal at Tower',f2(b.ulMaxTower)+' dBm')]:null));
-    if(has(id('spur')))ch.push(...await box(id('spur'),c('spur','Uplink Spurious Emissions')));
-    const nzL=n=>isN(n.m)?[kv('Measured Signal',fmtd(n.m)+' dBm'),kv('Calc. Path Loss',f2(b.cplUL)+' dB'),kv('Signal at Tower',f2(n.tower)+' dBm'),P(''),kv('Donor Gain – Cable Loss',f2(b.netGain)+' dB'),kv('Donor Antenna ERP',f2(n.erp)+' dBm'),itl(n.erp<=-43?'The uplink quiescent noise is within the acceptable parameters and is FCC compliant.':'Donor ERP is over the -43 dBm limit. Check UL gain and noise.')]:null;
-    ch.push(...await box(id('noiseon'),c('noiseon','Uplink Quiescent Noise – RF On'),nzL(b.non||{})));
-    ch.push(...await box(id('noiseoff'),c('noiseoff','Uplink Quiescent Noise – RF Off'),nzL(b.noff||{})));
-  }
-  ch.push(brk());
-  // sweeps
-  ch.push(H1('Sweep Test Measurements'));
-  for(const [id,d] of slotsFor('sweep'))if(has(id))ch.push(...await box(id,cap(id,d)));
-  if(!slotsFor('sweep').some(([id])=>has(id)))ch.push(P([T('[ Add Return Loss and DTF screenshots ]',{it:1,color:'999999'})]));
-  ch.push(brk());
-  // monitoring + battery
-  ch.push(H1('System Monitoring'),table(['ERRCS Alarm','FACP Supervisory Alarm Label','Annunciator','FACP'],J.alarms.filter(a=>a.a||a.l).map(a=>[a.a,a.l,a.an||'—',a.fa||'—'])),P(''));
-  if(has('alarmgui'))ch.push(...await box('alarmgui',cap('alarmgui','GUI Alarm Settings')));
-  ch.push(H1('Battery Backup Calculations'));
-  ch.push(...(has('battery')?await box('battery',cap('battery','Battery Backup Calculations')):[P([T('[ Add battery calculation ]',{it:1,color:'999999'})])]));
-  ch.push(brk());
-  // photos 4 per page
-  const ph=slotsFor('photos').filter(([id])=>has(id));
-  ch.push(H1('ERRCS Equipment Photos'));
-  if(!ph.length)ch.push(P([T('[ Add equipment photos ]',{it:1,color:'999999'})]));
-  for(let k=0;k<ph.length;k+=2){const a=ph[k],b=ph[k+1]||null;
-    if(b)ch.push(await two(a,b),P(''));else{const r=await imgRun(a[0],300,300);ch.push(new Table({width:{size:50,type:WidthType.PERCENTAGE},rows:[new TableRow({children:[cell(cap(a[0],a[1]),{head:1,bold:1})]}),new TableRow({children:[cell([P([r],{center:1})])]})]}),P(''))}}
-  ch.push(brk());
-  const extra=multiSlots('extra').filter(([id])=>has(id));
-  if(extra.length){ch.push(H1('Additional Screenshots'));for(const [id,d] of extra)ch.push(...await box(id,cap(id,d)));ch.push(brk())}
-  ch.push(H1('FCC License'));ch.push(...(has('fcc')?[P([await imgRun('fcc',620,820)],{center:1})]:[P([T('[ Add FCC license ]',{it:1,color:'999999'})])]));ch.push(brk());
-  ch.push(H1('BDA Certification'));ch.push(...(has('cert')?[P([await imgRun('cert',620,820)],{center:1})]:[P([T('[ Add BDA certification ]',{it:1,color:'999999'})])]));
-  const doc=new Document({features:{updateFields:true},creator:C.tester||'',title:`${J.site||'Site'} ERRCS Commissioning Report`,
-    styles:{default:{document:{run:{font:'Calibri',size:22}}},paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{font:'Calibri',size:36,bold:true,color:BLUE}}]},
-    sections:[{properties:{page:{margin:{top:900,bottom:900,left:900,right:900}}},footers:{default:new Footer({children:[new Paragraph({alignment:AlignmentType.LEFT,children:[new TextRun({children:['Page ',PageNumber.CURRENT,' of ',PageNumber.TOTAL_PAGES],size:18,font:'Calibri'})]})]})},children:ch}]});
-  return Packer.toBlob(doc);
-}
-$('make').onclick=async()=>{const b=$('make');b.disabled=true;b.textContent='Building the report…';
-  try{const blob=await buildDocx();const name=`${(J.site||'Site').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')}_ERRCS_Commissioning_Report.docx`;
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Report downloaded. Open it in Word, check it, and save as PDF when you\'re happy.')}
-  catch(err){console.error(err);toast('Something went wrong building the report: '+err.message)}
-  b.disabled=false;b.textContent='Download Word report'};
-
-(async()=>{await dbOpen();
-  const ids=new Set();['loc','freq','tower','meas','sweep','mon','batt','photos','fcc'].forEach(s=>slotsFor(s).forEach(([id])=>ids.add(id)));Object.values(J.multi).flat().forEach(id=>ids.add(id));
-  for(const id of ids){const d=await dbGet(id);if(d)IMG[id]={url:URL.createObjectURL(d.blob),w:d.w,h:d.h,name:d.name}}
-  render()})();
+(async()=>{await dbOpen();for(const [k,v] of await dbAll())IMG[k]={url:URL.createObjectURL(v.blob),name:v.name};save();render()})();
 
 
 const bg=$('burger'),mn=$('menu');bg.onclick=e=>{e.stopPropagation();const o=!mn.classList.contains('open');mn.classList.toggle('open',o);bg.setAttribute('aria-expanded',o)};
